@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from risksched.schema import (
+from quotashift.schema import (
     ArrivalProcess,
     LengthDist,
     SLOSpec,

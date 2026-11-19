@@ -1,3 +1,0 @@
-name: fcfs
-params: {}     # optional: max_inflight
-description: pass-through; native vLLM FCFS scheduling decides everything (no gateway admission)

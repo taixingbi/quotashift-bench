@@ -1,7 +1,9 @@
-# Local zero-cost stack: mock vLLM server + runner. No GPU, no cloud.
-#   docker compose -f docker/compose.yaml up --build --abort-on-container-exit
-# For a real local GPU (e.g. RTX 3090), see docs/REPRODUCIBILITY.md (profile "gpu").
-name: risksched
+# Local zero-cost stack: mock vLLM backend + QuotaShift gateway. No GPU, no cloud,
+# nothing published to the host. Mirrors the deployed topology (gateway -> vLLM)
+# for local checks only; results from the mock are simulator plumbing, not GPU data.
+#   docker compose -f docker/compose.yaml up --build
+# A real local GPU vLLM is opt-in via `--profile gpu` (see docs/REPRODUCIBILITY.md).
+name: quotashift
 services:
   mock-vllm:
     build: {context: .., dockerfile: docker/Dockerfile}
@@ -11,20 +13,35 @@ services:
       test: ["CMD", "python", "-c", "import urllib.request;urllib.request.urlopen('http://localhost:8000/health')"]
       interval: 2s
       retries: 15
-  runner:
+
+  gateway:
     build: {context: .., dockerfile: docker/Dockerfile}
+    entrypoint: ["python", "-m", "uvicorn", "--factory", "quotashift.gateway.app:app_from_env",
+                 "--host", "0.0.0.0", "--port", "8080"]
     depends_on:
       mock-vllm: {condition: service_healthy}
-    command: ["run", "--config", "configs/experiments/smoke_http.yaml", "--scheduler", "fcfs", "--seed", "11",
-              "--backend-url", "http://mock-vllm:8000", "--results-root", "/app/results"]
-    volumes: ["../results:/app/results"]
+    expose: ["8080"]          # internal network only; no public listener
+    environment:
+      QUOTASHIFT_TENANTS: /app/configs/gateway/tenants.example.yaml
+      QUOTASHIFT_BACKEND_URL: http://mock-vllm:8000
+      QUOTASHIFT_MODEL: mock-model
+      QUOTASHIFT_MAX_TOTAL_REQUESTS: "150"
+      QUOTASHIFT_MAX_REQUESTS_PER_TENANT: "60"
+      QUOTASHIFT_MAX_INPUT_TOKENS: "1024"
+      QUOTASHIFT_MAX_OUTPUT_TOKENS: "256"
+      QUOTASHIFT_MAX_GLOBAL_INFLIGHT: "4"
+      QUOTASHIFT_RUN_DEADLINE_S: "600"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request;urllib.request.urlopen('http://localhost:8080/healthz')"]
+      interval: 2s
+      retries: 15
 
   # Real vLLM on a local NVIDIA GPU (opt-in: `--profile gpu`). Requires NVIDIA Container Toolkit.
   vllm:
     profiles: ["gpu"]
     image: vllm/vllm-openai@sha256:d825baf9ce4b1b6bfc5ecc7b79880c7e6748c65a72d697ce3d47607aafa84c6e  # v0.33.0
-    command: ["Qwen/Qwen3-1.7B", "--revision", "70d244cc86ccca08cf5af4e1e306ecf908b1ad5e",
-              "--max-model-len", "10240", "--gpu-memory-utilization", "0.90", "--no-enable-prefix-caching"]
+    command: ["Qwen/Qwen2.5-7B-Instruct", "--max-model-len", "4096",
+              "--gpu-memory-utilization", "0.90", "--no-enable-prefix-caching"]
     ipc: host
     ports: ["127.0.0.1:8000:8000"]   # loopback only
     volumes: ["${HOME}/.cache/huggingface:/root/.cache/huggingface"]

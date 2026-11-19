@@ -1,8 +1,8 @@
 import pytest
 
-from risksched.instrumentation.recorder import LifecycleError, RunRecorder, validate_events
-from risksched.schema import EventType as E
-from risksched.schema import Request, SLOType
+from quotashift.instrumentation.recorder import LifecycleError, RunRecorder, validate_events
+from quotashift.schema import EventType as E
+from quotashift.schema import Request, SLOType
 
 
 def req(rid="r"):

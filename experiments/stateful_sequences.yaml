@@ -1,0 +1,35 @@
+# A5 stateful-sequence scenario (plan §5). validate / dry-run only in Phase 0.
+schema_version: 1
+scenario_id: a5_stateful_sequence
+seed: 42
+model: qwen2_5_7b
+model_max_len: 4096
+runtime_seconds: 180
+endpoint: http://gateway.quotashift.internal:8080
+victim_tenants: [victim_a, victim_b]
+competing_tenants: [synthetic_competitor]
+budget_class: input_tokens
+safety:
+  max_total_requests: 150
+  max_global_inflight: 4
+  max_requests_per_tenant: 60
+  max_input_tokens_per_request: 1024
+  max_output_tokens_per_request: 256
+  max_runtime_seconds: 240
+  per_request_timeout_seconds: 120
+comparison:
+  primary_control: shuffled_phase_order
+  matched_request_budget: true
+  matched_token_budget: true
+  repetitions: 5
+  degradation_metric: ttft_p95
+  preregistered_threshold: 1.5
+benign:
+  rate_rps: 0.2
+  request_shape: short
+  ttft_deadline_ms: 2000
+  e2e_deadline_ms: 30000
+phases:
+  - {name: uniform, duration_seconds: 60, pattern: steady, request_shape: short, rate_rps: 0.3}
+  - {name: prefill_heavy, duration_seconds: 60, pattern: steady, request_shape: context_heavy, rate_rps: 0.3}
+  - {name: mixed, duration_seconds: 60, pattern: burst_bounded, request_shape: mixed, rate_rps: 0.4}

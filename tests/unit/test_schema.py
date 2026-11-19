@@ -1,7 +1,7 @@
 import pytest
 from pydantic import ValidationError
 
-from risksched.schema import LengthDist, OracleInfo, Request, SLOType, WorkloadConfig
+from quotashift.schema import LengthDist, OracleInfo, Request, SLOType, WorkloadConfig
 from tests.conftest import tenant
 
 

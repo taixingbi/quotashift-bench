@@ -1,6 +1,6 @@
-# risksched runner / gateway / mock-vLLM image (CPU only).
-# Base pinned by digest (python:3.11-slim-bookworm, resolved 2026-11-18 from Docker Hub).
-FROM python:3.11-slim-bookworm@sha256:a83ba18aef0f865b1a4a611c2cf460fe446f2795673bbb9fe43be570439e3b39
+# quotashift gateway / mock-vLLM image (CPU only).
+# Base pinned by digest (python:3.12-slim-bookworm multi-arch index, resolved 2026-11-19 from Docker Hub).
+FROM python:3.12-slim-bookworm@sha256:935c3c5b12357a7e10caa9c1e6ca5692344d97cf229832ef584be2cec9fc03df
 
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy
 # uv binary pinned to the version used to create uv.lock
@@ -11,8 +11,8 @@ COPY pyproject.toml uv.lock README.md ./
 RUN uv sync --frozen --no-dev --no-install-project
 COPY src ./src
 COPY configs ./configs
-RUN uv sync --frozen --no-dev && useradd -m -u 10001 risksched && mkdir -p /app/results && chown -R risksched /app/results
-USER risksched
+RUN uv sync --frozen --no-dev && useradd -m -u 10001 quotashift && mkdir -p /app/results && chown -R quotashift /app/results
+USER quotashift
 ENV PATH="/app/.venv/bin:$PATH"
-ENTRYPOINT ["python", "-m", "risksched.cli"]
+ENTRYPOINT ["python", "-m", "quotashift.cli"]
 CMD ["doctor"]

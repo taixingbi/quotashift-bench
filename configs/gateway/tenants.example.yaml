@@ -1,0 +1,6 @@
+# Synthetic tenant identities (fixtures for an owned, isolated testbed).
+# These are NOT real secrets and must never be reused as such.
+keys:
+  qs-test-victim-a-000:   {tenant_id: victim_a, experiment_id: exp_smoke, run_id: run_0001, role: victim}
+  qs-test-victim-b-000:   {tenant_id: victim_b, experiment_id: exp_smoke, run_id: run_0001, role: victim}
+  qs-test-competitor-000: {tenant_id: synthetic_competitor, experiment_id: exp_smoke, run_id: run_0001, role: competitor}

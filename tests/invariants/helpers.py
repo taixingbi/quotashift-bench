@@ -1,13 +1,13 @@
 from __future__ import annotations
 
-from risksched.gateway.core import Gateway
-from risksched.gateway.ledger import TokenLedger
-from risksched.instrumentation.recorder import RunRecorder, validate_events
-from risksched.runtime.clients import OpenLoopClient
-from risksched.runtime.sim import SimConfig, run_simulation
-from risksched.schedulers.base import SchedulerPolicy
-from risksched.serving.engine_model import EngineModel, EngineParams
-from risksched.workload.generator import generate_trace
+from quotashift.gateway.core import Gateway
+from quotashift.gateway.ledger import TokenLedger
+from quotashift.instrumentation.recorder import RunRecorder, validate_events
+from quotashift.runtime.clients import OpenLoopClient
+from quotashift.runtime.sim import SimConfig, run_simulation
+from quotashift.schedulers.base import SchedulerPolicy
+from quotashift.serving.engine_model import EngineModel, EngineParams
+from quotashift.workload.generator import generate_trace
 
 
 def sim_run(wl, policy: SchedulerPolicy, seed=11, ledger=None, end_extra=60.0, max_queue_wait_s=None,

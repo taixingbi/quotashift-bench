@@ -1,6 +1,6 @@
-from risksched.gateway.ledger import TokenLedger
-from risksched.schedulers.simple import StaticQuota
-from risksched.schema import WorkloadConfig
+from quotashift.gateway.ledger import TokenLedger
+from quotashift.schedulers.simple import StaticQuota
+from quotashift.schema import WorkloadConfig
 from tests.conftest import tenant
 from tests.invariants.helpers import assert_accounting, sim_run
 

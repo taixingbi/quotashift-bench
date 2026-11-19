@@ -54,7 +54,7 @@ def test_no_state_or_secrets_tracked(repo):
 def test_gated_actions_refuse_without_approval(repo):
     for action in ("deploy", "start-gpu", "destroy", "cost-report"):
         r = subprocess.run(["bash", "scripts/aws_ops.sh", action, "dev"], cwd=repo, capture_output=True, text=True,
-                           env=os.environ | {"RISKSCHED_APPROVED": ""}, timeout=30)
+                           env=os.environ | {"QUOTASHIFT_APPROVED": ""}, timeout=30)
         assert r.returncode == 3 and "REFUSED" in r.stderr, (action, r.stderr)
 
 

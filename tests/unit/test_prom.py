@@ -1,4 +1,4 @@
-from risksched.instrumentation.prom import hist_delta, parse_prometheus_text, resolve
+from quotashift.instrumentation.prom import hist_delta, parse_prometheus_text, resolve
 
 V1_TEXT = """
 # HELP vllm:num_requests_running Number of requests in model execution batches.

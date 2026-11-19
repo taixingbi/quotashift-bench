@@ -4,17 +4,17 @@ import json
 import pandas as pd
 import pytest
 
-from risksched.config import BackendConfig, ExperimentConfig, GatewayConfig, RunControl
-from risksched.gateway.core import Gateway
-from risksched.instrumentation.recorder import RunRecorder, validate_events
-from risksched.runtime.clients import OpenLoopClient
-from risksched.runtime.live import LiveConfig, run_live
-from risksched.runtime.runner import local_mock_server, run_experiment
-from risksched.schedulers.simple import FCFSPassThrough
-from risksched.schema import SLOType, WorkloadConfig
-from risksched.serving.engine_model import EngineParams
-from risksched.serving.openai_backend import OpenAICompatBackend
-from risksched.workload.generator import generate_trace
+from quotashift.config import BackendConfig, ExperimentConfig, GatewayConfig, RunControl
+from quotashift.gateway.core import Gateway
+from quotashift.instrumentation.recorder import RunRecorder, validate_events
+from quotashift.runtime.clients import OpenLoopClient
+from quotashift.runtime.live import LiveConfig, run_live
+from quotashift.runtime.runner import local_mock_server, run_experiment
+from quotashift.schedulers.simple import FCFSPassThrough
+from quotashift.schema import SLOType, WorkloadConfig
+from quotashift.serving.engine_model import EngineParams
+from quotashift.serving.openai_backend import OpenAICompatBackend
+from quotashift.workload.generator import generate_trace
 from tests.conftest import tenant
 
 pytestmark = pytest.mark.slow
@@ -27,7 +27,7 @@ def mock_url():
 
 
 def _req(rid="r1", n=50, max_tokens=8):
-    from risksched.schema import Request
+    from quotashift.schema import Request
     return Request(request_id=rid, tenant_id="A", arrival_time_s=0, prompt_token_ids=tuple(range(1000, 1000 + n)),
                    input_token_count=n, max_output_tokens=max_tokens, workload_class="c",
                    slo_type=SLOType.INTERACTIVE, ttft_deadline_ms=1000, seed=1, trace_id="t")

@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from risksched.evaluation.metrics import (
+from quotashift.evaluation.metrics import (
     derive_request_metrics,
     histogram_quantile,
     jain_index,

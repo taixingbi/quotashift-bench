@@ -1,9 +1,9 @@
 [project]
-name = "risksched"
+name = "quotashift"
 version = "0.1.0"
-description = "RISK-Sched research platform: tenant-aware, GPU/KV-aware admission & dispatch for LLM serving (Milestone 0/1 framework)"
+description = "QuotaShift: attack-side, reproducible cross-tenant resource-interference benchmark for LLM serving (owned, isolated testbed)"
 readme = "README.md"
-requires-python = ">=3.11,<3.12"
+requires-python = ">=3.12,<3.13"
 license = { text = "Apache-2.0" }
 dependencies = [
   "pydantic>=2.7,<3",
@@ -15,27 +15,28 @@ dependencies = [
   "starlette>=0.37",
   "uvicorn>=0.30",
   "matplotlib>=3.8",
+  "fastapi>=0.111,<1",
 ]
 
 [dependency-groups]
-dev = ["pytest>=8", "pytest-asyncio>=0.23", "ruff>=0.5"]
+dev = ["pytest>=8", "pytest-asyncio>=0.23", "ruff>=0.5", "mypy>=1.10", "asgi-lifespan>=2"]
 
 [project.scripts]
-risksched = "risksched.cli:main"
+quotashift = "quotashift.cli:main"
 
 [build-system]
 requires = ["hatchling>=1.24"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/risksched"]
+packages = ["src/quotashift"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
 markers = [
-  "gpu: requires a real NVIDIA GPU + vLLM endpoint (opt-in via RISKSCHED_GPU_TESTS=1)",
+  "gpu: requires a real NVIDIA GPU + vLLM endpoint (opt-in via QUOTASHIFT_GPU_TESTS=1)",
   "slow: slower integration tests",
 ]
 addopts = "-ra"
@@ -43,7 +44,27 @@ pythonpath = ["."]
 
 [tool.ruff]
 line-length = 110
-target-version = "py311"
+target-version = "py312"
 [tool.ruff.lint]
 select = ["E", "F", "I", "B", "UP"]
 ignore = ["E501"]
+[tool.mypy]
+python_version = "3.12"
+ignore_missing_imports = true
+check_untyped_defs = false
+warn_unused_ignores = true
+
+# Reused RISK-Sched modules kept as-is during the QuotaShift pivot; not type-gated.
+[[tool.mypy.overrides]]
+module = [
+  "quotashift.workload.generator",
+  "quotashift.evaluation.metrics",
+  "quotashift.evaluation.plots",
+  "quotashift.runtime.runner",
+  "quotashift.runtime.sim",
+  "quotashift.runtime.live",
+  "quotashift.instrumentation.gpu",
+  "quotashift.instrumentation.provenance",
+  "quotashift.config",
+]
+ignore_errors = true

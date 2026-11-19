@@ -24,7 +24,7 @@ variable "cost_center" {
 
 variable "name_prefix" {
   type    = string
-  default = "risksched"
+  default = "quotashift"
 }
 
 # ---------------------------------------------------------------- networking
@@ -166,7 +166,7 @@ variable "dcgm_exporter_image" {
 variable "runner_image" {
   type        = string
   default     = ""
-  description = "risksched image in ECR pinned by digest (built from docker/Dockerfile). Empty = task definition not created."
+  description = "quotashift image in ECR pinned by digest (built from docker/Dockerfile). Empty = task definition not created."
   validation {
     condition     = var.runner_image == "" || can(regex("@sha256:[0-9a-f]{64}$", var.runner_image))
     error_message = "runner_image must be empty or pinned by @sha256 digest."

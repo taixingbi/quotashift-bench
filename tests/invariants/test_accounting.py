@@ -1,10 +1,10 @@
 import pandas as pd
 import pytest
 
-from risksched.evaluation.metrics import summarize
-from risksched.gateway.ledger import TokenLedger
-from risksched.schedulers.simple import FCFSPassThrough, StaticQuota
-from risksched.serving.engine_model import EngineParams
+from quotashift.evaluation.metrics import summarize
+from quotashift.gateway.ledger import TokenLedger
+from quotashift.schedulers.simple import FCFSPassThrough, StaticQuota
+from quotashift.serving.engine_model import EngineParams
 from tests.invariants.helpers import assert_accounting, sim_run
 
 

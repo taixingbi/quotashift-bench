@@ -2,44 +2,60 @@ import json
 import subprocess
 import sys
 
-import pytest
-
 
 def run(*args, cwd):
-    return subprocess.run([sys.executable, "-m", "risksched.cli", *args], cwd=cwd, capture_output=True, text=True, timeout=300)
+    return subprocess.run([sys.executable, "-m", "quotashift.cli", *args], cwd=cwd, capture_output=True, text=True, timeout=300)
 
 
-def test_generate_workload_deterministic(repo, tmp_path):
-    a = run("generate-workload", "--config", "configs/tenants/three_tenants.yaml", "--seed", "11",
-            "--out", str(tmp_path / "a.jsonl"), cwd=repo)
-    b = run("generate-workload", "--config", "configs/tenants/three_tenants.yaml", "--seed", "11",
-            "--out", str(tmp_path / "b.jsonl"), cwd=repo)
-    assert a.returncode == 0, a.stderr
-    assert json.loads(a.stdout)["sha256"] == json.loads(b.stdout)["sha256"]
-
-
-def test_validate_env_and_doctor(repo):
-    v = run("validate-env", cwd=repo)
-    assert v.returncode == 0, v.stdout + v.stderr
+def test_doctor(repo):
     d = run("doctor", cwd=repo)
     assert d.returncode == 0 and "packages" in json.loads(d.stdout)
 
 
-@pytest.mark.slow
-def test_run_report_compare(repo, tmp_path):
-    for sched in ("fcfs", "static_quota"):
-        r = run("run", "--config", "configs/experiments/smoke.yaml", "--scheduler", sched, "--seed", "11",
-                "--results-root", str(tmp_path), cwd=repo)
-        assert r.returncode == 0, r.stdout + r.stderr
-        out = json.loads(r.stdout)
-        assert out["accounting_conserved"] and out["event_validation_ok"] and out["synthetic_backend"]
-        rep = run("report", "--run-dir", out["run_dir"], cwd=repo)
-        assert rep.returncode == 0 and json.loads(rep.stdout)["revalidated_event_errors"] == 0
-    c = run("compare", "--experiment", "smoke", "--results-root", str(tmp_path), cwd=repo)
-    assert c.returncode == 0 and "static_quota" in c.stdout
+def test_validate_ok(repo):
+    r = run("validate", "experiments/smoke.yaml", cwd=repo)
+    assert r.returncode == 0, r.stdout + r.stderr
+    out = json.loads(r.stdout)
+    assert out["valid"] and out["scenario_id"] == "smoke" and len(out["schedule_sha256"]) == 64
 
 
-def test_profile_vllm_requires_explicit_cost_ack(repo, tmp_path):
-    r = run("profile", "--config", "configs/experiments/e0.yaml", "--backend", "vllm", "--results-root", str(tmp_path),
-            cwd=repo)
-    assert r.returncode == 3 and "i-understand-gpu-costs" in r.stderr
+def test_validate_rejects_bad_scenario(repo, tmp_path):
+    bad = tmp_path / "bad.yaml"
+    bad.write_text(
+        "schema_version: 1\nscenario_id: bad\nseed: 1\nmodel: m\nruntime_seconds: 10\n"
+        "endpoint: http://evil.example.com:8080\n"
+        "victim_tenants: [v]\ncompeting_tenants: []\nphases: []\n"
+        "safety: {max_total_requests: 10, max_global_inflight: 1, max_requests_per_tenant: 10,"
+        " max_input_tokens_per_request: 8, max_output_tokens_per_request: 8, max_runtime_seconds: 60}\n"
+        "comparison: {primary_control: benign_only}\n"
+        "benign: {rate_rps: 0.1}\n"
+    )
+    r = run("validate", str(bad), cwd=repo)
+    assert r.returncode == 2 and "endpoint" in r.stderr.lower()
+
+
+def test_dry_run_is_deterministic(repo):
+    a = run("dry-run", "experiments/stateful_sequences.yaml", cwd=repo)
+    b = run("dry-run", "experiments/stateful_sequences.yaml", cwd=repo)
+    assert a.returncode == 0 and b.returncode == 0
+    assert json.loads(a.stdout)["schedule_sha256"] == json.loads(b.stdout)["schedule_sha256"]
+
+
+def test_dry_run_control_differs(repo):
+    base = run("dry-run", "experiments/stateful_sequences.yaml", cwd=repo)
+    ctrl = run("dry-run", "experiments/stateful_sequences.yaml", "--control", cwd=repo)
+    assert json.loads(base.stdout)["schedule_sha256"] != json.loads(ctrl.stdout)["schedule_sha256"]
+
+
+def test_run_local_requires_mock(repo, tmp_path):
+    r = run("run-local", "experiments/smoke.yaml", "--results-root", str(tmp_path), cwd=repo)
+    assert r.returncode == 3 and "mock" in r.stderr.lower()
+
+
+def test_run_local_and_summarize(repo, tmp_path):
+    r = run("run-local", "experiments/smoke.yaml", "--mock", "--results-root", str(tmp_path), cwd=repo)
+    assert r.returncode == 0, r.stdout + r.stderr
+    out = json.loads(r.stdout)
+    assert out["accounting_conserved"] and out["event_validation_ok"] and out["synthetic_backend"]
+    s = run("summarize", "--input", str(tmp_path), "--output", str(tmp_path / "rep"), cwd=repo)
+    assert s.returncode == 0 and (tmp_path / "rep" / "summary.csv").exists()

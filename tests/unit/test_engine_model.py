@@ -1,4 +1,4 @@
-from risksched.serving.engine_model import EngineModel, EngineParams
+from quotashift.serving.engine_model import EngineModel, EngineParams
 
 
 def drain(eng, limit=100000):

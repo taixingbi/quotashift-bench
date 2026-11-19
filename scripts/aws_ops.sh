@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
 # Approval-gated AWS operations. NOTHING here runs automatically from tests or CI.
 #   scripts/aws_ops.sh <plan|deploy|healthcheck|start-gpu|stop-gpu|collect|destroy|cost-report> <dev|research>
-# Gated actions require BOTH env RISKSCHED_APPROVED=<action> and an interactive "yes".
+# Gated actions require BOTH env QUOTASHIFT_APPROVED=<action> and an interactive "yes".
 set -euo pipefail
 ACTION="${1:?action}"; ENVIRONMENT="${2:?env (dev|research)}"
 TF="terraform -chdir=infra/terraform"
 VARS="-var-file=envs/${ENVIRONMENT}.tfvars"
 
 gate() {
-  if [[ "${RISKSCHED_APPROVED:-}" != "$1" ]]; then
-    echo "REFUSED: '$1' is approval-gated. Re-run with RISKSCHED_APPROVED=$1 after explicit approval." >&2; exit 3
+  if [[ "${QUOTASHIFT_APPROVED:-}" != "$1" ]]; then
+    echo "REFUSED: '$1' is approval-gated. Re-run with QUOTASHIFT_APPROVED=$1 after explicit approval." >&2; exit 3
   fi
   read -r -p "Type 'yes' to $1 in ${ENVIRONMENT} (account $(aws sts get-caller-identity --query Account --output text)): " ok
   [[ "$ok" == "yes" ]] || { echo "aborted"; exit 3; }

@@ -2,13 +2,13 @@ import dataclasses
 
 import pytest
 
-from risksched.config import BackendConfig
-from risksched.gateway.core import Gateway
-from risksched.instrumentation.recorder import RunRecorder
-from risksched.runtime.runner import make_backend
-from risksched.schedulers.base import GatewayView
-from risksched.schedulers.simple import FCFSPassThrough, OracleSJF
-from risksched.schema import OracleInfo, Request
+from quotashift.config import BackendConfig
+from quotashift.gateway.core import Gateway
+from quotashift.instrumentation.recorder import RunRecorder
+from quotashift.runtime.runner import make_backend
+from quotashift.schedulers.base import GatewayView
+from quotashift.schedulers.simple import FCFSPassThrough, OracleSJF
+from quotashift.schema import OracleInfo, Request
 from tests.invariants.helpers import sim_run
 
 FORBIDDEN = ("realized", "oracle", "true_output", "target_out")

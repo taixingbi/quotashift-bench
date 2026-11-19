@@ -162,11 +162,11 @@ resource "aws_ecs_task_definition" "vllm" {
   )
   volume {
     name      = "hf-cache"
-    host_path = "/opt/risksched/hf-cache"
+    host_path = "/opt/quotashift/hf-cache"
   }
   volume {
     name      = "models"
-    host_path = "/opt/risksched/models"
+    host_path = "/opt/quotashift/models"
   }
 
   lifecycle {
@@ -248,7 +248,7 @@ resource "aws_ecs_task_definition" "runner" {
     name        = "runner"
     image       = var.runner_image
     essential   = true
-    environment = [{ name = "RISKSCHED_RESULTS_S3", value = "s3://${aws_s3_bucket.results.bucket}/results/" }]
+    environment = [{ name = "QUOTASHIFT_RESULTS_S3", value = "s3://${aws_s3_bucket.results.bucket}/results/" }]
     logConfiguration = {
       logDriver = "awslogs"
       options = {

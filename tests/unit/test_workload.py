@@ -1,7 +1,7 @@
 import numpy as np
 
-from risksched.schema import LengthDist, WorkloadConfig
-from risksched.workload.generator import (
+from quotashift.schema import LengthDist, WorkloadConfig
+from quotashift.workload.generator import (
     generate_trace,
     read_trace_jsonl,
     sample_arrivals,

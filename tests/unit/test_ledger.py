@@ -3,7 +3,7 @@ import itertools
 import numpy as np
 import pytest
 
-from risksched.gateway.ledger import LedgerError, TokenLedger
+from quotashift.gateway.ledger import LedgerError, TokenLedger
 
 
 def test_reserve_release_conservation():
