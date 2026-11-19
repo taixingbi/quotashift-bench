@@ -1,0 +1,15 @@
+# FILL IN from the AWS Pricing Calculator / Price List API for your region before requesting approval.
+# Values are intentionally blank: this repository does not hardcode AWS prices.
+as_of: ""            # e.g. 2026-11-18
+region: us-east-1
+gpu_instance_hour: null          # g6.xlarge On-Demand
+public_ipv4_hour: null
+ebs_gp3_gb_month: null
+nat_gateway_hour: null
+nat_gateway_gb: null
+interface_endpoint_hour_per_az: null
+cloudwatch_logs_ingest_gb: null
+s3_standard_gb_month: null
+fargate_vcpu_hour: null
+fargate_gb_hour: null
+ecr_gb_month: null

@@ -1,0 +1,35 @@
+# Local zero-cost stack: mock vLLM server + runner. No GPU, no cloud.
+#   docker compose -f docker/compose.yaml up --build --abort-on-container-exit
+# For a real local GPU (e.g. RTX 3090), see docs/REPRODUCIBILITY.md (profile "gpu").
+name: risksched
+services:
+  mock-vllm:
+    build: {context: .., dockerfile: docker/Dockerfile}
+    command: ["mock-server", "--host", "0.0.0.0", "--port", "8000", "--model", "mock-model"]
+    expose: ["8000"]          # internal network only; not published to the host
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request;urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 2s
+      retries: 15
+  runner:
+    build: {context: .., dockerfile: docker/Dockerfile}
+    depends_on:
+      mock-vllm: {condition: service_healthy}
+    command: ["run", "--config", "configs/experiments/smoke_http.yaml", "--scheduler", "fcfs", "--seed", "11",
+              "--backend-url", "http://mock-vllm:8000", "--results-root", "/app/results"]
+    volumes: ["../results:/app/results"]
+
+  # Real vLLM on a local NVIDIA GPU (opt-in: `--profile gpu`). Requires NVIDIA Container Toolkit.
+  vllm:
+    profiles: ["gpu"]
+    image: vllm/vllm-openai@sha256:d825baf9ce4b1b6bfc5ecc7b79880c7e6748c65a72d697ce3d47607aafa84c6e  # v0.33.0
+    command: ["Qwen/Qwen3-1.7B", "--revision", "70d244cc86ccca08cf5af4e1e306ecf908b1ad5e",
+              "--max-model-len", "10240", "--gpu-memory-utilization", "0.90", "--no-enable-prefix-caching"]
+    ipc: host
+    ports: ["127.0.0.1:8000:8000"]   # loopback only
+    volumes: ["${HOME}/.cache/huggingface:/root/.cache/huggingface"]
+    environment: ["VLLM_NO_USAGE_STATS=1"]
+    deploy:
+      resources:
+        reservations:
+          devices: [{driver: nvidia, count: 1, capabilities: [gpu]}]

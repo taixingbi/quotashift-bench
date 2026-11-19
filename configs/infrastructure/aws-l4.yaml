@@ -1,0 +1,7 @@
+# Proposed (NOT deployed). See infra/terraform and docs/TERRAFORM_PROPOSAL.md.
+target: aws_ecs_ec2_gpu
+region: us-east-1
+instance_type: g6.xlarge      # 1x NVIDIA L4 24GB, 4 vCPU, 16 GiB (verify quota & regional availability)
+ami_ssm_parameter: /aws/service/ecs/optimized-ami/amazon-linux-2023/gpu/recommended/image_id
+vllm_image: vllm/vllm-openai@sha256:d825baf9ce4b1b6bfc5ecc7b79880c7e6748c65a72d697ce3d47607aafa84c6e  # tag v0.33.0
+dcgm_exporter_image: nvidia/dcgm-exporter@sha256:2490e1dfb5baaee6765ef2841813af7d978bb459a566c22c326a8fc27c64eea9  # 4.7.0-4.9.0

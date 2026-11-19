@@ -1,0 +1,29 @@
+# M1 smoke: same gateway over real HTTP streaming to the local mock vLLM server (real time).
+experiment_id: smoke_http
+description: three-tenant smoke over HTTP/SSE against the local mock vLLM server
+workload:
+  workload_id: three_tenants_short
+  duration_s: 15
+  max_model_len: 8192
+  tenants:
+    - {tenant_id: A, workload_class: chat_interactive, arrival: {process: poisson, rate_rps: 2.0},
+       prompt_tokens: {dist: lognormal, median: 200, sigma: 0.6, min: 16, max: 1024}, max_output_tokens: 256,
+       sim_output_tokens: {dist: lognormal, median: 60, sigma: 0.6, min: 1, max: 256},
+       slo: {slo_type: interactive, ttft_deadline_ms: 1000, tpot_target_ms: 60}}
+    - {tenant_id: B, workload_class: rag_long_prefill, arrival: {process: poisson, rate_rps: 0.5},
+       prompt_tokens: {dist: lognormal, median: 3000, sigma: 0.4, min: 512, max: 6000}, max_output_tokens: 512,
+       sim_output_tokens: {dist: lognormal, median: 80, sigma: 0.7, min: 1, max: 512},
+       slo: {slo_type: interactive, ttft_deadline_ms: 3000, tpot_target_ms: 80}}
+    - {tenant_id: C, workload_class: agent_batch_decode_heavy,
+       arrival: {process: onoff, rate_rps: 0.2, burst_rate_rps: 4.0, mean_on_s: 4, mean_off_s: 6},
+       prompt_tokens: {dist: lognormal, median: 800, sigma: 0.5, min: 64, max: 4096}, max_output_tokens: 1024,
+       sim_output_tokens: {dist: lognormal, median: 200, sigma: 0.8, min: 1, max: 1024},
+       slo: {slo_type: deadline, ttft_deadline_ms: 10000, e2e_deadline_ms: 60000}}
+backend:
+  kind: mock_http
+  model: mock-model
+  time_scale: 1.0
+  engine: {kv_blocks_total: 4096, block_size: 16, max_num_seqs: 64, max_num_batched_tokens: 2048, max_model_len: 8192}
+gateway: {max_queue_wait_s: 30}
+run: {drain_s: 20, metrics_interval_s: 0.5, request_timeout_s: 30, max_experiment_seconds: 120}
+schedulers: {fcfs: {}, static_quota: {max_inflight_per_tenant: 16}}

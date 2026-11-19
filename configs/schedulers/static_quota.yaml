@@ -1,0 +1,4 @@
+name: static_quota
+params: {max_inflight_per_tenant: 24}
+ledger: {allow_borrow: true}
+description: M0 infrastructure policy (per-tenant token reservation quota + RR dispatch); NOT the M2 baseline suite

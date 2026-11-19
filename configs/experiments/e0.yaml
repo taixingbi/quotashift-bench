@@ -1,0 +1,37 @@
+# E0 full grid for a REAL vLLM endpoint (NOT run in Milestone 0/1 without approval).
+# Run: python -m risksched.cli profile --config configs/experiments/e0.yaml --backend vllm \
+#        --backend-url http://<vllm-host>:8000 --i-understand-gpu-costs
+# Cells with prompt + max_tokens > max_model_len are recorded as skipped_unsupported.
+experiment_id: e0
+description: Qwen3 single-GPU profiling grid (prompt x output x concurrency x trials) + open-loop rate sweep
+backend:
+  kind: vllm
+  base_url: http://127.0.0.1:8000
+  model: Qwen/Qwen3-4B
+  model_revision: 1cfa9a7208912126459214e8b04321603b3df60c
+  sampling: {temperature: 0.0}
+  ignore_eos: true    # profiling: realized output == requested max_tokens (recorded & verified per cell)
+run: {max_concurrency_cap: 128}
+profile:
+  prompt_lengths: [256, 1024, 4096, 8192]
+  output_lengths: [128, 512, 1024, 2048]
+  concurrencies: [1, 4, 8, 16, 32, 64]
+  trials: 3
+  min_requests_per_cell: 16
+  requests_per_slot: 2
+  max_model_len: 10240   # must equal the server's --max-model-len; 8192+2048 needs >= 10240
+  ignore_eos: true
+  cell_timeout_s: 900
+  request_timeout_s: 600
+  warmup_requests: 8
+  max_total_seconds: 14400   # hard wall-clock budget for the whole sweep (4 h)
+  vocab_low: 1000
+  vocab_high: 150000         # Qwen3 vocab ~151k; random-ID prompts
+  rate_sweep:
+    prompt_tokens: 1024
+    output_tokens: 256
+    rates_rps: [0.5, 1, 2, 3, 4, 6, 8, 12]   # PROVISIONAL: re-centre on the knee after the first grid
+    duration_s: 120
+    trials: 3
+    ttft_deadline_ms: 2000
+    tpot_target_ms: 100

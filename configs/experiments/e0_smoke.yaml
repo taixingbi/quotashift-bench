@@ -1,0 +1,25 @@
+# E0 harness smoke on the mock engine (virtual time). Produces SYNTHETIC numbers only.
+experiment_id: e0_smoke
+description: reduced E0 grid on the mock engine to validate harness, accounting and plots
+backend:
+  kind: mock
+  model: mock-model
+  engine: {kv_blocks_total: 4096, block_size: 16, max_num_seqs: 64, max_num_batched_tokens: 2048, max_model_len: 8192}
+profile:
+  prompt_lengths: [256, 1024, 4096, 8192]
+  output_lengths: [128, 512]
+  concurrencies: [1, 4, 16, 64]
+  trials: 2
+  min_requests_per_cell: 8
+  requests_per_slot: 2
+  max_model_len: 8192
+  ignore_eos: true
+  warmup_requests: 2
+  rate_sweep:
+    prompt_tokens: 1024
+    output_tokens: 256
+    rates_rps: [1, 2, 4, 8, 12, 16, 24]
+    duration_s: 60
+    trials: 2
+    ttft_deadline_ms: 2000
+    tpot_target_ms: 100

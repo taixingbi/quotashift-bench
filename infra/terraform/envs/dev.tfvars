@@ -1,0 +1,10 @@
+environment          = "dev"
+owner                = "REPLACE-owner-handle"
+network_mode         = "public_egress_only"
+gpu_desired_capacity = 0
+vllm_desired_count   = 0
+model_id             = "Qwen/Qwen3-1.7B"
+model_revision       = "70d244cc86ccca08cf5af4e1e306ecf908b1ad5e"
+vllm_max_model_len   = 10240
+monthly_budget_usd   = 50
+budget_alert_emails  = []

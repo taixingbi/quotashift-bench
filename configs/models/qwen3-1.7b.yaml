@@ -1,0 +1,8 @@
+# Smoke model. Revision SHA fetched from the public HF API on 2026-11-18 (lastModified 2025-07-26).
+hf_id: Qwen/Qwen3-1.7B
+revision: 70d244cc86ccca08cf5af4e1e306ecf908b1ad5e
+tokenizer_revision: 70d244cc86ccca08cf5af4e1e306ecf908b1ad5e
+license: apache-2.0
+dtype: bfloat16
+max_model_len_candidates: [8192, 10240]
+notes: "Thinking mode is a chat-template feature; E0 uses /v1/completions with token-ID prompts, so no chat template is applied."

@@ -1,0 +1,19 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+results/*
+!results/.gitkeep
+# terraform
+infra/terraform/.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+infra/terraform/backend.hcl
+infra/terraform/*.auto.tfvars
+crash.log
+.env
+.DS_Store
+infra/terraform/backend_override.tf
+infra/terraform/local-state/

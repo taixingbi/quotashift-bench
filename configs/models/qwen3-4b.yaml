@@ -1,0 +1,10 @@
+# Primary model. Revision SHA fetched from the public HF API on 2026-11-18 (lastModified 2025-07-26).
+hf_id: Qwen/Qwen3-4B
+revision: 1cfa9a7208912126459214e8b04321603b3df60c
+tokenizer_revision: 1cfa9a7208912126459214e8b04321603b3df60c
+license: apache-2.0
+dtype: bfloat16
+max_model_len_candidates: [8192, 10240]
+# Back-of-envelope only (UNVERIFIED; check against vLLM startup log "GPU KV cache size: N tokens"):
+#   weights ~= 4.0e9 params * 2 B ~= 8 GB; on a 24 GB L4 with gpu_memory_utilization=0.90, ~12 GB remain for KV + activations.
+notes: "Feasibility of 10240 context x 64 concurrency on L4 is to be MEASURED in E0, not assumed."

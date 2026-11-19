@@ -1,0 +1,10 @@
+environment          = "research"
+owner                = "REPLACE-owner-handle"
+network_mode         = "public_egress_only"
+gpu_desired_capacity = 0
+vllm_desired_count   = 0
+model_id             = "Qwen/Qwen3-4B"
+model_revision       = "1cfa9a7208912126459214e8b04321603b3df60c"
+vllm_max_model_len   = 10240
+monthly_budget_usd   = 150
+budget_alert_emails  = []
