@@ -1,6 +1,6 @@
 # Metric Definitions
 
-Implemented in `src/risksched/evaluation/metrics.py`; tested in `tests/unit/test_metrics.py`.
+Implemented in `src/quotashift/evaluation/metrics.py`; tested in `tests/unit/test_metrics.py`.
 All per-request times are on the runner's single clock (monotonic in live runs, virtual in simulation).
 
 ## Per request

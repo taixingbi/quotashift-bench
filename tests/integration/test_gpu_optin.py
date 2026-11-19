@@ -16,7 +16,7 @@ pytestmark = [
 
 def test_vllm_endpoint_metrics_resolve():
     async def go():
-        be = OpenAICompatBackend(os.environ["QUOTASHIFT_VLLM_URL"], os.environ.get("QUOTASHIFT_VLLM_MODEL", "Qwen/Qwen3-1.7B"))
+        be = OpenAICompatBackend(os.environ["QUOTASHIFT_VLLM_URL"], os.environ.get("QUOTASHIFT_VLLM_MODEL", "Qwen/Qwen2.5-7B-Instruct"))
         try:
             return await be.info(), await be.scrape_metrics()
         finally:

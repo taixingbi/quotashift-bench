@@ -1,60 +1,42 @@
-# Threat Model — Resource-Exhaustion Defense for Multi-Tenant LLM Serving (draft v0.1, 2026-11-18)
+# Threat / attacker-capability model — QuotaShift (v1, 2026-11-19)
 
-Pivot recorded in `docs/DECISIONS.md` ADR-011. Infrastructure is unchanged: N virtual tenants share **one**
-vLLM engine on **one** GPU behind our gateway (ECS, Terraform as proposed).
+QuotaShift characterizes *attacker capability*, not a defense. N synthetic tenants share **one** vLLM engine on
+**one** GPU behind our internal gateway, in an owned, isolated VPC. We study whether a competing tenant's workload
+*shape and timing* degrades victim tenants' service **under identical, authorized budgets**.
 
-## 1. Assets
-- **A-avail:** benign tenants' latency SLOs (TTFT/TPOT/E2E) and goodput on the shared engine.
-- **A-wallet:** the operator's and each tenant's spend / token budget (GPU-hours ⇒ $).
+## Assets (victim side)
+- **A-latency:** victim tenants' TTFT / end-to-end latency and goodput on the shared engine.
 - **A-capacity:** shared GPU compute and KV-cache blocks.
 
-## 2. Adversary
-- A **valid tenant** with a legitimate API key (or a small set of Sybil keys — stretch goal), sending
-  well-formed requests through the normal API. No privileged access: cannot read engine internals, other
-  tenants' traffic, gateway config, or credentials.
-- Controls request **content** (prompts), **parameters** within API limits (`max_tokens`, sampling, thinking mode),
-  and **timing**. May observe its own latencies (e.g. inter-token latency) to infer KV occupancy.
-- Knows the defense algorithm (adaptive / white-box defense assumption) but not its runtime state or thresholds'
-  random components.
+## Adversary
+- A **valid synthetic tenant** with an experiment-owned key, sending well-formed requests through the normal gateway
+  API. No privileged access: cannot read engine internals, other tenants' traffic, gateway config, or credentials.
+- Controls request **shape** (prompt length, requested `max_tokens`) and **timing** within the fixed authorized
+  budget. Does **not** use malicious prompt content; prompts are deterministic benign templates.
+- Capability is bounded by the scenario `safety` block (per-tenant/total requests, per-request input/output,
+  in-flight, runtime). The attacker never exceeds the same budget the victim could use.
 
-## 3. Attacks to reproduce (only against our own deployment)
-| ID | Attack | Mechanism | Prior work |
-|---|---|---|---|
-| T1 | Output-length inflation | Prompts that suppress EOS so outputs run to `max_tokens` | Engorgio (ICLR 2025), sponge examples (Shumailov et al. 2021) |
-| T2 | Reasoning inflation | Decoy tasks that inflate (hidden) reasoning tokens; Qwen3 thinking mode | OverThink (arXiv 2502.02542) |
-| T3 | KV Fill & Squeeze | Fill the shared KV pool → head-of-line blocking, then sustain repeated preemption; timing-guided | *Rethinking Latency DoS* (arXiv 2602.07878) |
-| T4 | Denial-of-wallet / budget drain | Maximize billable tokens per request within quota (long prompts + max `max_tokens`) | OWASP LLM10:2025 Unbounded Consumption |
-| T5 | Burst / quota-edge pacing | Stay just under rate limits; burst at window boundaries | classic rate-limit evasion |
-| T6 | Adaptive attacker | Mimic a legitimate heavy tenant (e.g. agent/batch class) to evade anomaly scores | required for a credible evaluation |
+## Workload hypotheses (tested, not assumed)
+- **H1 (shape):** request-shape composition changes victim impact even when attacker request/token budgets match.
+- **H2 (timing):** temporal sequence/burstiness matters beyond the same shuffled mixture.
+- **H3 (robustness):** effects persist across seeds, victim profiles, and repeated runs.
 
-Out of scope (initially): KV/prefix-cache **side channels and data leakage** (e.g. NDSS 2025 prompt leakage via KV
-sharing), jailbreaks/content safety, network-layer DDoS (assumed handled by L3/L4 controls), compromised
-engine/host, gateway-state attacks such as shared cooldown records (*Cooldown Landmines*, arXiv 2610.05089 —
-noted as related).
+## Scenario families (attack side; all in-lab, bounded)
+| ID | Scenario | Shape / pattern (QuotaShift) | Matched control |
+|----|----------|------------------------------|-----------------|
+| B0 | Benign-only baseline | victims only, steady | reference |
+| A1 | Burst-shaped arrivals | `burst_bounded`, fixed totals | same totals spread `steady` |
+| A2 | Prefill-heavy | `context_heavy` (long input, short output) | token-matched, shorter inputs |
+| A3 | Decode-heavy | `decode_heavy` (short input, long output) | token-matched, shorter outputs |
+| A4 | Mixed shapes | `mixed` proportions | equal-size homogeneous workload |
+| A5 | Stateful sequence | ordered phases (`stateful_sequences.yaml`) | shuffled-phase order, same mixture |
 
-## 4. Defense goals (hypotheses, to be tested)
-- **G1 isolation:** benign tenants' SLO attainment under attack ≥ (1−ε) × their no-attack attainment, for
-  attack intensities up to a stated bound, at fixed GPU capacity (no overprovisioning).
-- **G2 bounded damage:** attacker's induced victim harm and spend are bounded by its own budget
-  (amplification factor ≤ small constant), without a priori knowledge of which tenant is malicious.
-- **G3 low false positives:** legitimately heavy tenants (long-decode agent/batch class) are not throttled
-  below their contracted share.
-- **G4 low overhead:** decision latency and throughput loss small relative to inference.
+## Explicitly out of scope
+- No defenses, no scheduler, no RL. No external targets, third-party APIs, or production tenants.
+- No KV/prefix-cache side channels or prompt/data leakage. No quota-bypass or detection-evasion logic.
+- No unbounded flooding: every scenario fails closed if its caps cannot be enforced.
 
-## 5. Defense mechanism under study (reuses the existing gateway)
-Per-tenant **multi-dimensional budgets** — tokens, **KV-block-seconds**, and SLO-risk — enforced at admission and
-dispatch; calibrated per-tenant output-length predictions; online **deviation scores** (realized vs predicted
-length, KV-seconds, preemptions attributed to a tenant) that tighten a tenant's in-flight/KV allowance
-progressively; reclamation of unused budget to benign tenants. All decisions use online-observable signals only
-(ADR-004). Claim boundary unchanged (ADR-001): gateway admission/dispatch, not token-step scheduling.
-
-## 6. Metrics
-benign-tenant SLO attainment and goodput (attack vs no-attack, paired traces); worst benign tenant;
-**amplification factor** = victim goodput loss (or victim GPU-seconds lost) per attacker token/$;
-attacker cost to achieve a given degradation; detection/mitigation latency; false-positive throttling of
-benign heavy tenants; defense overhead; total GPU utilization.
-
-## 7. Ethics / safety of the research
-Attacks run only against infrastructure we own, with synthetic tenants; no third-party services are probed.
-Attack prompt corpora are not released in a form that is directly weaponizable against public APIs without
-review; follow responsible-disclosure norms if a vLLM-specific vulnerability is found.
+## Reporting discipline
+A pre-registered degradation threshold (`comparison.preregistered_threshold`) is fixed before runs. Routine
+overload is not reported as a novel finding without evidence of *cross-tenant disparity* under matched budgets.
+Negative results (effects vanish when budgets are matched) are reported as such.

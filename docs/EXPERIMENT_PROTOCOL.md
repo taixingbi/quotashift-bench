@@ -1,42 +1,36 @@
-# Experiment Protocol (draft v0.1 — to be frozen before final evaluation)
+# Experiment protocol — QuotaShift
 
-## 1. Primary metric and pre-registered comparisons
-- Primary: **SLO goodput (req/s)** with the offered-load denominator (METRIC_DEFINITIONS.md).
-- Key comparisons (to be frozen after E0/E1 and before E2–E8 test runs): proposed method vs (i) vLLM FCFS,
-  (ii) vLLM priority, (iii) static per-tenant token buckets, (iv) WFQ/DRR, (v) tuned GPU-aware heuristic,
-  (vi) VTC/JITServe where comparable — on worst-tenant SLO attainment and aggregate SLO goodput.
+## Principles
+- **Matched budgets.** A scenario and its control run under identical `safety` caps and the same victim workload.
+  The only thing that changes is the competing tenant's shape/timing (or phase order).
+- **Pre-registration.** Fix `comparison.preregistered_threshold` (victim-slowdown ratio) and `repetitions` in the
+  scenario file before running. Never choose the threshold after seeing results.
+- **Determinism.** Each `(scenario, seed)` yields one planned schedule with a stable SHA-256; the schedule is
+  written before execution and can be replayed. The shuffled-phase control is a deterministic permutation.
+- **Honesty.** Record requested vs. measured tokens; separate successful from timed-out/errored requests; keep
+  warm-up separate; report negative results.
 
-## 2. Platform gates
-- E0 must show *controlled saturation*: a measured knee where in-window throughput stops tracking offered load,
-  repeatable across ≥3 trials, with valid event accounting (0 validation errors). Otherwise stop.
-- Feasible-regime SLOs (TTFT/TPOT per tenant class) are calibrated from E0 and **fixed** before M2 comparisons.
+## Local (zero cost) loop
+```bash
+uv run quotashift validate   experiments/<scenario>.yaml
+uv run quotashift dry-run    experiments/<scenario>.yaml           # planned schedule + hash (and --control)
+uv run quotashift run-local  experiments/<scenario>.yaml --mock    # mock engine, not a GPU measurement
+uv run quotashift summarize  --input results --output reports
+```
 
-## 3. Workload calibration (from E0, not assumed)
-Tenant rates/lengths/deadlines in `configs/tenants/three_tenants.yaml` are placeholders. After E0:
-set per-class TTFT/TPOT targets to a feasible percentile at ~0.5–0.8× knee load; scale tenant rates so the
-aggregate sweeps 0.5–2.0× the measured knee (E2).
+## Controlled integration loop (Phase 4; owner-approved only)
+1. `scripts/check_prereqs.sh <env>` (read-only): identity, G/VT vCPU quota, g5.2xlarge offering, ECS GPU AMI.
+2. `scripts/plan_infra.sh <env>` (read-only plan) → review.
+3. Approve, then `scripts/deploy.sh <env>`; `scripts/aws_ops.sh start-gpu <env>` (billing starts).
+4. Confirm the private vLLM endpoint is healthy with one small request.
+5. Run `smoke.yaml` (2 victims + 1 competitor); confirm S3 records, task exit, per-tenant attribution.
+6. Run one matched baseline/control pair at a fixed seed; report measured vs. requested tokens.
+7. `scripts/aws_ops.sh stop-gpu <env>` (ungated; reduces cost) and/or `scripts/destroy.sh <env>`.
 
-## 4. Runs
-- Open-loop arrivals (primary); closed-loop only for E0 grid and sensitivity.
-- Paired design: all methods replay the **same trace** (same seed, same `trace_sha256`).
-- ≥5 independent repeats per key real-GPU condition; run order randomized per block; a fixed warm-up episode
-  before each block; prefix caching disabled unless the experiment is about caching.
-- Stop-time cap: `duration_s + drain_s`, then every non-terminal request is `cancelled` (`run_cutoff`) and counted.
-
-## 5. Statistics
-- Unit of analysis = run (trace). Report per-run raw values, paired differences, bootstrap 95% CI over runs.
-- No significance claims from smoke runs or n<5.
-
-## 6. Tuning and test separation
-- Tuning traces: seeds 1000–1999; test traces: seeds 2000–2999 (generated once, hashes recorded).
-- Equal tuning budget (number of configurations × runs) for every method, including baselines.
-
-## 7. Failure handling
-- OOM / startup failures / backend errors are explicit rows with root-cause notes; never dropped.
-- E0 cells exceeding `max_model_len` are `skipped_unsupported`; cells over the time budget are `aborted_budget`.
-
-## 8. Provenance (every run)
-`manifest.json`: schema version, seed, scheduler, backend kind (+ `synthetic_backend`), backend `/version` and
-`/v1/models`, config hash, trace hash, git SHA/dirty flag, Python/packages, platform, GPU static info.
-Real-GPU runs must additionally record image digest, model/tokenizer revision, driver/CUDA (nvidia-smi),
-and GPU clocks/temperature (sampled in `metrics_timeseries.parquet` when `nvidia-smi` exists).
+## Analysis (Phase 5)
+- Victim median/P95 TTFT and E2E latency ratio vs. the benign-only reference (B0), success vs. timeout split.
+- Attack success = fraction of repeated runs crossing the pre-registered threshold.
+- Budget-normalized victim slowdown per measured competing tokens (request- and token-matched views).
+- Bootstrap confidence intervals across seeds/runs; full per-run manifests and hashes.
+- Lock model revision, vLLM version/flags, max context length, hardware, replica count, and benign arrival
+  distribution across every compared run.
