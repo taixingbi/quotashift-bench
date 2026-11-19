@@ -106,9 +106,10 @@ resource "aws_vpc_endpoint" "interface" {
 # ---------------------------------------------------------------- security groups
 # No security group in this module allows ingress from 0.0.0.0/0 or ::/0 (enforced by tests/plan_mock.tftest.hcl).
 
+# Load generators (benign-runner / scenario-runner): no ingress; egress to the gateway only.
 resource "aws_security_group" "runner" {
   name_prefix = "${local.name}-runner-"
-  description = "Gateway/load generator: no ingress"
+  description = "Load generators: no ingress; talk to the gateway, not vLLM"
   vpc_id      = aws_vpc.this.id
 }
 
@@ -116,24 +117,49 @@ resource "aws_vpc_security_group_egress_rule" "runner_all" {
   security_group_id = aws_security_group.runner.id
   ip_protocol       = "-1"
   cidr_ipv4         = "0.0.0.0/0"
-  description       = "egress for image pulls, S3, vLLM"
+  description       = "egress for image pulls, S3, and the internal gateway"
+}
+
+# Gateway (Fargate): ingress only from the load generators on 8080; no public listener.
+resource "aws_security_group" "gateway" {
+  name_prefix = "${local.name}-gateway-"
+  description = "Internal tenant gateway: ingress from load generators only; egress to vLLM"
+  vpc_id      = aws_vpc.this.id
+}
+
+resource "aws_vpc_security_group_ingress_rule" "gateway_from_generators" {
+  security_group_id            = aws_security_group.gateway.id
+  referenced_security_group_id = aws_security_group.runner.id
+  ip_protocol                  = "tcp"
+  from_port                    = 8080
+  to_port                      = 8080
+  description                  = "gateway chat API from load generators only"
+}
+
+resource "aws_vpc_security_group_egress_rule" "gateway_all" {
+  security_group_id = aws_security_group.gateway.id
+  ip_protocol       = "-1"
+  cidr_ipv4         = "0.0.0.0/0"
+  description       = "egress for image pulls, S3, and the private vLLM backend"
 }
 
 resource "aws_security_group" "gpu_host" {
   name_prefix = "${local.name}-gpuhost-"
-  description = "GPU container instance (vLLM + DCGM in host networking): ingress only from runner SG; no SSH"
+  description = "GPU container instance (vLLM + DCGM in host networking): ingress only from gateway/generators; no SSH"
   vpc_id      = aws_vpc.this.id
 }
 
-resource "aws_vpc_security_group_ingress_rule" "vllm_from_runner" {
+# Only the gateway reaches vLLM. Generators never talk to the model directly.
+resource "aws_vpc_security_group_ingress_rule" "vllm_from_gateway" {
   security_group_id            = aws_security_group.gpu_host.id
-  referenced_security_group_id = aws_security_group.runner.id
+  referenced_security_group_id = aws_security_group.gateway.id
   ip_protocol                  = "tcp"
   from_port                    = 8000
   to_port                      = 8000
-  description                  = "vLLM OpenAI API + /metrics from runner only"
+  description                  = "vLLM OpenAI API from the gateway only"
 }
 
+# DCGM / vLLM metrics are scraped by the generators' collector (not the model API).
 resource "aws_vpc_security_group_ingress_rule" "dcgm_from_runner" {
   count                        = var.enable_dcgm_exporter ? 1 : 0
   security_group_id            = aws_security_group.gpu_host.id
@@ -141,7 +167,7 @@ resource "aws_vpc_security_group_ingress_rule" "dcgm_from_runner" {
   ip_protocol                  = "tcp"
   from_port                    = 9400
   to_port                      = 9400
-  description                  = "DCGM exporter metrics from runner only"
+  description                  = "DCGM exporter metrics from the generators' collector only"
 }
 
 resource "aws_vpc_security_group_egress_rule" "gpu_host_all" {

@@ -259,3 +259,129 @@ resource "aws_ecs_task_definition" "runner" {
     }
   }])
 }
+
+# ---------------------------------------------------------------- internal service discovery
+# Private DNS namespace so generators resolve the gateway by name. Created only when a
+# gateway image is provided (keeps the default plan free of a private hosted zone).
+resource "aws_service_discovery_private_dns_namespace" "internal" {
+  count       = var.gateway_image == "" ? 0 : 1
+  name        = "${var.name_prefix}.internal"
+  description = "QuotaShift internal service discovery (no public records)"
+  vpc         = aws_vpc.this.id
+}
+
+resource "aws_service_discovery_service" "gateway" {
+  count = var.gateway_image == "" ? 0 : 1
+  name  = "gateway"
+  dns_config {
+    namespace_id = aws_service_discovery_private_dns_namespace.internal[0].id
+    dns_records {
+      type = "A"
+      ttl  = 10
+    }
+    routing_policy = "MULTIVALUE"
+  }
+}
+
+# ---------------------------------------------------------------- tenant gateway (Fargate, internal only)
+resource "aws_ecs_task_definition" "gateway" {
+  count                    = var.gateway_image == "" ? 0 : 1
+  family                   = "${local.name}-gateway"
+  requires_compatibilities = ["FARGATE"]
+  network_mode             = "awsvpc"
+  cpu                      = "1024"
+  memory                   = "2048"
+  execution_role_arn       = aws_iam_role.task_execution.arn
+  task_role_arn            = aws_iam_role.runner_task.arn
+  runtime_platform {
+    cpu_architecture        = "X86_64"
+    operating_system_family = "LINUX"
+  }
+  container_definitions = jsonencode([{
+    name         = "gateway"
+    image        = var.gateway_image
+    essential    = true
+    entryPoint   = ["python", "-m", "uvicorn", "--factory", "quotashift.gateway.app:app_from_env", "--host", "0.0.0.0", "--port", "8080"]
+    portMappings = [{ containerPort = 8080, protocol = "tcp" }]
+    environment = [
+      { name = "QUOTASHIFT_TENANTS", value = "/app/configs/gateway/tenants.example.yaml" },
+      { name = "QUOTASHIFT_BACKEND_URL", value = var.vllm_backend_url },
+      { name = "QUOTASHIFT_MODEL", value = var.model_id },
+      { name = "QUOTASHIFT_MAX_GLOBAL_INFLIGHT", value = "4" },
+      { name = "QUOTASHIFT_RUN_DEADLINE_S", value = tostring(var.max_run_minutes * 60) },
+    ]
+    healthCheck = {
+      command     = ["CMD-SHELL", "python -c \"import urllib.request;urllib.request.urlopen('http://localhost:8080/healthz')\" || exit 1"]
+      interval    = 15
+      timeout     = 5
+      retries     = 5
+      startPeriod = 20
+    }
+    logConfiguration = {
+      logDriver = "awslogs"
+      options = {
+        awslogs-group         = aws_cloudwatch_log_group.gateway.name
+        awslogs-region        = var.region
+        awslogs-stream-prefix = "gateway"
+      }
+    }
+  }])
+}
+
+resource "aws_ecs_service" "gateway" {
+  count           = var.gateway_image == "" ? 0 : 1
+  name            = "${local.name}-gateway"
+  cluster         = aws_ecs_cluster.this.id
+  task_definition = aws_ecs_task_definition.gateway[0].arn
+  desired_count   = 0 # raised deliberately at experiment time; never a standing public service
+  launch_type     = "FARGATE"
+
+  network_configuration {
+    subnets          = local.compute_subnet_ids
+    security_groups  = [aws_security_group.gateway.id]
+    assign_public_ip = false # gateway is never reachable from the internet
+  }
+
+  service_registries {
+    registry_arn = aws_service_discovery_service.gateway[0].arn
+  }
+
+  lifecycle {
+    ignore_changes = [desired_count]
+  }
+}
+
+# ---------------------------------------------------------------- load generators (Fargate run-task, no service)
+# benign-runner (fixed seeded victims) and scenario-runner (controlled competing patterns).
+resource "aws_ecs_task_definition" "generator" {
+  for_each                 = var.runner_image == "" ? toset([]) : toset(["benign", "scenario"])
+  family                   = "${local.name}-${each.key}-runner"
+  requires_compatibilities = ["FARGATE"]
+  network_mode             = "awsvpc"
+  cpu                      = tostring(var.runner_cpu)
+  memory                   = tostring(var.runner_memory)
+  execution_role_arn       = aws_iam_role.task_execution.arn
+  task_role_arn            = aws_iam_role.runner_task.arn
+  runtime_platform {
+    cpu_architecture        = "X86_64"
+    operating_system_family = "LINUX"
+  }
+  container_definitions = jsonencode([{
+    name      = "${each.key}-runner"
+    image     = var.runner_image
+    essential = true
+    environment = [
+      { name = "QUOTASHIFT_ROLE", value = each.key },
+      { name = "QUOTASHIFT_RESULTS_S3", value = "s3://${aws_s3_bucket.results.bucket}/results/" },
+      { name = "QUOTASHIFT_GATEWAY_URL", value = "http://gateway.${var.name_prefix}.internal:8080" },
+    ]
+    logConfiguration = {
+      logDriver = "awslogs"
+      options = {
+        awslogs-group         = aws_cloudwatch_log_group.runner.name
+        awslogs-region        = var.region
+        awslogs-stream-prefix = each.key
+      }
+    }
+  }])
+}

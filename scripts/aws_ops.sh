@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Approval-gated AWS operations. NOTHING here runs automatically from tests or CI.
-#   scripts/aws_ops.sh <plan|deploy|healthcheck|start-gpu|stop-gpu|collect|destroy|cost-report> <dev|research>
+#   scripts/aws_ops.sh <plan|plan-destroy|deploy|healthcheck|start-gpu|stop-gpu|collect|destroy|cost-report> <dev|research>
 # Gated actions require BOTH env QUOTASHIFT_APPROVED=<action> and an interactive "yes".
 set -euo pipefail
 ACTION="${1:?action}"; ENVIRONMENT="${2:?env (dev|research)}"
@@ -20,13 +20,20 @@ case "$ACTION" in
   plan)        # read-only AWS API calls; no resources created
     $TF init -backend-config=backend.hcl -input=false
     $TF plan $VARS -out="${ENVIRONMENT}.tfplan" ;;
+  plan-destroy) # read-only teardown preview; creates/destroys nothing
+    $TF init -backend-config=backend.hcl -input=false
+    $TF plan -destroy $VARS ;;
   deploy)      gate deploy; $TF apply "${ENVIRONMENT}.tfplan" ;;          # applies the REVIEWED plan file only
   start-gpu)   gate start-gpu
     aws autoscaling set-desired-capacity --auto-scaling-group-name "$(out gpu_asg_name)" --desired-capacity 1
     echo "Waiting for container instance..."; sleep 120
     aws ecs update-service --cluster "$(out cluster_name)" --service "$(out vllm_service_name)" --desired-count 1 >/dev/null
+    GW="$(out gateway_service_name 2>/dev/null || true)"
+    [[ -n "$GW" && "$GW" != "null" ]] && aws ecs update-service --cluster "$(out cluster_name)" --service "$GW" --desired-count 1 >/dev/null || true
     echo "GPU STARTED - billing is running. Stop with: scripts/aws_ops.sh stop-gpu ${ENVIRONMENT}" ;;
   stop-gpu)    # always allowed: reduces cost
+    GW="$(out gateway_service_name 2>/dev/null || true)"
+    [[ -n "$GW" && "$GW" != "null" ]] && aws ecs update-service --cluster "$(out cluster_name)" --service "$GW" --desired-count 0 >/dev/null || true
     aws ecs update-service --cluster "$(out cluster_name)" --service "$(out vllm_service_name)" --desired-count 0 >/dev/null || true
     aws autoscaling set-desired-capacity --auto-scaling-group-name "$(out gpu_asg_name)" --desired-capacity 0
     echo "GPU desired capacity set to 0." ;;
@@ -40,6 +47,6 @@ case "$ACTION" in
   cost-report) # NOTE: each Cost Explorer API request is billed (~$0.01). Gated for that reason.
     gate cost-report
     aws ce get-cost-and-usage --time-period "Start=$(date -u -v-30d +%F 2>/dev/null || date -u -d '30 days ago' +%F),End=$(date -u +%F)" \
-      --granularity DAILY --metrics UnblendedCost --filter '{"Tags":{"Key":"Project","Values":["mlsys-gpu-scheduling"]}}' ;;
+      --granularity DAILY --metrics UnblendedCost --filter '{"Tags":{"Key":"Project","Values":["QuotaShift"]}}' ;;
   *) echo "unknown action $ACTION" >&2; exit 2 ;;
 esac

@@ -23,7 +23,7 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--prices", required=True)
     ap.add_argument("--gpu-hours", type=float, required=True, help="GPU instance running hours in the period")
-    ap.add_argument("--network-mode", choices=["public_egress_only", "nat", "endpoints"], default="public_egress_only")
+    ap.add_argument("--network-mode", choices=["public_egress_only", "nat", "endpoints"], default="nat")
     ap.add_argument("--infra-hours", type=float, default=None, help="hours NAT/endpoints exist (default = gpu-hours)")
     ap.add_argument("--ebs-gb", type=float, default=120)
     ap.add_argument("--nat-gb", type=float, default=30, help="GB through NAT (model + image downloads)")

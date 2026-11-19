@@ -17,10 +17,12 @@ mock_provider "aws" {
 }
 
 variables {
-  owner = "test-owner"
+  owner              = "test-owner"
+  max_run_minutes    = 60
+  spending_limit_usd = 25
 }
 
-run "defaults_are_zero_cost_idle_and_private" {
+run "defaults_are_private_and_idle_safe" {
   command = plan
 
   assert {
@@ -31,9 +33,23 @@ run "defaults_are_zero_cost_idle_and_private" {
     condition     = aws_ecs_service.vllm.desired_count == 0
     error_message = "vLLM service must default to 0 tasks."
   }
+  # QuotaShift defaults to the private nat network: exactly one NAT, no public IP on the
+  # GPU host, and no gateway/generator compute until their images are provided.
   assert {
-    condition     = length(aws_nat_gateway.this) == 0 && length(aws_vpc_endpoint.interface) == 0
-    error_message = "Default network mode must not create NAT gateways or interface endpoints."
+    condition     = length(aws_nat_gateway.this) == 1 && length(aws_vpc_endpoint.interface) == 0
+    error_message = "Default (nat) mode must create exactly one NAT gateway and no interface endpoints."
+  }
+  assert {
+    condition     = aws_launch_template.gpu.network_interfaces[0].associate_public_ip_address == "false"
+    error_message = "Default private network must not assign a public IP to the GPU host."
+  }
+  assert {
+    condition     = length(aws_ecs_service.gateway) == 0 && length(aws_ecs_task_definition.gateway) == 0 && length(aws_ecs_task_definition.generator) == 0
+    error_message = "Gateway and generator compute must not exist until gateway_image/runner_image are set."
+  }
+  assert {
+    condition     = length(aws_budgets_budget.monthly) == 0
+    error_message = "Budget only when alert emails are configured."
   }
   assert {
     condition     = length(aws_budgets_budget.monthly) == 0
@@ -41,14 +57,14 @@ run "defaults_are_zero_cost_idle_and_private" {
   }
   assert {
     condition = alltrue([
-      aws_vpc_security_group_ingress_rule.vllm_from_runner.cidr_ipv4 == null,
-      aws_vpc_security_group_ingress_rule.vllm_from_runner.cidr_ipv6 == null,
+      aws_vpc_security_group_ingress_rule.vllm_from_gateway.cidr_ipv4 == null,
+      aws_vpc_security_group_ingress_rule.vllm_from_gateway.cidr_ipv6 == null,
       aws_vpc_security_group_ingress_rule.dcgm_from_runner[0].cidr_ipv4 == null,
     ])
     error_message = "vLLM / metrics ingress must be SG-referenced only (no internet CIDRs)."
   }
   assert {
-    condition     = aws_vpc_security_group_ingress_rule.vllm_from_runner.from_port == 8000 && aws_vpc_security_group_ingress_rule.vllm_from_runner.to_port == 8000
+    condition     = aws_vpc_security_group_ingress_rule.vllm_from_gateway.from_port == 8000 && aws_vpc_security_group_ingress_rule.vllm_from_gateway.to_port == 8000
     error_message = "Only port 8000 may be opened to the runner for vLLM."
   }
   assert {
@@ -151,4 +167,48 @@ run "budget_created_with_emails" {
     condition     = length(aws_budgets_budget.monthly) == 1
     error_message = "Budget alert expected when emails provided."
   }
+}
+
+run "gateway_and_generators_are_private_when_enabled" {
+  command = plan
+  variables {
+    gateway_image = "123456789012.dkr.ecr.us-east-1.amazonaws.com/quotashift-dev-gateway@sha256:1111111111111111111111111111111111111111111111111111111111111111"
+    runner_image  = "123456789012.dkr.ecr.us-east-1.amazonaws.com/quotashift-dev-runner@sha256:2222222222222222222222222222222222222222222222222222222222222222"
+  }
+  assert {
+    condition     = length(aws_ecs_service.vllm[*]) == 1
+    error_message = "Exactly one shared vLLM service (one GPU backend for all tenants)."
+  }
+  assert {
+    condition     = aws_ecs_service.gateway[0].network_configuration[0].assign_public_ip == false
+    error_message = "Gateway service must never be assigned a public IP."
+  }
+  assert {
+    condition     = length(aws_ecs_task_definition.generator) == 2
+    error_message = "Two load-generator task definitions (benign + scenario)."
+  }
+  assert {
+    condition     = length(aws_service_discovery_private_dns_namespace.internal) == 1
+    error_message = "Internal private DNS namespace must exist when the gateway is enabled."
+  }
+}
+
+run "no_admin_access_on_any_role" {
+  command = plan
+  assert {
+    condition = alltrue([
+      aws_iam_role_policy_attachment.task_execution.policy_arn != "arn:aws:iam::aws:policy/AdministratorAccess",
+      aws_iam_role_policy_attachment.gpu_host_ecs.policy_arn != "arn:aws:iam::aws:policy/AdministratorAccess",
+      aws_iam_role_policy_attachment.gpu_host_ssm.policy_arn != "arn:aws:iam::aws:policy/AdministratorAccess",
+    ])
+    error_message = "No task/instance role may attach AdministratorAccess."
+  }
+}
+
+run "missing_cost_gates_block_plan" {
+  command = plan
+  variables {
+    max_run_minutes = 0
+  }
+  expect_failures = [var.max_run_minutes]
 }

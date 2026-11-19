@@ -113,6 +113,31 @@ resource "aws_ecr_lifecycle_policy" "runner" {
   })
 }
 
+# Gateway image (separate repo so the gateway and the load generators version independently).
+resource "aws_ecr_repository" "gateway" {
+  name                 = "${local.name}-gateway"
+  image_tag_mutability = "IMMUTABLE"
+  force_delete         = false
+  image_scanning_configuration {
+    scan_on_push = true
+  }
+  encryption_configuration {
+    encryption_type = "AES256"
+  }
+}
+
+resource "aws_ecr_lifecycle_policy" "gateway" {
+  repository = aws_ecr_repository.gateway.name
+  policy = jsonencode({
+    rules = [{
+      rulePriority = 1
+      description  = "keep last 20 images"
+      selection    = { tagStatus = "any", countType = "imageCountMoreThan", countNumber = 20 }
+      action       = { type = "expire" }
+    }]
+  })
+}
+
 # ---------------------------------------------------------------- logs (bounded retention)
 resource "aws_cloudwatch_log_group" "vllm" {
   name              = "/${var.name_prefix}/${var.environment}/vllm"
@@ -121,6 +146,11 @@ resource "aws_cloudwatch_log_group" "vllm" {
 
 resource "aws_cloudwatch_log_group" "runner" {
   name              = "/${var.name_prefix}/${var.environment}/runner"
+  retention_in_days = var.log_retention_days
+}
+
+resource "aws_cloudwatch_log_group" "gateway" {
+  name              = "/${var.name_prefix}/${var.environment}/gateway"
   retention_in_days = var.log_retention_days
 }
 
@@ -140,7 +170,7 @@ resource "aws_budgets_budget" "monthly" {
 
   cost_filter {
     name   = "TagKeyValue"
-    values = ["user:Project$mlsys-gpu-scheduling"]
+    values = ["user:Project$QuotaShift"]
   }
 
   dynamic "notification" {
