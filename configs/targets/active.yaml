@@ -1,0 +1,3 @@
+# Active backend target. Switch with `uv run quotashift target use <name>`;
+# override per-process with QUOTASHIFT_TARGET=<name>.
+active: selfhost

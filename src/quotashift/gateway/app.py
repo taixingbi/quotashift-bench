@@ -174,7 +174,14 @@ def app_from_env() -> FastAPI:
         max_global_inflight=int(os.environ["QUOTASHIFT_MAX_GLOBAL_INFLIGHT"]),
     )
     deadline = os.environ.get("QUOTASHIFT_RUN_DEADLINE_S")
-    gw = GatewayApp(registry, caps, backend_url=os.environ["QUOTASHIFT_BACKEND_URL"],
-                    model=os.environ["QUOTASHIFT_MODEL"],
+    backend_url = os.environ.get("QUOTASHIFT_BACKEND_URL")
+    model = os.environ.get("QUOTASHIFT_MODEL")
+    if not (backend_url and model):
+        # Fall back to the active target profile (configs/targets, QUOTASHIFT_TARGET).
+        from quotashift.targets import active_target
+
+        prof = active_target()
+        backend_url, model = backend_url or prof.backend_url, model or prof.model
+    gw = GatewayApp(registry, caps, backend_url=backend_url, model=model,
                     run_deadline_s=float(deadline) if deadline else None)
     return build_app(gw)

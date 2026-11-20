@@ -1,0 +1,8 @@
+# Self-hosted target: owner-operated vLLM on a private LAN GPU host. No cloud cost.
+# Endpoint/model/max_model_len observed via GET /v1/models on 2026-11-19.
+name: selfhost
+kind: selfhost
+backend_url: http://192.168.86.173:8000
+model: Qwen/Qwen2.5-7B-Instruct
+model_revision: null   # not reported by the server; record the host's --revision here once known
+max_model_len: 4096

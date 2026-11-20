@@ -2,7 +2,7 @@
 
 Legend: ✅ done · 🟡 partial · ⬜ not started · 🚫 blocked (needs approval/quota)
 
-Snapshot of RISK-Sched preserved on branch `risksched-snapshot`. Pivot on `quotashift-pivot`.
+Snapshot of RISK-Sched preserved as commit `273a57c` (first commit on `main`).
 
 ## Phase 0 — scaffold + local mock ✅
 - ✅ `ScenarioConfig` with strict schema, fail-closed safety block, private-endpoint allowlist.
@@ -20,6 +20,11 @@ Snapshot of RISK-Sched preserved on branch `risksched-snapshot`. Pivot on `quota
   fail-closed; idempotent per-request records (replay → 409); token ledger isolation (no borrowing).
 - ✅ Private-only egress forwarder; rejects external backends and body URL overrides.
 - ✅ Tests: attribution, budgets, idempotency, egress.
+
+## Backend target toggle ✅
+- ✅ `configs/targets/{aws,selfhost}.yaml` + `active.yaml`; `quotashift target {list,show,use,check}`; `QUOTASHIFT_TARGET`.
+- ✅ Active: `selfhost` (Qwen2.5-7B-Instruct @ 192.168.86.173:8000, max_model_len 4096; `target check` OK 2026-11-19).
+- ✅ `run-local --live` (self-hosted only); gateway falls back to active target. See ADR-Q09.
 
 ## Phase 2 — synthetic scenarios (B0, A1–A5) 🟡
 - ✅ Phase program + shapes (short/context_heavy/decode_heavy/mixed) and patterns (steady/burst_bounded).

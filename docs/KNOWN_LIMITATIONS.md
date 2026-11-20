@@ -26,6 +26,11 @@
 - **vLLM service discovery.** The gateway's `vllm_backend_url` defaults to an internal name; wiring the host-network
   vLLM task into Cloud Map / resolving the GPU host's private address is finalized at deploy time.
 
+## Self-hosted target
+- **Revision unpinned.** The self-hosted vLLM (`configs/targets/selfhost.yaml`) does not report its HF revision via
+  `/v1/models`, so `model_revision` is `null` until the host's `--revision` is recorded. Its GPU type, vLLM version and
+  flags are owner-managed and not captured by this repo; self-host and AWS results are not directly comparable.
+
 ## Reused code
 - The scheduler `REGISTRY` (fcfs/static_quota) is retained as a fixed config; it is not a QuotaShift contribution and
   is not exercised as an experimental variable.

@@ -4,6 +4,8 @@
     python -m quotashift.cli validate experiments/smoke.yaml
     python -m quotashift.cli dry-run experiments/stateful_sequences.yaml [--control]
     python -m quotashift.cli run-local experiments/smoke.yaml --mock
+    python -m quotashift.cli target {list,show,use <aws|selfhost>,check}
+    python -m quotashift.cli run-local experiments/smoke.yaml --live   # active target (selfhost only)
     python -m quotashift.cli summarize --input results/ --output reports/
     python -m quotashift.cli mock-server --port 8000
 
@@ -120,18 +122,57 @@ def cmd_dry_run(a: argparse.Namespace) -> int:
 def cmd_run_local(a: argparse.Namespace) -> int:
     from quotashift.local import run_scenario_local
     from quotashift.scenario import load_scenario
+    from quotashift.targets import active_target, load_target
 
-    if not a.mock:
-        print("run-local requires --mock in this phase (no live backend without approval).", file=sys.stderr)
+    if a.mock == a.live:
+        print("run-local requires exactly one of --mock or --live.", file=sys.stderr)
         return 3
+    target = None
+    if a.live:
+        target = load_target(a.target) if a.target else active_target()
+        if target.kind == "aws":
+            # AWS runs go through the approval-gated generator task (scripts/aws_ops.sh).
+            print("run-local --live supports self-hosted targets only; AWS runs use scripts/aws_ops.sh.",
+                  file=sys.stderr)
+            return 3
     sc = load_scenario(_resolve(a.config))
-    out = run_scenario_local(sc, Path(a.results_root), phase_order=None)
+    out = run_scenario_local(sc, Path(a.results_root), phase_order=None, target=target)
     s = json.loads((out / "metrics_summary.json").read_text())
     _print({"run_dir": str(out), "offered": s.get("offered"), "status_counts": s.get("status_counts"),
             "accounting_conserved": s.get("accounting_conserved"), "event_validation_ok": s.get("event_validation_ok"),
             "worst_tenant_slo_attainment": s.get("worst_tenant_slo_attainment"),
-            "synthetic_backend": s.get("synthetic_backend")})
+            "synthetic_backend": s.get("synthetic_backend"),
+            "target": target.name if target else "mock"})
     return 0 if s.get("accounting_conserved") and s.get("event_validation_ok") else 2
+
+
+# ---------------------------------------------------------------- target
+
+
+def cmd_target(a: argparse.Namespace) -> int:
+    from quotashift import targets as T
+
+    try:
+        if a.action == "list":
+            _print({"targets": T.list_targets(), "active": T.active_target_name()})
+        elif a.action == "use":
+            if not a.name:
+                print("usage: quotashift target use <name>", file=sys.stderr)
+                return 2
+            prof = T.set_active(a.name)
+            _print({"active": prof.name, **prof.model_dump()})
+        else:
+            prof = T.load_target(a.name) if a.name else T.active_target()
+            out: dict = {"active": T.active_target_name(), "target": prof.model_dump()}
+            if a.action == "check":
+                out["check"] = T.check_target(prof)
+                _print(out)
+                return 0 if out["check"].get("ok") else 1
+            _print(out)
+    except ValueError as e:
+        print(str(e), file=sys.stderr)
+        return 2
+    return 0
 
 
 # ---------------------------------------------------------------- summarize
@@ -209,9 +250,16 @@ def main(argv: list[str] | None = None) -> int:
 
     rl = sub.add_parser("run-local")
     rl.add_argument("config")
-    rl.add_argument("--mock", action="store_true")
+    rl.add_argument("--mock", action="store_true", help="in-process mock engine (zero cost)")
+    rl.add_argument("--live", action="store_true", help="send to the active (or --target) self-hosted vLLM")
+    rl.add_argument("--target", default=None, help="target profile name (default: active target)")
     rl.add_argument("--results-root", default=str(REPO / "results"))
     rl.set_defaults(fn=cmd_run_local)
+
+    tg = sub.add_parser("target", help="list/show/switch/check the backend target (aws|selfhost)")
+    tg.add_argument("action", choices=["list", "show", "use", "check"], nargs="?", default="show")
+    tg.add_argument("name", nargs="?", default=None)
+    tg.set_defaults(fn=cmd_target)
 
     sm = sub.add_parser("summarize")
     sm.add_argument("--input", required=True)

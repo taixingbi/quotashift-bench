@@ -42,3 +42,12 @@ user-supplied (`scripts/estimate_cost.py` refuses blanks).
 `comparison.preregistered_threshold` (victim-slowdown ratio) is fixed in the scenario file before runs. Attack
 success is the fraction of repeated runs crossing it. If effects vanish under matched budgets, that is reported as
 a negative result, not implied to be an attack.
+
+## ADR-Q09 — Backend target toggle (aws | selfhost)
+Where the fixed serving config runs is a *target profile* (`configs/targets/<name>.yaml`: private `backend_url`,
+`model`, `model_revision`, `max_model_len`), selected by `configs/targets/active.yaml` or `QUOTASHIFT_TARGET`
+(`quotashift target use <name>`). Both profiles serve `Qwen/Qwen2.5-7B-Instruct` at `max_model_len=4096`. The target
+is not an experimental variable: a scenario and its control must run on the same target, and results from different
+targets are not pooled. `run-local --live` sends to self-hosted targets only; AWS runs stay behind
+`scripts/aws_ops.sh`. Selecting a target never starts cloud resources. The gateway falls back to the active target
+when `QUOTASHIFT_BACKEND_URL`/`QUOTASHIFT_MODEL` are unset; the private-endpoint check applies to profiles too.

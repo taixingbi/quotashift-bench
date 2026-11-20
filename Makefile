@@ -1,7 +1,7 @@
 # Zero-cost targets run locally. AWS targets that create/start/destroy resources are approval-gated in scripts/aws_ops.sh.
 ENV ?= dev
 SEED ?= 11
-.PHONY: setup test test-all lint typecheck validate dry-run run-local summarize tf-fmt tf-validate tf-test tf-plan deploy start-gpu stop-gpu healthcheck collect destroy cost-report
+.PHONY: setup test test-all lint typecheck validate dry-run run-local summarize target target-check run-live tf-fmt tf-validate tf-test tf-plan deploy start-gpu stop-gpu healthcheck collect destroy cost-report
 
 setup:          ; uv sync
 test:           ; uv run pytest -q -m "not slow and not gpu"
@@ -11,6 +11,9 @@ typecheck:      ; uv run mypy src/quotashift
 validate:       ; uv run quotashift validate experiments/smoke.yaml && uv run quotashift validate experiments/baseline.yaml && uv run quotashift validate experiments/stateful_sequences.yaml
 dry-run:        ; uv run quotashift dry-run experiments/stateful_sequences.yaml
 run-local:      ; uv run quotashift run-local experiments/smoke.yaml --mock
+target:         ; uv run quotashift target show
+target-check:   ; uv run quotashift target check
+run-live:       ; uv run quotashift run-local experiments/smoke.yaml --live   # active self-hosted target
 summarize:      ; uv run quotashift summarize --input results --output reports
 tf-fmt:         ; terraform -chdir=infra/terraform fmt -check -recursive
 tf-validate:    ; terraform -chdir=infra/terraform init -backend=false -input=false >/dev/null && terraform -chdir=infra/terraform validate
