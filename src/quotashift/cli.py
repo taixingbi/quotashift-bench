@@ -5,6 +5,7 @@
     python -m quotashift.cli dry-run experiments/stateful_sequences.yaml [--control]
     python -m quotashift.cli run-local experiments/smoke.yaml --mock
     python -m quotashift.cli budget experiments/a1_burst_arrivals.yaml
+    python -m quotashift.cli experiment experiments/a1_burst_arrivals.yaml --reps 5 --mock
     python -m quotashift.cli target {list,show,use <aws|selfhost>,check}
     python -m quotashift.cli run-local experiments/smoke.yaml --live   # active target (selfhost only)
     python -m quotashift.cli summarize --input results/ --output reports/
@@ -220,6 +221,57 @@ def cmd_budget(a: argparse.Namespace) -> int:
     return 0
 
 
+# ---------------------------------------------------------------- experiment (Phase 5)
+
+
+def cmd_experiment(a: argparse.Namespace) -> int:
+    """Run an attack/control pair over N seeds and write the attack-effect report."""
+    from quotashift.evaluation.attack_effect import analyze_pair, run_metrics, write_report
+    from quotashift.local import run_matched_pairs
+    from quotashift.scenario import load_scenario
+    from quotashift.targets import active_target, load_target
+
+    if a.mock == a.live:
+        print("experiment requires exactly one of --mock or --live.", file=sys.stderr)
+        return 3
+    target = None
+    if a.live:
+        target = load_target(a.target) if a.target else active_target()
+        if target.kind == "aws":
+            print("experiment --live supports self-hosted targets only.", file=sys.stderr)
+            return 3
+    try:
+        sc = load_scenario(_resolve(a.config))
+    except (ValidationError, ValueError) as e:
+        print(f"INVALID: {a.config}\n{e}", file=sys.stderr)
+        return 2
+    if not sc.competing_tenants:
+        print("experiment needs a scenario with competing_tenants (an attack scenario).", file=sys.stderr)
+        return 2
+
+    results_root = Path(a.results_root)
+    pairs = run_matched_pairs(sc, results_root, reps=a.reps, target=target)
+    pairs["budget_tolerance"] = sc.comparison.budget_tolerance
+    attack = [run_metrics(pairs["attack"][s], sc.scenario_id, "attack", s) for s in pairs["seeds"]]
+    control = [run_metrics(pairs["control"][s], sc.scenario_id, "control", s) for s in pairs["seeds"]]
+    analysis = analyze_pair(
+        attack, control, metric=sc.comparison.degradation_metric,
+        threshold=sc.comparison.preregistered_threshold)
+    cmds = [
+        f"uv run quotashift budget {a.config}",
+        f"uv run quotashift experiment {a.config} --reps {a.reps} --{'mock' if a.mock else 'live'}",
+    ]
+    out_dir = Path(a.out) if a.out else (REPO / "reports" / sc.scenario_id)
+    written = write_report(sc.scenario_id, pairs, analysis, attack, control, out_dir, commands=cmds)
+    _print({
+        "scenario_id": sc.scenario_id, "control": pairs["control_label"], "seeds": pairs["seeds"],
+        "metric": analysis["metric"], "mean_ratio": analysis["mean_ratio"],
+        "ratio_ci95": analysis["ratio_ci95"], "attack_success_rate": analysis["attack_success_rate"],
+        "synthetic_backend": target is None, **written,
+    })
+    return 0
+
+
 # ---------------------------------------------------------------- summarize
 
 
@@ -309,6 +361,16 @@ def main(argv: list[str] | None = None) -> int:
     bg = sub.add_parser("budget", help="fail-closed matched-budget gate (scenario vs its control)")
     bg.add_argument("config")
     bg.set_defaults(fn=cmd_budget)
+
+    ex = sub.add_parser("experiment", help="Phase 5: run attack/control over N seeds + write report")
+    ex.add_argument("config")
+    ex.add_argument("--reps", type=int, default=5)
+    ex.add_argument("--mock", action="store_true", help="in-process mock engine (zero cost)")
+    ex.add_argument("--live", action="store_true", help="send to the active (or --target) self-hosted vLLM")
+    ex.add_argument("--target", default=None)
+    ex.add_argument("--results-root", default=str(REPO / "results"))
+    ex.add_argument("--out", default=None, help="report dir (default: reports/<scenario_id>)")
+    ex.set_defaults(fn=cmd_experiment)
 
     sm = sub.add_parser("summarize")
     sm.add_argument("--input", required=True)

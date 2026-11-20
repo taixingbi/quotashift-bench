@@ -34,3 +34,13 @@
 ## Reused code
 - The scheduler `REGISTRY` (fcfs/static_quota) is retained as a fixed config; it is not a QuotaShift contribution and
   is not exercised as an experimental variable.
+
+## Attack-effect analysis (Phase 5)
+- **Mock results are plumbing only.** A `--mock` experiment exercises the gateway, matched-budget pairing and the
+  analysis/reporting path; its latencies are simulator outputs (`synthetic_backend: true`) and must never be read as
+  evidence of real cross-tenant interference. Only a live target (self-hosted or AWS) yields a measurement.
+- **Small-sample statistics.** The default 5 repetitions give a bootstrap CI for exploration, not a significance
+  claim. Increase repetitions based on observed variance before drawing conclusions; a wide CI around 1.0× is a
+  negative result, reported as such.
+- **Attack-success rate depends on the pre-registered threshold.** It is fixed per scenario before runs (ADR-Q08/Q11);
+  the rate is only meaningful relative to that threshold and the chosen degradation metric.

@@ -72,3 +72,17 @@ holding that total, so their request-count delta is reported, not gated.
 Victim traffic is identical in attack and control for every control. Budgets compared are
 planned/requested quantities; realized output is reported but never used to decide a match. `control_scenario`
 remains only for an explicit B0 benign-only reference file.
+
+## ADR-Q11 — Attack-effect analysis is paired, pre-registered and reports negatives (Phase 5)
+`quotashift experiment <scenario> --reps N` runs the attack and its in-process matched control over seeds
+`seed..seed+N-1` under an identical serving config (only the schedule differs), then analyzes the pair.
+Victim degradation is the ratio of the victim's pre-registered metric (`ttft_p95` or `e2e_p95`) in the
+attack over the control, computed **per matched seed** so each ratio holds the schedule's random draw fixed
+between arms; completed and timed-out victim requests are separated, and the warm-up window is excluded.
+Attack success is the fraction of seeds whose ratio crosses `comparison.preregistered_threshold` (ADR-Q08);
+the effect is also reported budget-normalized (slowdown per measured competing tokens and per competing
+requests), with a percentile bootstrap CI over the per-seed ratios. Outputs: `summary.csv`, `summary.md`
+(with an explicit verdict, negative results included), `figure_victim_latency.png`,
+`figure_degradation_ratio.png`, and `manifest.json` (per-seed matched-budget report, run dirs, hashes,
+commands). Mock runs are labelled `synthetic_backend: true` and stated to be plumbing evidence, never a GPU
+measurement. The analysis has no optimization objective and no scheduler contribution.

@@ -17,3 +17,7 @@ crash.log
 .DS_Store
 infra/terraform/backend_override.tf
 infra/terraform/local-state/
+
+# Phase 5 generated reports (summary.csv/md, figures, manifest)
+reports/*
+!reports/.gitkeep

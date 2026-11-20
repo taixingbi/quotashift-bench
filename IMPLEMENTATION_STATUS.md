@@ -44,7 +44,14 @@ Snapshot of RISK-Sched preserved as commit `273a57c` (first commit on `main`).
   (G/VT vCPU quota = 0; account using root access keys).
 
 ## Phase 4 — controlled integration experiment ⬜ (needs approval)
-## Phase 5 — attack-effect validation analysis ⬜ (victim degradation, pre-registered threshold, bootstrap CIs)
+## Phase 5 — attack-effect validation analysis ✅ (pipeline; validated on local mock)
+- ✅ `quotashift experiment <scenario> --reps N --mock|--live`: runs attack + matched control over seeds
+  `seed..seed+N-1` (identical serving config), then analyzes. ADR-Q11.
+- ✅ Per-matched-seed victim degradation ratio (`ttft_p95`/`e2e_p95`), completed vs timed-out separated,
+  warm-up excluded; attack-success rate vs pre-registered threshold; budget-normalized slowdown; bootstrap CI.
+- ✅ Emits `summary.csv`, `summary.md` (with verdict incl. negatives), `figure_*.png`, `manifest.json`
+  (per-seed budget report, run dirs, commands). Mock output labelled `synthetic_backend: true`.
+- ⬜ Real measurements require a live run (self-hosted `--live`, owner-approved) or AWS (blocked on quota).
 ## Phase 6 — optional paper-strengthening ⬜
 
 ## Verification (this pass)
