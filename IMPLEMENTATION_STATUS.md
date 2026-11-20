@@ -28,8 +28,12 @@ Snapshot of RISK-Sched preserved as commit `273a57c` (first commit on `main`).
 
 ## Phase 2 — synthetic scenarios (B0, A1–A5) 🟡
 - ✅ Phase program + shapes (short/context_heavy/decode_heavy/mixed) and patterns (steady/burst_bounded).
-- 🟡 Shuffled-phase control (deterministic) implemented; matched request/token budget *enforcement* and the
-  full A1–A4 comparison controls are the next increment.
+- ✅ Matched-budget accounting + fail-closed gate (`quotashift budget`; `dry-run` reports it). Pre-registered
+  `comparison.budget_tolerance`. Discrepancies (incl. requested vs realized) always reported. ADR-Q10.
+- ✅ Two exactly-matched controls (zero delta by construction): `uniform_arrivals` (A1, `experiments/a1_burst_arrivals.yaml`)
+  and `shuffled_phase_order` (A5, `experiments/stateful_sequences.yaml`); B0 benign-only reference (`baseline.yaml`).
+- 🟡 Shape/mixture controls A2 (prefill-heavy) / A3 (decode-heavy) / A4 (mixed) via paired `control_scenario`
+  YAMLs (token-matched within tolerance) are the next increment.
 
 ## Phase 3 — AWS Terraform ✅ (prepared; nothing deployed)
 - ✅ `fmt`/`validate`/`test` (mock provider, 10 runs). Private `nat` default; one shared GPU vLLM (desired 0);

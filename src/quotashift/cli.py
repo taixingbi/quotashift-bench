@@ -4,6 +4,7 @@
     python -m quotashift.cli validate experiments/smoke.yaml
     python -m quotashift.cli dry-run experiments/stateful_sequences.yaml [--control]
     python -m quotashift.cli run-local experiments/smoke.yaml --mock
+    python -m quotashift.cli budget experiments/a1_burst_arrivals.yaml
     python -m quotashift.cli target {list,show,use <aws|selfhost>,check}
     python -m quotashift.cli run-local experiments/smoke.yaml --live   # active target (selfhost only)
     python -m quotashift.cli summarize --input results/ --output reports/
@@ -105,14 +106,28 @@ def cmd_dry_run(a: argparse.Namespace) -> int:
         d["requests"] += 1
         d["input_tokens"] += r.input_token_count
         d["requested_output_tokens"] += r.max_output_tokens
-    _print({
+    out: dict = {
         "scenario_id": sc.scenario_id,
         "phase_order": order or [p.name for p in sc.phases],
         "total_requests": len(items),
         "schedule_sha256": sc.schedule_hash(phase_order=order),
         "per_tenant": per_tenant,
         "note": "DRY RUN: nothing sent. Synthetic schedule only.",
-    })
+    }
+    # Matched-budget comparison against the pre-registered control (reporting only;
+    # `quotashift budget` is the fail-closed gate).
+    if order is None and sc.competing_tenants:
+        from quotashift.budget import budget_report, summarize_trace
+
+        try:
+            control, label = sc.control_trace()
+            out["control"] = {
+                "control": label,
+                "report": budget_report(summarize_trace(items), summarize_trace(control), sc.comparison),
+            }
+        except (ValidationError, ValueError, FileNotFoundError) as e:
+            out["control"] = {"error": str(e)}
+    _print(out)
     return 0
 
 
@@ -172,6 +187,36 @@ def cmd_target(a: argparse.Namespace) -> int:
     except ValueError as e:
         print(str(e), file=sys.stderr)
         return 2
+    return 0
+
+
+# ---------------------------------------------------------------- budget
+
+
+def cmd_budget(a: argparse.Namespace) -> int:
+    """Fail-closed matched-budget gate for a scenario and its control."""
+    from quotashift.budget import BudgetMismatch, summarize_trace, verify_matched_budget
+    from quotashift.scenario import load_scenario
+
+    try:
+        sc = load_scenario(_resolve(a.config))
+    except (ValidationError, ValueError) as e:
+        print(f"INVALID: {a.config}\n{e}", file=sys.stderr)
+        return 2
+    try:
+        control, label = sc.control_trace()
+    except (ValueError, FileNotFoundError) as e:
+        print(f"control unavailable: {e}", file=sys.stderr)
+        return 2
+    attack = summarize_trace(sc.build_trace())
+    ctl = summarize_trace(control)
+    try:
+        report = verify_matched_budget(attack, ctl, sc.comparison)
+    except BudgetMismatch as e:
+        _print({"scenario_id": sc.scenario_id, "control": label, "matched": False, "report": e.report})
+        print(str(e), file=sys.stderr)
+        return 2
+    _print({"scenario_id": sc.scenario_id, "control": label, "matched": True, "report": report})
     return 0
 
 
@@ -260,6 +305,10 @@ def main(argv: list[str] | None = None) -> int:
     tg.add_argument("action", choices=["list", "show", "use", "check"], nargs="?", default="show")
     tg.add_argument("name", nargs="?", default=None)
     tg.set_defaults(fn=cmd_target)
+
+    bg = sub.add_parser("budget", help="fail-closed matched-budget gate (scenario vs its control)")
+    bg.add_argument("config")
+    bg.set_defaults(fn=cmd_budget)
 
     sm = sub.add_parser("summarize")
     sm.add_argument("--input", required=True)

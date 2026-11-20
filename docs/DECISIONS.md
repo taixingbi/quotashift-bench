@@ -51,3 +51,18 @@ is not an experimental variable: a scenario and its control must run on the same
 targets are not pooled. `run-local --live` sends to self-hosted targets only; AWS runs stay behind
 `scripts/aws_ops.sh`. Selecting a target never starts cloud resources. The gateway falls back to the active target
 when `QUOTASHIFT_BACKEND_URL`/`QUOTASHIFT_MODEL` are unset; the private-endpoint check applies to profiles too.
+
+## ADR-Q10 — Matched-budget gate and exactly-matched controls (Phase 2)
+Each attack scenario declares a `comparison.primary_control` and a pre-registered `budget_tolerance`
+(default 0.05, fixed before runs like the threshold in ADR-Q08). `quotashift budget <scenario>` is a
+fail-closed gate: it compiles the attack and control traces and refuses (exit 2) if a dimension the
+comparison marks matched (request count and/or input+requested-output tokens) differs by more than the
+tolerance. `dry-run` reports the same comparison without failing. Discrepancies — including the
+unmatched dimensions and realized vs requested output — are always reported, never hidden.
+Two controls are *exactly* matched by construction (zero delta, no RNG): `shuffled_phase_order` (A5 —
+the attack trace with phases reversed) and `uniform_arrivals` (A1 — the attack trace with competitor
+arrivals re-spaced evenly; victim traffic and all request bodies untouched, so only temporal
+concentration changes). Shape/mixture controls for A2–A4 (`homogeneous_mixture` + a sibling
+`control_scenario` YAML) are the next increment and will match on tokens within tolerance, reporting the
+request-count delta. Budgets compared here are planned/requested quantities; realized output is reported
+but never used to decide a match.

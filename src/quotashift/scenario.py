@@ -24,7 +24,7 @@ from typing import Literal
 from urllib.parse import urlparse
 
 import yaml
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, PrivateAttr, model_validator
 
 from quotashift.schema import (
     ArrivalProcess,
@@ -98,7 +98,9 @@ class Safety(_Frozen):
 
 
 class Comparison(_Frozen):
-    primary_control: Literal["shuffled_phase_order", "benign_only", "homogeneous_mixture"]
+    primary_control: Literal[
+        "shuffled_phase_order", "uniform_arrivals", "benign_only", "homogeneous_mixture"
+    ]
     matched_request_budget: bool = True
     matched_token_budget: bool = True
     repetitions: int = Field(default=5, ge=1)
@@ -106,6 +108,9 @@ class Comparison(_Frozen):
     # Pre-registered threshold: the victim-slowdown ratio that counts as "impact".
     # Chosen before any run; never after seeing results (plan §5).
     preregistered_threshold: float = Field(default=1.5, gt=1.0)
+    # Pre-registered budget tolerance: max relative difference between attack and
+    # control along a matched dimension (request count / tokens). Fail-closed.
+    budget_tolerance: float = Field(default=0.05, ge=0.0, lt=1.0)
 
 
 class Phase(_Frozen):
@@ -141,6 +146,14 @@ class ScenarioConfig(_Frozen):
     benign: BenignProfile
     phases: list[Phase] = Field(default_factory=list)
     competitor_rate_rps: float = Field(default=4.0, gt=0)  # default phase rate when a phase omits it
+    # Paired control scenario (A1–A4): a sibling YAML providing the matched comparison.
+    # Resolved relative to this scenario's file. Required unless the control is
+    # generated in-process (shuffled_phase_order) or the scenario has no competitors.
+    control_scenario: str | None = None
+
+    # Directory of the file this scenario was loaded from (for resolving
+    # `control_scenario`); set by `load_scenario`, None for in-memory configs.
+    _source_dir: Path | None = PrivateAttr(default=None)
 
     # ---------------------------------------------------------------- validation
 
@@ -184,6 +197,19 @@ class ScenarioConfig(_Frozen):
             names = [p.name for p in self.phases]
             if len(set(names)) != len(names):
                 raise ValueError("phase names must be unique")
+
+        # Control-pairing contract. The shuffled-phase control is generated in-process
+        # from this scenario's phases; a homogeneous-mixture control needs a sibling
+        # YAML; the benign-only reference may use either an explicit B0 file or this
+        # scenario's own victim traffic.
+        ctrl = self.comparison.primary_control
+        if ctrl in ("shuffled_phase_order", "uniform_arrivals"):
+            if self.control_scenario is not None:
+                raise ValueError(f"{ctrl} control is generated in-process; drop control_scenario")
+            if ctrl == "uniform_arrivals" and not self.competing_tenants:
+                raise ValueError("uniform_arrivals control needs competing_tenants to re-time")
+        elif ctrl == "homogeneous_mixture" and not self.control_scenario:
+            raise ValueError("homogeneous_mixture control requires control_scenario (path to the matched control YAML)")
 
         # Planned-budget check: expected requests under the declared rates must not
         # exceed the per-tenant / total caps (mean of the arrival process).
@@ -347,9 +373,75 @@ class ScenarioConfig(_Frozen):
     def schedule_hash(self, seed: int | None = None, *, phase_order: list[str] | None = None) -> str:
         return gen.trace_hash(self.build_trace(seed, phase_order=phase_order))
 
+    # ---------------------------------------------------------------- control pairing
+
+    def canonical_control_order(self) -> list[str]:
+        """Deterministic phase permutation for the shuffled-phase control (reversed)."""
+        return [p.name for p in reversed(self.phases)]
+
+    def load_control(self) -> ScenarioConfig:
+        """Load the paired control scenario named by `control_scenario`.
+
+        Resolved relative to this scenario's source directory (falling back to the
+        current directory for in-memory configs). Raises if no control is declared.
+        """
+        if not self.control_scenario:
+            raise ValueError(f"{self.scenario_id}: no control_scenario declared")
+        base = self._source_dir or Path.cwd()
+        return load_scenario(base / self.control_scenario)
+
+    def control_trace(self, seed: int | None = None) -> tuple[list[TraceItem], str]:
+        """The control trace and a label, per `comparison.primary_control`.
+
+        - shuffled_phase_order: this scenario's trace with phases reversed (exact
+          budget match by construction; victim traffic identical).
+        - homogeneous_mixture: the paired control scenario's trace.
+        - benign_only: the paired B0 file if given, else this scenario's victim-only
+          traffic (a reference, not a budget-matched control).
+        """
+        ctrl = self.comparison.primary_control
+        if ctrl == "shuffled_phase_order":
+            return self.build_trace(seed, phase_order=self.canonical_control_order()), "shuffled_phase_order"
+        if ctrl == "uniform_arrivals":
+            return self._uniform_arrivals_control(seed), "uniform_arrivals"
+        if ctrl == "homogeneous_mixture":
+            return self.load_control().build_trace(seed), f"control:{self.control_scenario}"
+        # benign_only
+        if self.control_scenario:
+            return self.load_control().build_trace(seed), f"control:{self.control_scenario}"
+        victims = [it for it in self.build_trace(seed) if it.request.workload_class == "victim"]
+        return victims, "benign_only(self victims)"
+
+    def _uniform_arrivals_control(self, seed: int | None) -> list[TraceItem]:
+        """A1 control: the attack trace with competitor arrivals re-timed uniformly.
+
+        Request bodies and ids are preserved, so the request count and the input /
+        output token budgets are identical to the attack by construction; only the
+        competitors' temporal concentration changes (burst -> uniform). Victim
+        traffic is untouched. Re-timing is deterministic (no RNG), spacing each
+        competitor's requests evenly across [0, runtime).
+        """
+        trace = self.build_trace(seed)
+        by_tenant: dict[str, list[TraceItem]] = {}
+        for it in trace:
+            if it.request.workload_class == "competitor":
+                by_tenant.setdefault(it.request.tenant_id, []).append(it)
+        out: list[TraceItem] = [it for it in trace if it.request.workload_class != "competitor"]
+        for items in by_tenant.values():
+            items.sort(key=lambda it: (it.request.arrival_time_s, it.request.request_id))
+            n = len(items)
+            for i, it in enumerate(items):
+                t = (i + 0.5) * self.runtime_seconds / n if n else 0.0
+                out.append(TraceItem(request=it.request.model_copy(update={"arrival_time_s": t}), oracle=it.oracle))
+        out.sort(key=lambda it: (it.request.arrival_time_s, it.request.request_id))
+        return out
+
 
 _ID_CHARS = set("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-")
 
 
 def load_scenario(path: str | Path) -> ScenarioConfig:
-    return ScenarioConfig.model_validate(yaml.safe_load(Path(path).read_text()))
+    p = Path(path)
+    sc = ScenarioConfig.model_validate(yaml.safe_load(p.read_text()))
+    sc._source_dir = p.resolve().parent
+    return sc
