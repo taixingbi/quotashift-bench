@@ -39,6 +39,11 @@ class TraceBudget:
     requested_output_tokens: int
     realized_output_tokens: int  # simulator ground truth; reported, never matched on
 
+    @property
+    def total_tokens(self) -> int:
+        """Combined requested budget (prefill + requested decode)."""
+        return self.input_tokens + self.requested_output_tokens
+
     def as_dict(self) -> dict[str, int]:
         return asdict(self)
 
@@ -61,9 +66,12 @@ def _rel_delta(attack: int, control: int) -> float:
     return 0.0 if hi == 0 else abs(attack - control) / hi
 
 
-# Which dimensions each matched-flag governs.
+# Which dimension each matched-flag gates. Per the plan, the matched token budget
+# is the *total* (prefill + requested decode): A2/A3 deliberately trade input length
+# for request count while holding the total fixed. The input/output split and the
+# realized output are always reported, but never gate the match on their own.
 _REQUEST_DIM = "requests"
-_TOKEN_DIMS = ("input_tokens", "requested_output_tokens")
+_TOKEN_DIM = "total_tokens"
 
 
 def budget_report(
@@ -72,13 +80,14 @@ def budget_report(
     """Compare attack vs control budgets against the pre-registered tolerance.
 
     Returns a JSON-serializable report. `matched` is True iff every dimension the
-    comparison requires (request count and/or tokens) agrees within tolerance.
-    Unmatched dimensions are still reported with their deltas.
+    comparison requires (request count and/or total tokens) agrees within tolerance.
+    All dimensions are reported with their deltas regardless of what is gated.
     """
     tol = comparison.budget_tolerance
     dims = {}
     for name, a, c in (
         ("requests", attack.requests, control.requests),
+        ("total_tokens", attack.total_tokens, control.total_tokens),
         ("input_tokens", attack.input_tokens, control.input_tokens),
         ("requested_output_tokens", attack.requested_output_tokens, control.requested_output_tokens),
         ("realized_output_tokens", attack.realized_output_tokens, control.realized_output_tokens),
@@ -89,7 +98,7 @@ def budget_report(
     if comparison.matched_request_budget:
         required.append(_REQUEST_DIM)
     if comparison.matched_token_budget:
-        required.extend(_TOKEN_DIMS)
+        required.append(_TOKEN_DIM)
 
     violations = [d for d in required if dims[d]["rel_delta"] > tol]
     return {

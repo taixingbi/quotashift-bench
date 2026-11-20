@@ -1,0 +1,40 @@
+# A4 — mixed request shapes (plan §2).
+# Independent variable: heterogeneity of the competitor's request mixture. The
+# competitor sends mixed-shape requests. Control (in-process, homogeneous_mixture): an
+# equal-sized homogeneous workload — the SAME request count, each request sized at the
+# tenant's mean competitor shape, with the same arrival times. Both request count and
+# total token budget are matched, so a victim-degradation difference is attributable to
+# shape heterogeneity, not to offered load.
+schema_version: 1
+scenario_id: a4_mixed_shapes
+seed: 42
+model: mock-model
+model_max_len: 4096
+runtime_seconds: 60
+endpoint: http://localhost:8080
+victim_tenants: [victim_a, victim_b]
+competing_tenants: [synthetic_competitor]
+budget_class: total_requests
+safety:
+  max_total_requests: 700
+  max_global_inflight: 4
+  max_requests_per_tenant: 600
+  max_input_tokens_per_request: 1024
+  max_output_tokens_per_request: 256
+  max_runtime_seconds: 240
+  per_request_timeout_seconds: 120
+comparison:
+  primary_control: homogeneous_mixture
+  matched_request_budget: true    # A4: equal-sized homogeneous workload
+  matched_token_budget: true      # same count AND total tokens; single shape
+  repetitions: 5
+  degradation_metric: ttft_p95
+  preregistered_threshold: 1.5
+  budget_tolerance: 0.05
+benign:
+  rate_rps: 0.3
+  request_shape: short
+  ttft_deadline_ms: 2000
+  e2e_deadline_ms: 30000
+phases:
+  - {name: mixed, duration_seconds: 60, pattern: steady, request_shape: mixed, rate_rps: 0.6}

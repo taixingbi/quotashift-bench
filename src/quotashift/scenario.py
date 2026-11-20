@@ -99,7 +99,11 @@ class Safety(_Frozen):
 
 class Comparison(_Frozen):
     primary_control: Literal[
-        "shuffled_phase_order", "uniform_arrivals", "benign_only", "homogeneous_mixture"
+        "shuffled_phase_order",  # A5 — in-process, phases reversed
+        "uniform_arrivals",      # A1 — in-process, competitor arrivals re-timed evenly
+        "matched_total_short",   # A2/A3 — in-process, competitor token budget as short requests
+        "homogeneous_mixture",   # A4 — in-process, equal-sized mean-shape requests (count fixed)
+        "benign_only",           # B0 — victim-only reference
     ]
     matched_request_budget: bool = True
     matched_token_budget: bool = True
@@ -203,13 +207,12 @@ class ScenarioConfig(_Frozen):
         # YAML; the benign-only reference may use either an explicit B0 file or this
         # scenario's own victim traffic.
         ctrl = self.comparison.primary_control
-        if ctrl in ("shuffled_phase_order", "uniform_arrivals"):
+        _in_process = ("shuffled_phase_order", "uniform_arrivals", "matched_total_short", "homogeneous_mixture")
+        if ctrl in _in_process:
             if self.control_scenario is not None:
                 raise ValueError(f"{ctrl} control is generated in-process; drop control_scenario")
-            if ctrl == "uniform_arrivals" and not self.competing_tenants:
-                raise ValueError("uniform_arrivals control needs competing_tenants to re-time")
-        elif ctrl == "homogeneous_mixture" and not self.control_scenario:
-            raise ValueError("homogeneous_mixture control requires control_scenario (path to the matched control YAML)")
+            if ctrl != "shuffled_phase_order" and not self.competing_tenants:
+                raise ValueError(f"{ctrl} control needs competing_tenants")
 
         # Planned-budget check: expected requests under the declared rates must not
         # exceed the per-tenant / total caps (mean of the arrival process).
@@ -380,11 +383,7 @@ class ScenarioConfig(_Frozen):
         return [p.name for p in reversed(self.phases)]
 
     def load_control(self) -> ScenarioConfig:
-        """Load the paired control scenario named by `control_scenario`.
-
-        Resolved relative to this scenario's source directory (falling back to the
-        current directory for in-memory configs). Raises if no control is declared.
-        """
+        """Load the paired control scenario named by `control_scenario` (B0 only)."""
         if not self.control_scenario:
             raise ValueError(f"{self.scenario_id}: no control_scenario declared")
         base = self._source_dir or Path.cwd()
@@ -393,19 +392,30 @@ class ScenarioConfig(_Frozen):
     def control_trace(self, seed: int | None = None) -> tuple[list[TraceItem], str]:
         """The control trace and a label, per `comparison.primary_control`.
 
-        - shuffled_phase_order: this scenario's trace with phases reversed (exact
-          budget match by construction; victim traffic identical).
-        - homogeneous_mixture: the paired control scenario's trace.
-        - benign_only: the paired B0 file if given, else this scenario's victim-only
-          traffic (a reference, not a budget-matched control).
+        All non-B0 controls are generated in-process from this scenario and are
+        matched to the attack by construction on every seed (victim traffic is
+        always identical):
+
+        - shuffled_phase_order (A5): phases reversed — exact match, all dimensions.
+        - uniform_arrivals (A1): competitor arrivals re-timed evenly — exact match.
+        - matched_total_short (A2/A3): the competitor token budget re-expressed as
+          short requests (request count free, total tokens matched within one
+          request per tenant).
+        - homogeneous_mixture (A4): each competitor request resized to the mean
+          competitor shape — request count identical, total tokens matched to
+          rounding.
+        - benign_only (B0): the paired B0 file if given, else this scenario's
+          victim-only traffic (a reference, not a budget-matched control).
         """
         ctrl = self.comparison.primary_control
         if ctrl == "shuffled_phase_order":
             return self.build_trace(seed, phase_order=self.canonical_control_order()), "shuffled_phase_order"
         if ctrl == "uniform_arrivals":
             return self._uniform_arrivals_control(seed), "uniform_arrivals"
+        if ctrl == "matched_total_short":
+            return self._matched_total_short_control(seed), "matched_total_short"
         if ctrl == "homogeneous_mixture":
-            return self.load_control().build_trace(seed), f"control:{self.control_scenario}"
+            return self._homogeneous_mixture_control(seed), "homogeneous_mixture"
         # benign_only
         if self.control_scenario:
             return self.load_control().build_trace(seed), f"control:{self.control_scenario}"
@@ -433,6 +443,104 @@ class ScenarioConfig(_Frozen):
             for i, it in enumerate(items):
                 t = (i + 0.5) * self.runtime_seconds / n if n else 0.0
                 out.append(TraceItem(request=it.request.model_copy(update={"arrival_time_s": t}), oracle=it.oracle))
+        out.sort(key=lambda it: (it.request.arrival_time_s, it.request.request_id))
+        return out
+
+    def _competitor_items(self, trace: list[TraceItem]) -> dict[str, list[TraceItem]]:
+        """Competitor TraceItems grouped by tenant, each sorted by arrival."""
+        by_tenant: dict[str, list[TraceItem]] = {}
+        for it in trace:
+            if it.request.workload_class == "competitor":
+                by_tenant.setdefault(it.request.tenant_id, []).append(it)
+        for items in by_tenant.values():
+            items.sort(key=lambda it: (it.request.arrival_time_s, it.request.request_id))
+        return by_tenant
+
+    def _fixed_shape_pool(
+        self, tenant: str, *, in_tokens: int, out_tokens: int, realized_tokens: int, rate: float,
+        seed: int, label: str,
+    ) -> list[TraceItem]:
+        """A deterministic competitor pool of fixed-size requests (dist='fixed').
+
+        Every request has exactly `in_tokens` prompt tokens and requests `out_tokens`
+        output; prompt bodies are generated so the backend counts the intended length.
+        """
+        s = self.safety
+        in_tok = max(1, min(in_tokens, s.max_input_tokens_per_request))
+        out_tok = max(1, min(out_tokens, s.max_output_tokens_per_request))
+        real_tok = max(1, min(realized_tokens, out_tok))
+        tp = TenantProfile(
+            tenant_id=tenant,
+            workload_class="competitor",
+            arrival=self._arrival("steady", max(rate, 0.1)),
+            prompt_tokens=LengthDist(dist="fixed", value=in_tok, min=1, max=s.max_input_tokens_per_request),
+            max_output_tokens=out_tok,
+            sim_output_tokens=LengthDist(dist="fixed", value=real_tok, min=1, max=out_tok),
+            slo=self._slo("short"),
+            priority_weight=1.0,
+        )
+        return self._segment_items(tp, t_offset=0.0, duration=self.runtime_seconds, seed=seed, phase=label)
+
+    def _matched_total_short_control(self, seed: int | None) -> list[TraceItem]:
+        """A2/A3 control: competitor token budget delivered as short requests.
+
+        Per tenant, generates fixed short requests (input=output=`_SHORT`) and selects
+        the prefix whose cumulative total tokens best matches that tenant's attack
+        competitor total. Request count is free; the matched total token budget holds
+        within one request per tenant on every seed. Victim traffic is untouched.
+        """
+        seed = self.seed if seed is None else seed
+        trace = self.build_trace(seed)
+        out = [it for it in trace if it.request.workload_class != "competitor"]
+        short = min(64, self.safety.max_input_tokens_per_request), min(64, self.safety.max_output_tokens_per_request)
+        per_req = short[0] + short[1]
+        for tenant, atk in self._competitor_items(trace).items():
+            target = sum(it.request.input_token_count + it.request.max_output_tokens for it in atk)
+            rate = 2.0 * (target / per_req) / self.runtime_seconds
+            pool = self._fixed_shape_pool(
+                tenant, in_tokens=short[0], out_tokens=short[1], realized_tokens=min(48, short[1]),
+                rate=rate, seed=seed, label="ctl_short",
+            )
+            pool.sort(key=lambda it: (it.request.arrival_time_s, it.request.request_id))
+            cum = 0
+            for it in pool:
+                t = it.request.input_token_count + it.request.max_output_tokens
+                if cum and abs(cum - target) <= abs(cum + t - target):
+                    break  # stopping now is at least as close as adding this request
+                out.append(it)
+                cum += t
+        out.sort(key=lambda it: (it.request.arrival_time_s, it.request.request_id))
+        return out
+
+    def _homogeneous_mixture_control(self, seed: int | None) -> list[TraceItem]:
+        """A4 control: equal-sized homogeneous competitor workload.
+
+        Per tenant, replaces the mixed-shape requests with the same *count* of
+        fixed-size requests sized at the tenant's mean competitor shape, keeping the
+        attack arrival times. Request count is identical and the total token budget is
+        matched to rounding on every seed. Victim traffic is untouched.
+        """
+        seed = self.seed if seed is None else seed
+        trace = self.build_trace(seed)
+        out = [it for it in trace if it.request.workload_class != "competitor"]
+        for tenant, atk in self._competitor_items(trace).items():
+            n = len(atk)
+            if not n:
+                continue
+            mean_in = round(sum(it.request.input_token_count for it in atk) / n)
+            mean_out = round(sum(it.request.max_output_tokens for it in atk) / n)
+            mean_real = round(sum(it.oracle.realized_output_tokens for it in atk) / n)
+            pool = self._fixed_shape_pool(
+                tenant, in_tokens=mean_in, out_tokens=mean_out, realized_tokens=mean_real,
+                rate=2.0 * n / self.runtime_seconds, seed=seed, label="ctl_homog",
+            )
+            pool.sort(key=lambda it: (it.request.arrival_time_s, it.request.request_id))
+            # keep attack arrival times; equal count (pool has ~2n items, so never short)
+            for atk_it, pool_it in zip(atk, pool[:n], strict=False):
+                out.append(TraceItem(
+                    request=pool_it.request.model_copy(update={"arrival_time_s": atk_it.request.arrival_time_s}),
+                    oracle=pool_it.oracle,
+                ))
         out.sort(key=lambda it: (it.request.arrival_time_s, it.request.request_id))
         return out
 

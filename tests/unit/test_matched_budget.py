@@ -39,10 +39,19 @@ def test_identical_budgets_match():
 
 
 def test_token_mismatch_beyond_tolerance_flagged():
-    a = TraceBudget(100, 5000, 2000, 1500)
-    c = TraceBudget(100, 4000, 2000, 1400)  # input tokens 20% low
+    a = TraceBudget(100, 5000, 2000, 1500)  # total 7000
+    c = TraceBudget(100, 4000, 2000, 1400)  # total 6000, ~14% low
     rep = budget_report(a, c, _cmp())
-    assert "input_tokens" in rep["violations"] and not rep["matched"]
+    assert "total_tokens" in rep["violations"] and not rep["matched"]
+
+
+def test_matched_total_tolerates_input_output_resplit():
+    # Same total tokens, redistributed input<->output: matched (A2/A3 design).
+    a = TraceBudget(50, 6000, 1000, 800)   # total 7000
+    c = TraceBudget(200, 1000, 6000, 5000)  # total 7000, request count free
+    rep = budget_report(a, c, _cmp(matched_request_budget=False))
+    assert rep["matched"]
+    assert rep["dimensions"]["total_tokens"]["rel_delta"] == 0.0
 
 
 def test_unmatched_dim_not_required_when_flag_off():
@@ -93,6 +102,39 @@ def test_uniform_arrivals_changes_only_competitor_timing(repo):
     comp_a = sorted(i.request.arrival_time_s for i in attack if i.request.workload_class == "competitor")
     comp_c = sorted(i.request.arrival_time_s for i in control if i.request.workload_class == "competitor")
     assert comp_a != comp_c  # competitor arrivals re-timed
+
+
+@pytest.mark.parametrize("name,ctrl,exact_count", [
+    ("a2_prefill_heavy", "matched_total_short", False),
+    ("a3_decode_heavy", "matched_total_short", False),
+    ("a4_mixed_shapes", "homogeneous_mixture", True),
+])
+def test_shape_controls_match_total_tokens_every_seed(repo, name, ctrl, exact_count):
+    sc = load_scenario(repo / "experiments" / f"{name}.yaml")
+    assert sc.comparison.primary_control == ctrl
+    for seed in (42, 7, 100, 5, 9):
+        attack = summarize_trace(sc.build_trace(seed=seed))
+        control, label = sc.control_trace(seed=seed)
+        rep = budget_report(attack, summarize_trace(control), sc.comparison)
+        assert rep["matched"], (name, seed, rep["violations"])
+        if exact_count:
+            assert rep["dimensions"]["requests"]["abs_delta"] == 0
+        # victim traffic identical in attack and control
+        av = {i.request.request_id for i in sc.build_trace(seed=seed) if i.request.workload_class == "victim"}
+        cv = {i.request.request_id for i in control if i.request.workload_class == "victim"}
+        assert av == cv
+
+
+def test_shape_control_bodies_are_consistent(repo):
+    # resized/regenerated competitor requests keep prompt length == input_token_count
+    # (the mock backend recounts the payload).
+    sc = load_scenario(repo / "experiments" / "a4_mixed_shapes.yaml")
+    control, _ = sc.control_trace()
+    for it in control:
+        r = it.request
+        if r.prompt_token_ids is not None:
+            assert len(r.prompt_token_ids) == r.input_token_count
+        assert it.oracle.realized_output_tokens <= r.max_output_tokens
 
 
 def test_shuffled_phase_control_is_exact(repo):

@@ -26,14 +26,16 @@ Snapshot of RISK-Sched preserved as commit `273a57c` (first commit on `main`).
 - ✅ Active: `selfhost` (Qwen2.5-7B-Instruct @ 192.168.86.173:8000, max_model_len 4096; `target check` OK 2026-11-19).
 - ✅ `run-local --live` (self-hosted only); gateway falls back to active target. See ADR-Q09.
 
-## Phase 2 — synthetic scenarios (B0, A1–A5) 🟡
+## Phase 2 — synthetic scenarios (B0, A1–A5) ✅
 - ✅ Phase program + shapes (short/context_heavy/decode_heavy/mixed) and patterns (steady/burst_bounded).
 - ✅ Matched-budget accounting + fail-closed gate (`quotashift budget`; `dry-run` reports it). Pre-registered
-  `comparison.budget_tolerance`. Discrepancies (incl. requested vs realized) always reported. ADR-Q10.
-- ✅ Two exactly-matched controls (zero delta by construction): `uniform_arrivals` (A1, `experiments/a1_burst_arrivals.yaml`)
-  and `shuffled_phase_order` (A5, `experiments/stateful_sequences.yaml`); B0 benign-only reference (`baseline.yaml`).
-- 🟡 Shape/mixture controls A2 (prefill-heavy) / A3 (decode-heavy) / A4 (mixed) via paired `control_scenario`
-  YAMLs (token-matched within tolerance) are the next increment.
+  `comparison.budget_tolerance`; token budget gated on the *total* (prefill+decode). Discrepancies
+  (incl. requested vs realized) always reported. ADR-Q10.
+- ✅ Every attack has an in-process, seed-stable control (victim traffic identical):
+  B0 benign-only (`baseline.yaml`); A1 `uniform_arrivals` (`a1_burst_arrivals.yaml`);
+  A2 `matched_total_short` (`a2_prefill_heavy.yaml`); A3 `matched_total_short` (`a3_decode_heavy.yaml`);
+  A4 `homogeneous_mixture` (`a4_mixed_shapes.yaml`); A5 `shuffled_phase_order` (`stateful_sequences.yaml`).
+  Measured match: A1/A5 exact; A2/A3 total tokens <0.4%; A4 exact count, total <0.1% — all seeds.
 
 ## Phase 3 — AWS Terraform ✅ (prepared; nothing deployed)
 - ✅ `fmt`/`validate`/`test` (mock provider, 10 runs). Private `nat` default; one shared GPU vLLM (desired 0);

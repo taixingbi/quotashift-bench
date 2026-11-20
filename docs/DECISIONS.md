@@ -59,10 +59,16 @@ fail-closed gate: it compiles the attack and control traces and refuses (exit 2)
 comparison marks matched (request count and/or input+requested-output tokens) differs by more than the
 tolerance. `dry-run` reports the same comparison without failing. Discrepancies — including the
 unmatched dimensions and realized vs requested output — are always reported, never hidden.
-Two controls are *exactly* matched by construction (zero delta, no RNG): `shuffled_phase_order` (A5 —
-the attack trace with phases reversed) and `uniform_arrivals` (A1 — the attack trace with competitor
-arrivals re-spaced evenly; victim traffic and all request bodies untouched, so only temporal
-concentration changes). Shape/mixture controls for A2–A4 (`homogeneous_mixture` + a sibling
-`control_scenario` YAML) are the next increment and will match on tokens within tolerance, reporting the
-request-count delta. Budgets compared here are planned/requested quantities; realized output is reported
-but never used to decide a match.
+All controls are generated in-process from the attack scenario (no sibling YAMLs) and hold on every seed,
+so a matched pair can be replayed across repetitions without re-tuning. The matched token budget is the
+*total* (prefill + requested decode); A2/A3 deliberately trade input length for request count while
+holding that total, so their request-count delta is reported, not gated.
+- `shuffled_phase_order` (A5): attack trace with phases reversed — exact on all dimensions.
+- `uniform_arrivals` (A1): competitor arrivals re-spaced evenly; bodies and count unchanged — exact.
+- `matched_total_short` (A2/A3): the competitor total-token budget re-expressed as fixed short requests,
+  selected by cumulative tokens — total matched within one request per tenant (measured <0.4%); count free.
+- `homogeneous_mixture` (A4): each competitor request replaced by a fixed mean-sized request at the same
+  arrival time — request count identical, total matched to rounding (measured <0.1%).
+Victim traffic is identical in attack and control for every control. Budgets compared are
+planned/requested quantities; realized output is reported but never used to decide a match. `control_scenario`
+remains only for an explicit B0 benign-only reference file.
