@@ -51,7 +51,10 @@ Snapshot of RISK-Sched preserved as commit `273a57c` (first commit on `main`).
   warm-up excluded; attack-success rate vs pre-registered threshold; budget-normalized slowdown; bootstrap CI.
 - ✅ Emits `summary.csv`, `summary.md` (with verdict incl. negatives), `figure_*.png`, `manifest.json`
   (per-seed budget report, run dirs, commands). Mock output labelled `synthetic_backend: true`.
-- ⬜ Real measurements require a live run (self-hosted `--live`, owner-approved) or AWS (blocked on quota).
+- ✅ First live run (self-hosted vLLM 0.17.1, Qwen2.5-7B-Instruct, 5 seeds/scenario, 2026-11-20).
+  Headline: A2 prefill-heavy 3.16× (100% success); A1 burst 1.58× (60%, marginal); A3/A4/A5 negative under
+  matched budgets. All budgets matched on every seed; zero attack-arm timeouts. See `docs/RESULTS_selfhost.md`.
+- ⬜ AWS measurements still blocked on quota. More reps per scenario held pending owner approval.
 ## Phase 6 — optional paper-strengthening ⬜
 
 ## Verification (this pass)
