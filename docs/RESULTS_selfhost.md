@@ -122,8 +122,10 @@ tightly budget-matched to each other.
 
 ## Caveats
 
-- **Seed counts: A1 n=20, A2 main point n=5, A2 sweep n=5/point, A3–A5 n=5.** The A2 effect is replicated across
-  five concentration levels. A4/A5 means sit below 1.5× at 5 seeds with non-trivial spread; more reps would
-  tighten the negatives but that is additional GPU time — not run without owner approval.
+- **Seed counts: A1 n=20, A2 headline n=20, A2 sweep n=5/point, A3–A5 n=5.** The A2 effect is both resolved at
+  n=20 and replicated across five concentration levels. The sweep's L=1024 row shows the n=5 value so all five
+  sweep points are apples-to-apples; the n=20 headline (3.19×, [2.66, 3.75]) is the separate confirmation run.
+  A4/A5 means sit below 1.5× at 5 seeds with non-trivial spread; more reps would tighten the negatives but that
+  is additional GPU time — not run without owner approval.
 - Single target, single model, single hardware instance. No cross-target pooling (ADR-Q09).
 - `ttft_p95` is the pre-registered metric; the e2e asymmetry noted for A2/A3 is a secondary observation.
