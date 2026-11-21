@@ -13,27 +13,34 @@ These are the project's first non-mock attack-effect numbers. Reported per ADR-Q
 - **Metric:** victim `ttft_p95`, attack ÷ matched control, computed **per matched seed**; warm-up excluded;
   completed vs timed-out victim requests separated.
 - **Pre-registered threshold:** 1.5× (fixed before runs). **Budget tolerance:** 0.05.
-- **Seeds / reps:** A2–A5 seeds 42–46 (5 reps); A1 seeds 42–61 (20 reps, re-run to resolve a marginal result).
+- **Seeds / reps:** A3–A5 seeds 42–46 (5 reps); A1 and A2 seeds 42–61 (20 reps, re-run to harden the positives).
 - **Code commit:** `4a829d7`.
 - **Run dates:** 2026-11-20 — initial 5-rep sweep 12:22:55Z–13:36:31Z (1h13m36s);
-  A1 20-rep re-run 23:35:19Z–00:17:07Z (41m48s). Total GPU wall-clock ≈ 1h55m.
+  A1 20-rep re-run 23:35:19Z–00:17:07Z (41m48s); A2 20-rep re-run 00:52:03Z–01:42:23Z (50m20s).
+  Total GPU wall-clock ≈ 2h45m.
 
 ## Headline results
 
 | Scenario | Control | Mean ratio | Median | 95% bootstrap CI | Attack success | Verdict |
 |---|---|---|---|---|---|---|
 | A1 burst_arrivals | uniform_arrivals | **1.59×** | 1.58× | [1.53, 1.65] | 70% (14/20) | crosses threshold |
-| A2 prefill_heavy | matched_total_short | **3.16×** | 3.14× | [2.37, 3.94] | 100% (5/5) | **crosses — strongest** |
+| A2 prefill_heavy | matched_total_short | **3.19×** | 2.83× | [2.66, 3.75] | 95% (19/20) | **crosses — strongest** |
 | A3 decode_heavy | matched_total_short | **1.06×** | 1.11× | [0.87, 1.26] | 0% (0/5) | negative |
 | A4 mixed_shapes | homogeneous_mixture | **1.35×** | 1.26× | [1.23, 1.47] | 20% (1/5) | negative |
 | A5 stateful_sequence | shuffled_phase_order | **1.28×** | 1.39× | [1.08, 1.46] | 20% (1/5) | negative |
 
 All metrics are victim `ttft_p95`. Ratios are per-seed attack/control; mean/median/CI are over the seeds.
 
-**A1 was re-run at 20 seeds (42–61)** to resolve the marginal 5-seed result. The effect held and tightened:
-mean 1.59×, median 1.58×, 95% CI **[1.53, 1.65]** — now entirely above the 1.5× threshold — success 70% (14/20).
-All 20 budgets matched exactly (rel_delta 0.0), zero attack-arm timeouts. A1 is a real, consistent ~1.6× effect,
-not noise. Report in `reports/live/a1_burst_arrivals_r20/`. The other four scenarios remain at 5 seeds.
+**A1 and A2 were re-run at 20 seeds (42–61)** to harden the two positives:
+- **A1** held and tightened: mean 1.59×, median 1.58×, 95% CI **[1.53, 1.65]** (entirely above threshold),
+  success 70% (14/20). All 20 budgets matched exactly, zero attack-arm timeouts. A real, consistent ~1.6× effect.
+  Report in `reports/live/a1_burst_arrivals_r20/`.
+- **A2** stayed strong: mean 3.19×, median 2.83×, 95% CI **[2.66, 3.75]**, success **95% (19/20)** — only one
+  seed (61) fell just under at 1.40×. All 20 budgets matched (max total-token rel_delta 0.0013), zero attack-arm
+  timeouts, and the control-arm e2e blow-up repeated (70 victim e2e timeouts across the 20 control runs vs 0 in
+  attack). Report in `reports/live/a2_prefill_heavy_r20/`.
+
+A3/A4/A5 remain at 5 seeds.
 
 ## Integrity checks (all pass)
 
@@ -57,7 +64,7 @@ not noise. Report in `reports/live/a1_burst_arrivals_r20/`. The other four scena
 
 ## Interpretation
 
-- **A2 prefill-heavy is the clear, robust effect** (3.16×, 100%, CI well clear of 1.5×): concentrating the
+- **A2 prefill-heavy is the clear, robust effect** (3.19×, 95% at n=20, CI [2.66, 3.75] well clear of 1.5×): concentrating the
   matched token budget into few long-prefill requests degrades victim TTFT far more than spreading the *same
   total tokens* across many short requests. Note the matched control (`matched_total_short`) instead blows up
   victim **e2e** (control-arm victim timeouts 0–3/seed, e2e_p95 ≈ 60s) because it floods the queue with ~228
@@ -89,7 +96,7 @@ Schedule hashes (`schedule_sha256`, deterministic, wall-clock-independent):
 
 ## Caveats
 
-- **Seed counts: A1 n=20, A2–A5 n=5.** A1 is now well-resolved. A4/A5 means sit below 1.5× at 5 seeds with
+- **Seed counts: A1 & A2 n=20, A3–A5 n=5.** Both positives are now well-resolved. A4/A5 means sit below 1.5× at 5 seeds with
   non-trivial spread; more reps would tighten the negatives but that is additional GPU time — not run without
   owner approval.
 - Single target, single model, single hardware instance. No cross-target pooling (ADR-Q09).
