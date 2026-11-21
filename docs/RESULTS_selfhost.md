@@ -13,21 +13,27 @@ These are the project's first non-mock attack-effect numbers. Reported per ADR-Q
 - **Metric:** victim `ttft_p95`, attack ÷ matched control, computed **per matched seed**; warm-up excluded;
   completed vs timed-out victim requests separated.
 - **Pre-registered threshold:** 1.5× (fixed before runs). **Budget tolerance:** 0.05.
-- **Seeds:** 42–46. **Reps:** 5 per arm.
+- **Seeds / reps:** A2–A5 seeds 42–46 (5 reps); A1 seeds 42–61 (20 reps, re-run to resolve a marginal result).
 - **Code commit:** `4a829d7`.
-- **Run date:** 2026-11-20 (12:22:55Z–13:36:31Z, total wall-clock 1h13m36s).
+- **Run dates:** 2026-11-20 — initial 5-rep sweep 12:22:55Z–13:36:31Z (1h13m36s);
+  A1 20-rep re-run 23:35:19Z–00:17:07Z (41m48s). Total GPU wall-clock ≈ 1h55m.
 
 ## Headline results
 
 | Scenario | Control | Mean ratio | Median | 95% bootstrap CI | Attack success | Verdict |
 |---|---|---|---|---|---|---|
-| A1 burst_arrivals | uniform_arrivals | **1.58×** | 1.51× | [1.45, 1.79] | 60% (3/5) | crosses threshold |
+| A1 burst_arrivals | uniform_arrivals | **1.59×** | 1.58× | [1.53, 1.65] | 70% (14/20) | crosses threshold |
 | A2 prefill_heavy | matched_total_short | **3.16×** | 3.14× | [2.37, 3.94] | 100% (5/5) | **crosses — strongest** |
 | A3 decode_heavy | matched_total_short | **1.06×** | 1.11× | [0.87, 1.26] | 0% (0/5) | negative |
 | A4 mixed_shapes | homogeneous_mixture | **1.35×** | 1.26× | [1.23, 1.47] | 20% (1/5) | negative |
 | A5 stateful_sequence | shuffled_phase_order | **1.28×** | 1.39× | [1.08, 1.46] | 20% (1/5) | negative |
 
-All metrics are victim `ttft_p95`. Ratios are per-seed attack/control; mean/median/CI are over the 5 seeds.
+All metrics are victim `ttft_p95`. Ratios are per-seed attack/control; mean/median/CI are over the seeds.
+
+**A1 was re-run at 20 seeds (42–61)** to resolve the marginal 5-seed result. The effect held and tightened:
+mean 1.59×, median 1.58×, 95% CI **[1.53, 1.65]** — now entirely above the 1.5× threshold — success 70% (14/20).
+All 20 budgets matched exactly (rel_delta 0.0), zero attack-arm timeouts. A1 is a real, consistent ~1.6× effect,
+not noise. Report in `reports/live/a1_burst_arrivals_r20/`. The other four scenarios remain at 5 seeds.
 
 ## Integrity checks (all pass)
 
@@ -57,8 +63,9 @@ All metrics are victim `ttft_p95`. Ratios are per-seed attack/control; mean/medi
   victim **e2e** (control-arm victim timeouts 0–3/seed, e2e_p95 ≈ 60s) because it floods the queue with ~228
   tiny requests — i.e. the two shapes hurt *different* victim metrics at equal token budget. The TTFT finding
   stands; the e2e asymmetry is worth reporting alongside it, not hiding.
-- **A1 burst arrivals (1.58×, 60%)** is a real but marginal effect: median 1.51× sits right on the threshold and
-  the CI lower bound (1.45) dips below it. Suggestive, not conclusive at 5 seeds.
+- **A1 burst arrivals (1.59×, 70%)** — at 20 seeds this is a real, consistent effect: CI [1.53, 1.65] clears
+  the threshold with room to spare. (At 5 seeds it looked marginal, 1.58× with CI [1.45, 1.79]; the re-run
+  confirmed it rather than dissolving it.)
 - **A3 / A4 / A5 are negatives** under matched budgets: decode-heavy, mixed-shape, and stateful-sequence timing
   do not degrade victim TTFT beyond their matched controls at these budgets. A3's control (many short requests)
   actually inflates victim e2e more than the attack. Reported as negatives per the pre-registration.
@@ -82,7 +89,8 @@ Schedule hashes (`schedule_sha256`, deterministic, wall-clock-independent):
 
 ## Caveats
 
-- **n = 5 seeds.** A1's CI straddles the threshold; A4/A5 means sit below 1.5× but with non-trivial spread.
-  More reps would tighten these, but that is additional GPU time — not run without owner approval.
+- **Seed counts: A1 n=20, A2–A5 n=5.** A1 is now well-resolved. A4/A5 means sit below 1.5× at 5 seeds with
+  non-trivial spread; more reps would tighten the negatives but that is additional GPU time — not run without
+  owner approval.
 - Single target, single model, single hardware instance. No cross-target pooling (ADR-Q09).
 - `ttft_p95` is the pre-registered metric; the e2e asymmetry noted for A2/A3 is a secondary observation.
