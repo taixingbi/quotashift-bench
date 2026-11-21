@@ -94,10 +94,36 @@ Schedule hashes (`schedule_sha256`, deterministic, wall-clock-independent):
 | a4_mixed_shapes | `0d9bb522873974baeb456a93307b32bef764a277055c398e69ce08b1d470d8ad` |
 | stateful_sequences | `d5f2ab6f07799a4cc42a2057955cecbf98931f49c6d344da8738c0fd3534f9e4` |
 
+## Phase 6 — A2 prefill-concentration dose-response
+
+To turn the A2 point finding into a mechanism, the competitor's ~30 k-token budget was held fixed and
+re-packed across a sweep of per-request input lengths L (fewer long-prefill requests as L grows; count/rate
+set to ~30000/(L+32)/60). Each point has its own in-process `matched_total_short` control and passes the
+matched-budget gate. Serving config (FCFS, `max_global_inflight=4`, model) is identical across every point.
+5 seeds/point. Scenarios: `experiments/a2_sweep_in{128,256,512,768}.yaml`; L=1024 reuses the main A2 run.
+Run 2026-11-21 01:39:38Z–02:29:53Z (50m15s). Figure: `docs/figures/a2_sweep_curve.png`.
+
+| input len L | ≈requests | comp tokens | mean ratio | median | 95% CI | success |
+|---|---|---|---|---|---|---|
+| 128 | 206 | 30 222 | 1.73× | 1.93× | [1.30, 2.05] | 80% |
+| 256 | 112 | 29 374 | 2.22× | 2.22× | [1.54, 2.90] | 60% |
+| 512 | 57 | 27 879 | 2.14× | 2.03× | [1.62, 2.69] | 80% |
+| 768 | 38 | 27 794 | **3.00×** | 2.78× | [2.53, 3.47] | 100% |
+| 1024 | 35 | 33 882 | **3.16×** | 3.14× | [2.37, 3.94] | 100% |
+
+**Reading it:** at equal token budget, concentrating the budget into fewer, longer-prefill requests degrades
+victim TTFT more — a monotonic climb at the concentrated end (512→768→1024: 2.14→3.00→3.16×, CIs tightening
+and well clear of 1.5×). The effect stays above threshold even at the most dispersed packing (L=128, 1.73×).
+**Caveat:** holding the budget fixed inherently couples L to request rate — low-L points fire many more
+requests/sec, so the dispersed end (128/256) mixes prefill length with raw queue pressure. The clean
+concentration signal is the **768→1024 segment**; the low-L end is reported but not claimed as pure prefill
+effect. The 1024 point used the original A2 rate (0.6 rps → higher token total); the four new points are more
+tightly budget-matched to each other.
+
 ## Caveats
 
-- **Seed counts: A1 & A2 n=20, A3–A5 n=5.** Both positives are now well-resolved. A4/A5 means sit below 1.5× at 5 seeds with
-  non-trivial spread; more reps would tighten the negatives but that is additional GPU time — not run without
-  owner approval.
+- **Seed counts: A1 n=20, A2 main point n=5, A2 sweep n=5/point, A3–A5 n=5.** The A2 effect is replicated across
+  five concentration levels. A4/A5 means sit below 1.5× at 5 seeds with non-trivial spread; more reps would
+  tighten the negatives but that is additional GPU time — not run without owner approval.
 - Single target, single model, single hardware instance. No cross-target pooling (ADR-Q09).
 - `ttft_p95` is the pre-registered metric; the e2e asymmetry noted for A2/A3 is a secondary observation.

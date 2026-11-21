@@ -1,0 +1,41 @@
+# A2 prefill-concentration sweep point: competitor input length = 128 tokens.
+# Dose-response for ADR-Q08/Q11: hold the competitor TOTAL token budget (~32k) fixed
+# and vary how it is packed — few long-prefill requests vs many short ones. Independent
+# variable across the sweep is per-request input length L (here 128); competitor rate is
+# set to ~32000/(L+32)/60 so the total budget is held approximately constant. The in-process
+# matched_total_short control re-expresses the SAME total as short (64/64) requests, so the
+# per-point degradation ratio is attributable to prefill concentration, not to more work.
+# Serving config (FCFS, max_global_inflight=4, model) is identical across every sweep point.
+schema_version: 1
+scenario_id: a2_sweep_in128
+seed: 42
+model: mock-model
+model_max_len: 4096
+runtime_seconds: 60
+endpoint: http://localhost:8080
+victim_tenants: [victim_a, victim_b]
+competing_tenants: [synthetic_competitor]
+budget_class: input_tokens
+safety:
+  max_total_requests: 1000
+  max_global_inflight: 4
+  max_requests_per_tenant: 900
+  max_input_tokens_per_request: 128
+  max_output_tokens_per_request: 256
+  max_runtime_seconds: 240
+  per_request_timeout_seconds: 120
+comparison:
+  primary_control: matched_total_short
+  matched_request_budget: false
+  matched_token_budget: true
+  repetitions: 5
+  degradation_metric: ttft_p95
+  preregistered_threshold: 1.5
+  budget_tolerance: 0.05
+benign:
+  rate_rps: 0.3
+  request_shape: short
+  ttft_deadline_ms: 2000
+  e2e_deadline_ms: 30000
+phases:
+  - {name: prefill, duration_seconds: 60, pattern: steady, request_shape: context_heavy, rate_rps: 3.333}
