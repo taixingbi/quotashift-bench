@@ -125,3 +125,12 @@
 - Tenant identity is the gateway's own trace label, not anything vLLM reports. It's exact for harness runs, but the
   field can't attribute traffic from clients outside the harness.
 - Only completed requests carry usage; cancelled or timed-out requests (A8) have no per-request cached-token value.
+
+### Preflight / warm-cache guard (2026-11-21)
+- The warm-cache re-run guard matches on the exact `trace_sha256` plus the server start. It doesn't detect
+  *partial* prompt overlap with earlier runs (for example a different scenario that shares victim prefixes), and it
+  ignores runs recorded before 2026-11-21 09:00 local, which didn't store `process_start_time_seconds`.
+- The engine-idle preflight only sees vLLM's own counters. A non-vLLM GPU process is caught only indirectly, by
+  the GPU idle-baseline check.
+- `prompt_tokens_by_source_total` sources summed to 4 tokens more than `prompt_tokens_total` in one 18,250-token
+  arm. This is reported, not reconciled away.

@@ -20,7 +20,8 @@ from typing import Any
 from quotashift.instrumentation.prom import MetricSnapshot
 
 COUNTERS = ("prompt_tokens_total", "generation_tokens_total", "num_preemptions_total",
-            "prefix_cache_queries_total", "prefix_cache_hits_total")
+            "prefix_cache_queries_total", "prefix_cache_hits_total",
+            "prompt_tokens_local_compute_total", "prompt_tokens_local_cache_hit_total")
 HISTS = ("ttft_seconds", "itl_seconds", "e2e_seconds", "queue_time_seconds", "prefill_time_seconds",
          "decode_time_seconds")
 
@@ -34,6 +35,8 @@ def engine_state(snap: MetricSnapshot | None) -> dict[str, Any]:
     return {"available": True, "num_requests_running": v.get("num_requests_running"),
             "num_requests_waiting": v.get("num_requests_waiting"),
             "kv_cache_usage_perc": v.get("kv_cache_usage_perc"),
+            "engine_awake": v.get("engine_awake"),  # None = metric not exposed by this vLLM
+            "process_start_time_seconds": v.get("process_start_time_seconds"),
             "prefix_caching_enabled": None if pc is None else pc.lower() == "true",
             "cache_config_info": cc or None}
 
@@ -75,6 +78,16 @@ def counter_deltas(before: MetricSnapshot | None, after: MetricSnapshot | None, 
     p = out.get("prompt_tokens_total")
     # prompt tokens that had to be prefilled (not served from the prefix cache); engine-global estimate
     out["prefill_computed_tokens_est"] = (p - h) if isinstance(p, float) and isinstance(h, float) else None
+    # measured directly by the engine (vllm:prompt_tokens_by_source_total{source=local_compute}); reported beside
+    # the pre-registered estimate above, never replacing it
+    lc = out.get("prompt_tokens_local_compute_total")
+    out["prefill_computed_tokens_measured"] = lc if isinstance(lc, float) else None
+    est = out["prefill_computed_tokens_est"]
+    out["prefill_est_minus_measured"] = (est - lc) if isinstance(est, float) and isinstance(lc, float) else None
+    ps_b, ps_a = before.values.get("process_start_time_seconds"), after.values.get("process_start_time_seconds")
+    out["server_restarted"] = (ps_b is not None and ps_a is not None and ps_a != ps_b)
+    if out["server_restarted"]:
+        out["resets"].append("process_start_time_seconds")
 
     start = engine_state(before)
     reasons = []

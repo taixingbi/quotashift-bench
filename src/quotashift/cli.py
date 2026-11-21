@@ -281,11 +281,24 @@ def cmd_experiment(a: argparse.Namespace) -> int:
             print(msg, file=sys.stderr)
             return 3
     results_root = Path(a.results_root)
-    from quotashift.local import CacheResetUnverified, LifecycleLeak
+    from quotashift.local import CacheResetUnverified, LifecycleLeak, ServerRestarted, WarmCacheRerun
+    from quotashift.runtime.runner import EngineNotReady
 
+    if target is not None:
+        from quotashift.targets import write_target_snapshot
+
+        snap = write_target_snapshot(target, out_dir / "target_snapshot")
+        if not snap["check"].get("ok"):
+            print(f"preflight failed: {snap['check'].get('problems')} (snapshot in {out_dir / 'target_snapshot'})",
+                  file=sys.stderr)
+            return 3
     try:
-        pairs = run_matched_pairs(sc, results_root, reps=a.reps, target=target, path=a.path)
-    except (LifecycleLeak, CacheResetUnverified) as e:
+        pairs = run_matched_pairs(sc, results_root, reps=a.reps, target=target, path=a.path,
+                                  allow_warm_rerun=a.allow_warm_rerun)
+    except WarmCacheRerun as e:
+        print(f"REFUSED: {e}", file=sys.stderr)
+        return 3
+    except (LifecycleLeak, CacheResetUnverified, ServerRestarted, EngineNotReady) as e:
         print(f"STOPPED: {type(e).__name__}: {e}", file=sys.stderr)
         return 4
     pairs["budget_tolerance"] = sc.comparison.budget_tolerance
@@ -455,6 +468,9 @@ def main(argv: list[str] | None = None) -> int:
     ex.add_argument("--out", default=None, help="report dir (default: reports/<scenario_id>)")
     ex.add_argument("--path", choices=["gateway", "direct"], default="gateway")
     ex.add_argument("--force", action="store_true", help="allow overwriting an existing report dir")
+    ex.add_argument("--allow-warm-rerun", action="store_true",
+                    help="re-send identical prompts to the same vLLM server start (warm prefix cache); "
+                         "never for a measurement, only for deliberate harness checks")
     ex.set_defaults(fn=cmd_experiment)
 
     ge = sub.add_parser("gpu-exporter", help="run ON the GPU host: nvidia-smi -> Prometheus /metrics")

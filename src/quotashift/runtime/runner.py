@@ -123,6 +123,29 @@ def write_results(out_dir: Path, recorder: RunRecorder, timeseries: list[dict], 
 # ------------------------------------------------------------------ main entry
 
 
+class EngineNotReady(SafetyError):
+    """The engine was asleep or still busy (running/waiting > 0) before an arm, past the bounded wait."""
+
+
+async def preflight_engine_ready(be, *, timeout_s: float = 30.0, interval_s: float = 0.5) -> dict:  # noqa: ANN001
+    """Bounded wait until vLLM reports nothing running/waiting and (when exposed) the engine is awake.
+    Busy at start = another client's traffic or a previous arm still draining -> the arm's engine deltas
+    would not be attributable, so the run stops instead of measuring. Unknown metrics are not assumed bad."""
+    t0 = time.monotonic()
+    st: dict = {}
+    while True:
+        st = engine_state(await be.scrape_metrics())
+        busy = (st.get("num_requests_running") or 0) > 0 or (st.get("num_requests_waiting") or 0) > 0
+        asleep = st.get("engine_awake") == 0.0
+        if st.get("available") and not busy and not asleep:
+            return st
+        if time.monotonic() - t0 >= timeout_s:
+            raise EngineNotReady(f"engine not ready after {timeout_s:.0f} s: available={st.get('available')} "
+                                 f"running={st.get('num_requests_running')} waiting={st.get('num_requests_waiting')} "
+                                 f"awake={st.get('engine_awake')}")
+        await asyncio.sleep(interval_s)
+
+
 def run_experiment(cfg: ExperimentConfig, scheduler: str, seed: int, results_root: Path,
                    config_base: Path, base_url_override: str | None = None,
                    trace_override: list | None = None, lifecycle_plans: dict | None = None) -> Path:
@@ -192,6 +215,8 @@ def run_experiment(cfg: ExperimentConfig, scheduler: str, seed: int, results_roo
             be = make_backend(cfg.backend, url)
             try:
                 info = await be.info()
+                if cfg.backend.kind == "vllm":  # preflight (fail closed): engine awake and idle before the arm
+                    await preflight_engine_ready(be)
                 if gpu.available:  # settled idle board power right before the arm (for dynamic energy)
                     from quotashift.instrumentation.gpu import settle_idle_power
 

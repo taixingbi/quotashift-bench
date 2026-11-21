@@ -37,6 +37,16 @@ VLLM_HISTOGRAM_CANDIDATES: dict[str, tuple[str, ...]] = {
 }
 
 
+# logical name -> (metric name, required label subset); summed over the remaining labels
+VLLM_LABELLED_CANDIDATES: dict[str, tuple[str, dict[str, str]]] = {
+    # direct engine counter of prompt tokens actually computed vs served from the local prefix cache
+    "prompt_tokens_local_compute_total": ("vllm:prompt_tokens_by_source_total", {"source": "local_compute"}),
+    "prompt_tokens_local_cache_hit_total": ("vllm:prompt_tokens_by_source_total", {"source": "local_cache_hit"}),
+    "engine_awake": ("vllm:engine_sleep_state", {"sleep_state": "awake"}),
+    "process_start_time_seconds": ("process_start_time_seconds", {}),  # server restart detection
+}
+
+
 @dataclass
 class Sample:
     name: str
@@ -90,6 +100,10 @@ def resolve(samples: list[Sample]) -> MetricSnapshot:
                 values[logical] = float(sum(s.value for s in by_name[c]))
                 names[logical] = c
                 break
+    for logical, (metric, want) in VLLM_LABELLED_CANDIDATES.items():
+        rows = [s for s in by_name.get(metric, []) if all(s.labels.get(k) == v for k, v in want.items())]
+        values[logical] = float(sum(s.value for s in rows)) if rows else None
+        names[logical] = metric if rows else None
     hists: dict[str, list[tuple[float, float]]] = {}
     sums: dict[str, tuple[float, float]] = {}
     for logical, cands in VLLM_HISTOGRAM_CANDIDATES.items():

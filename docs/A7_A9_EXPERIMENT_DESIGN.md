@@ -195,3 +195,9 @@ See `experiments/PLAN.md` § Suite S (A7–A9). Each block is launched explicitl
   and observed ratios identical to the earlier derived values (victim 0.452 both arms; competitor 0.585 attack,
   0.000 control). No metric, threshold, control, workload or endpoint changed; the mock now mirrors the fully
   patched target. Single seed, not an effect.
+- **2026-11-21 09:00–09:08 local (tooling; no metric, threshold or control changed):** added a fail-closed engine
+  preflight (awake + idle, bounded at 30 s), a stop on server restart, a per-suite target snapshot,
+  `prefill_computed_tokens_measured` from `prompt_tokens_by_source_total` (secondary, beside the
+  pre-registered estimate), and a warm-cache re-run guard. The guard came from an invalid smoke: an A7 smoke repeated
+  on the same server start with the same salt hit 98.6% of prompt tokens in both arms, because the prefix cache
+  persists across runs. Each Suite S block therefore runs once per salt per server start.

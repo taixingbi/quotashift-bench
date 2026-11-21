@@ -175,3 +175,39 @@ def probe_capabilities(prof: TargetProfile, timeout_s: float = 10.0) -> dict:
     if prof.gpu_exporter_url and exp is None:
         caps["gpu_exporter"] = {"power_w_ok": False, "error": f"unreachable: {prof.gpu_exporter_url}"}
     return caps
+
+
+def write_target_snapshot(prof: TargetProfile, out: Path, *, timeout_s: float = 10.0) -> dict:
+    """Read-only (GET only) record of the server state a suite ran against: target check + capabilities,
+    `/version`, `/v1/models`, the `vllm:*` and `process_*` lines of `/metrics`, and the GPU exporter's
+    `nvidia_smi_gpu_info`. Written under `<report>/target_snapshot/`; never contains credentials."""
+    import datetime
+    import json
+
+    out.mkdir(parents=True, exist_ok=True)
+    base = prof.backend_url.rstrip("/")
+
+    def get(u: str) -> str | None:
+        try:
+            r = httpx.get(u, timeout=timeout_s)
+            r.raise_for_status()
+            return r.text
+        except httpx.HTTPError:
+            return None
+
+    chk = check_target(prof, timeout_s=timeout_s)
+    files = {"version.json": get(base + "/version"), "models.json": get(base + "/v1/models")}
+    met = get(base + "/metrics")
+    files["metrics_vllm.prom"] = None if met is None else "\n".join(
+        ln for ln in met.splitlines() if ln.startswith(("vllm:", "process_start_time_seconds"))) + "\n"
+    if prof.gpu_exporter_url:
+        exp = get(prof.gpu_exporter_url)
+        files["gpu_info.prom"] = None if exp is None else "\n".join(
+            ln for ln in exp.splitlines() if ln.startswith("nvidia_smi_gpu_info")) + "\n"
+    for name, text in files.items():
+        if text is not None:
+            (out / name).write_text(text)
+    rec = {"captured_utc": datetime.datetime.now(datetime.UTC).isoformat(), "target": prof.name,
+           "check": chk, "files": {k: v is not None for k, v in files.items()}}
+    (out / "target_check.json").write_text(json.dumps(rec, indent=2, default=str))
+    return rec

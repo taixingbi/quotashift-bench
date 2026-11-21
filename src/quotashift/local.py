@@ -95,9 +95,47 @@ def run_scenario_local(
                           lifecycle_plans=lifecycle_plans)
 
 
+def current_server_start(target: TargetProfile) -> float | None:
+    """vLLM `process_start_time_seconds` now (read-only GET); None if unavailable."""
+    import httpx
+
+    from quotashift.instrumentation.prom import parse_prometheus_text, resolve
+
+    try:
+        r = httpx.get(target.backend_url.rstrip("/") + "/metrics", timeout=10.0)
+        r.raise_for_status()
+    except httpx.HTTPError:
+        return None
+    return resolve(parse_prometheus_text(r.text)).values.get("process_start_time_seconds")
+
+
+def warm_cache_reruns(results_root: Path, experiment_id: str, trace: list, server_start: float | None) -> list[Path]:
+    """Earlier runs of the byte-identical trace (same trace_sha256) on the SAME vLLM server start.
+
+    The prefix cache persists across runs, so re-sending identical prompts without a verified reset measures
+    a warm cache (observed 2026-11-21: an A7 smoke repeated on the same server start hit 98.6% in both arms).
+    Protocol rule (PLAN.md): a new `isolation_salt` per replication, or `cache_reset: vllm_endpoint`."""
+    if server_start is None:
+        return []
+    from quotashift.workload.generator import trace_hash
+
+    sha = trace_hash(trace)
+    hits = []
+    for man in sorted((results_root / experiment_id).glob("*/manifest.json")):
+        try:
+            m = json.loads(man.read_text())
+            summ = json.loads((man.parent / "metrics_summary.json").read_text())
+        except (OSError, ValueError):
+            continue
+        st = ((summ.get("engine_counters") or {}).get("engine_state_at_start") or {}).get("process_start_time_seconds")
+        if m.get("trace_sha256") == sha and st == server_start:
+            hits.append(man.parent)
+    return hits
+
+
 def run_matched_pairs(
     scenario: ScenarioConfig, results_root: Path, *, reps: int, target: TargetProfile | None = None,
-    path: str = "gateway",
+    path: str = "gateway", allow_warm_rerun: bool = False,
 ) -> dict:
     """Run the attack and its matched control over `reps` seeds (Phase 5 orchestration).
 
@@ -113,6 +151,20 @@ def run_matched_pairs(
     budgets: dict[int, dict] = {}
     order: dict[int, list[str]] = {}
     resets: dict[int, dict] = {}
+    server_start: float | None = None  # process_start_time_seconds of the first arm; must not change
+    guard_start = (current_server_start(target) if target is not None and scenario.cache_reset == "none"
+                   and not allow_warm_rerun else None)
+    if guard_start is not None:  # refuse BEFORE any run: identical prompts already sent to this server start
+        prior: list[Path] = []
+        for s in seeds:
+            a_tr, c_tr, _ = paired_traces(scenario, s)
+            prior += warm_cache_reruns(results_root, f"{scenario.scenario_id}__attack", a_tr, guard_start)
+            prior += warm_cache_reruns(results_root, f"{scenario.scenario_id}__control", c_tr, guard_start)
+        if prior:
+            raise WarmCacheRerun(
+                f"{len(prior)} earlier run(s) sent byte-identical prompts to this vLLM server start "
+                f"({guard_start}); the prefix cache is warm. Use a new isolation_salt for a new replication, "
+                f"or cache_reset: vllm_endpoint. First: {prior[0]}")
     label: str = scenario.comparison.primary_control
     v2 = scenario.protocol_version >= 2
     for i, s in enumerate(seeds):
@@ -141,7 +193,14 @@ def run_matched_pairs(
                 scenario, results_root, target=target, trace=atk_trace if arm == "attack" else ctl_trace,
                 experiment_id=f"{scenario.scenario_id}__{arm}", seed=s, path=path, lifecycle_plans=plans)
             (attack if arm == "attack" else control)[s] = out
-            chk = json.loads((out / "metrics_summary.json").read_text()).get("cleanup_checks") or {}
+            summ = json.loads((out / "metrics_summary.json").read_text())
+            st = ((summ.get("engine_counters") or {}).get("engine_state_at_start") or {}).get("process_start_time_seconds")
+            ec = summ.get("engine_counters") or {}
+            if ec.get("server_restarted") or (st is not None and server_start is not None and st != server_start):
+                raise ServerRestarted(f"vLLM restarted during the experiment (start {server_start} -> {st}, "
+                                      f"arm {arm} seed {s}); runs across server starts are never pooled")
+            server_start = st if server_start is None else server_start
+            chk = summ.get("cleanup_checks") or {}
             if chk.get("leak_detected"):  # stop the stress experiment; record the defect
                 raise LifecycleLeak(f"cleanup check failed after {arm} seed {s}: {chk} (run dir {out})")
     return {"seeds": seeds, "attack": attack, "control": control, "control_label": label, "budgets": budgets,
@@ -161,6 +220,14 @@ def budget_view(scenario: ScenarioConfig, atk: list, seed: int) -> list:
 
 class LifecycleLeak(RuntimeError):
     """A cleanup/accounting check failed after an arm; the experiment is stopped (A8 safety rule)."""
+
+
+class WarmCacheRerun(RuntimeError):
+    """Identical prompts were already sent to the current server start without a verified reset."""
+
+
+class ServerRestarted(RuntimeError):
+    """vLLM's process start time changed between or within arms; the series is broken, stop."""
 
 
 class CacheResetUnverified(RuntimeError):

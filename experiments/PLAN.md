@@ -127,7 +127,7 @@ disk after each suite (only one disk was available on 2026-11-21).
 
 ## Order
 
-0. Implement target-reference follow-ups 1, 2 and 4 (preflight checks, `prompt_tokens_by_source`, target snapshot). These are zero-cost and need no GPU sweep.
+0. ~~Implement target-reference follow-ups 1, 2 and 4~~ **done 2026-11-21** (preflight checks, `prompt_tokens_by_source`, target snapshot), plus a warm-cache re-run guard. Validated live on .173.
 1. P1 GPU exporter on the GPU host; commit the code + configs (manifests record git SHA and a dirty flag).
 2. R1 (cache ON) → owner restarts vLLM with caching OFF → R2 → restart with caching ON → R3.
 3. E0 → E1 → E2 (validates baseline, overhead and quota correctness) → E3–E6.
@@ -171,3 +171,23 @@ GPU power verified 2026-11-21 06:36–06:51 local: `gpu_exporter_url: http://192
 (nvidia_gpu_exporter). Each run now waits for GPU idle clocks before the arm (about 3.5 s) and records the
 post-arm power tail (about 22 s), which adds about 25 s per run. The idle-baseline defect and its fix are in the
 design doc amendments.
+
+### Step 0 implemented (2026-11-21 09:00–09:08 local)
+
+- **Preflight, fail closed:** before each live arm, a bounded 30 s wait for `num_requests_running = waiting = 0`
+  and `engine_sleep_state{awake} = 1`. If that fails, `EngineNotReady` stops the run (exit 4). The per-arm
+  `process_start_time_seconds` must not change during an experiment; if it does, `ServerRestarted` (exit 4).
+- **Prefill accounting:** `prefill_computed_tokens_measured` = Δ`prompt_tokens_by_source_total{local_compute}`,
+  reported beside the pre-registered estimate (Δprompt − Δhits) with their difference. Live A7 smoke: 250 = 250.
+- **Target snapshot:** every live `quotashift experiment` writes `<report>/target_snapshot/` (target check, `/version`,
+  `/v1/models`, the `vllm:` and `process_start_time_seconds` lines, GPU `nvidia_smi_gpu_info`) and refuses to start
+  if the target check fails.
+- **Warm-cache re-run guard:** without a verified reset (`cache_reset: none`), the run is refused (exit 3) before
+  anything is sent if a run with a byte-identical trace (same `trace_sha256`) already ran on the current server
+  start. Fix: a new `isolation_salt` per replication. `--allow-warm-rerun` exists only for deliberate harness
+  checks. **Found by:** the A7 smoke `reports/v3/smoke_step0/a7_prefix_cache_smoke` (14:02 UTC) repeated the
+  13:45 UTC smoke on the same server start. Both arms hit 98.6% (warm cache), so it's **invalid** as an A7
+  measurement and kept only as evidence. The guard only recognizes runs that recorded `process_start_time_seconds`
+  (from 2026-11-21 09:00 local onward).
+- **Suite S consequence:** each `experiments/v3/*.yaml` block runs once per server start with its current salt. A
+  repeat (for example after a failure) needs a new `isolation_salt`, or a server restart, which starts a new series.

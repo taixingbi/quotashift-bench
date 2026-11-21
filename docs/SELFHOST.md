@@ -146,6 +146,12 @@ Expected under `check.capabilities` (2026-11-21):
 - `process_start_time_seconds` equals the value recorded for the series; any change means a server restart, so
   start a new series.
 
+`quotashift experiment --live` runs this check automatically, saves it to `<report>/target_snapshot/`, and refuses to
+start if it fails. During the run, each arm also waits (at most 30 s) for the engine to be awake and idle
+(`EngineNotReady` otherwise), and stops with `ServerRestarted` if `process_start_time_seconds` changes. Without a
+verified reset, re-sending a byte-identical trace to the same server start is refused (warm prefix cache): use a
+new `isolation_salt` per replication.
+
 Manual equivalents (all read-only, except the reset):
 
 ```bash
@@ -176,10 +182,16 @@ From vLLM `/metrics` (engine-global; no tenant labels):
 | `vllm:cache_config_info` | config check (prefix caching, memory utilization, block count) |
 | `process_start_time_seconds` | restart / counter-reset detection |
 
-Available but **not yet read** (plan follow-ups in `experiments/PLAN.md`):
-- `vllm:prompt_tokens_by_source_total{source=local_compute|local_cache_hit}`: direct prefill-computed tokens.
-- `vllm:engine_sleep_state{sleep_state="awake"}`.
-- `vllm:estimated_flops_per_gpu_total` and the related read/write-bytes counters: 0 unless MFU tracking is enabled.
+| `vllm:prompt_tokens_by_source_total{source=local_compute\|local_cache_hit}` | measured prefill-computed tokens (beside the Δprompt − Δhits estimate) |
+| `vllm:engine_sleep_state{sleep_state="awake"}` | preflight: the engine must be awake |
+| `process_start_time_seconds` | also: series key, restart stop, warm-cache re-run guard |
+
+Available but **not read**: `vllm:estimated_flops_per_gpu_total` and the related read/write-bytes counters
+(0 unless MFU tracking is enabled).
+
+Observed on 0.17.1 (patched): Δ`local_compute` + Δ`local_cache_hit` exceeded Δ`prompt_tokens_total` by 4 tokens
+in a 18,250-token arm, while Δ`local_compute` matched Δprompt − Δ`prefix_cache_hits_total` exactly. The cause
+isn't known; it's reported, not corrected.
 
 Histograms appear as `_bucket`, `_sum` and `_count`. Names change between vLLM versions, so confirm them with
 `curl -s $B/metrics | grep '^vllm:'` after any upgrade.
