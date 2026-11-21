@@ -51,6 +51,33 @@ class RunMetrics:
     victim_e2e_p95_ms: float
     competitor_requests: int      # measured (completed) competing requests
     competitor_tokens: int        # measured competing input+output tokens
+    # engine-global, per arm (from before/after /metrics snapshots); None when unavailable
+    prefix_cache_hit_ratio: float | None = None
+    prefix_cache_queries: float | None = None
+    unrelated_traffic_suspected: bool | None = None
+    victim_tpot_p95_ms: float | None = None
+    victim_prompt_tokens: int | None = None
+    path: str | None = None
+    # v3 cost accounting / pressure (engine-global; None when unavailable — never estimated otherwise)
+    victim_ttft_p99_ms: float | None = None
+    victim_e2e_p99_ms: float | None = None
+    authorized_tokens: int | None = None
+    competitor_authorized_tokens: int | None = None
+    prefill_computed_tokens: float | None = None
+    generation_tokens: float | None = None
+    engine_prefill_time_s: float | None = None
+    engine_decode_time_s: float | None = None
+    engine_busy_s: float | None = None
+    gpu_energy_j: float | None = None
+    gpu_dynamic_energy_j: float | None = None
+    gpu_util_mean: float | None = None
+    kv_cache_usage_max: float | None = None
+    num_requests_waiting_max: float | None = None
+    leak_detected: bool | None = None
+    run_cutoff_cancellations: int | None = None
+    victim_cached_coverage: float | None = None  # share of completed victim requests reporting cached_tokens
+    victim_cached_hit_ratio_reported: float | None = None  # reported-only, post-warm-up
+    competitor_cached_hit_ratio_reported: float | None = None
 
     def as_row(self) -> dict:
         return {k: getattr(self, k) for k in self.__dataclass_fields__}
@@ -73,6 +100,14 @@ def run_metrics(run_dir: Path, scenario: str, arm: str, seed: int) -> RunMetrics
     )
     vic = df[df["workload_class"] == "victim"]
     vic_ok = vic[vic["terminal_status"] == "completed"]
+    ec = summary.get("engine_counters") or {}
+    ca = summary.get("cost_accounting") or {}
+    from quotashift.evaluation.cache_hits import cached_token_summary
+
+    ch = cached_token_summary(df)["by_class"]  # post-warm-up rows, like every other per-run metric
+    vch, cch = ch.get("victim") or {}, ch.get("competitor") or {}
+    n_out = vic_ok["output_tokens"].fillna(0)
+    tpot = ((vic_ok["t_terminal"] - vic_ok["t_first_token"]) * 1000.0 / (n_out - 1)).where(n_out > 1)
     comp_ok = df[(df["workload_class"] == "competitor") & (df["terminal_status"] == "completed")]
     comp_tokens = int((comp_ok["input_token_count"].fillna(0) + comp_ok["output_tokens"].fillna(0)).sum())
     return RunMetrics(
@@ -84,6 +119,24 @@ def run_metrics(run_dir: Path, scenario: str, arm: str, seed: int) -> RunMetrics
         victim_e2e_p50_ms=_pctl(vic_ok["e2e_ms"], 50), victim_e2e_p95_ms=_pctl(vic_ok["e2e_ms"], 95),
         competitor_requests=int(len(comp_ok)),
         competitor_tokens=comp_tokens,
+        prefix_cache_hit_ratio=ec.get("prefix_cache_hit_ratio"),
+        prefix_cache_queries=ec.get("prefix_cache_queries_total") if isinstance(ec.get("prefix_cache_queries_total"), float) else None,
+        unrelated_traffic_suspected=ec.get("unrelated_traffic_suspected"),
+        victim_tpot_p95_ms=_pctl(tpot.dropna(), 95) if len(tpot.dropna()) else None,
+        victim_prompt_tokens=(int(pd.to_numeric(vic_ok["prompt_tokens_reported"], errors="coerce").fillna(0).sum())
+                              if "prompt_tokens_reported" in vic_ok else None),
+        path=summary.get("path"),
+        victim_ttft_p99_ms=_pctl(vic_ok["ttft_ms"], 99), victim_e2e_p99_ms=_pctl(vic_ok["e2e_ms"], 99),
+        authorized_tokens=ca.get("authorized_tokens"), competitor_authorized_tokens=ca.get("competitor_authorized_tokens"),
+        prefill_computed_tokens=_f(ec.get("prefill_computed_tokens_est")), generation_tokens=_f(ec.get("generation_tokens_total")),
+        engine_prefill_time_s=_f(ec.get("prefill_time_seconds_sum")), engine_decode_time_s=_f(ec.get("decode_time_seconds_sum")),
+        engine_busy_s=_f(ca.get("engine_busy_s")), gpu_energy_j=_f(ca.get("gpu_energy_j")),
+        gpu_dynamic_energy_j=_f(ca.get("gpu_dynamic_energy_j")), gpu_util_mean=_f(ca.get("gpu_util_mean")),
+        kv_cache_usage_max=_f(ca.get("kv_cache_usage_max")), num_requests_waiting_max=_f(ca.get("num_requests_waiting_max")),
+        leak_detected=(summary.get("cleanup_checks") or {}).get("leak_detected"),
+        run_cutoff_cancellations=(summary.get("cleanup_checks") or {}).get("run_cutoff_cancellations"),
+        victim_cached_coverage=vch.get("coverage"), victim_cached_hit_ratio_reported=vch.get("hit_ratio_reported"),
+        competitor_cached_hit_ratio_reported=cch.get("hit_ratio_reported"),
     )
 
 
@@ -99,12 +152,52 @@ def bootstrap_ci(values: list[float], *, n: int = 10000, seed: int = 0, alpha: f
     return (float(np.percentile(means, 100 * alpha / 2)), float(np.percentile(means, 100 * (1 - alpha / 2))))
 
 
+def _f(x: object) -> float | None:
+    return float(x) if isinstance(x, (int, float)) and not isinstance(x, bool) and np.isfinite(x) else None
+
+
+def _per_1k(v: float | None, tokens: int | None) -> float:
+    return v / (tokens / 1000.0) if v is not None and tokens else float("nan")
+
+
 def _metric_value(m: RunMetrics, metric: str) -> float:
-    return {"ttft_p95": m.victim_ttft_p95_ms, "e2e_p95": m.victim_e2e_p95_ms}[metric]
+    if metric == "ttft_p95":
+        return m.victim_ttft_p95_ms
+    if metric == "e2e_p95":
+        return m.victim_e2e_p95_ms
+    if metric == "gpu_energy_per_1k_authorized_tokens":
+        return _per_1k(m.gpu_dynamic_energy_j, m.authorized_tokens)
+    if metric == "engine_service_s_per_1k_authorized_tokens":
+        svc = None if m.engine_prefill_time_s is None or m.engine_decode_time_s is None else (
+            m.engine_prefill_time_s + m.engine_decode_time_s)
+        return _per_1k(svc, m.authorized_tokens)
+    raise KeyError(metric)
+
+
+MIN_SEEDS_FOR_CLAIM = 5
+
+
+def classify(ci: tuple[float, float] | list[float], threshold: float, direction: str) -> str:
+    """Pre-registered CI-based classification (v3). supported / negative / inconclusive / unavailable."""
+    lo, hi = ci
+    if not (np.isfinite(lo) and np.isfinite(hi)):
+        return "unavailable"
+    if direction == "two_sided":
+        if lo >= threshold or hi <= 1.0 / threshold:
+            return "supported"
+        if lo > 1.0 / threshold and hi < threshold:
+            return "negative"
+        return "inconclusive"
+    if lo >= threshold:
+        return "supported"
+    if hi < threshold:
+        return "negative"
+    return "inconclusive"
 
 
 def analyze_pair(
     attack: list[RunMetrics], control: list[RunMetrics], *, metric: str, threshold: float,
+    direction: str = "increase",
 ) -> dict:
     """Victim degradation ratios, attack-success rate and a bootstrap CI for one pair.
 
@@ -121,7 +214,8 @@ def analyze_pair(
         ratio = av / cv if cv and np.isfinite(cv) and cv > 0 else float("nan")
         per_seed.append({
             "seed": s, "attack_ms": av, "control_ms": cv, "ratio": ratio,
-            "crosses_threshold": bool(np.isfinite(ratio) and ratio >= threshold),
+            "crosses_threshold": bool(np.isfinite(ratio) and (ratio >= threshold or (
+                direction == "two_sided" and ratio <= 1.0 / threshold))),
             "attack_victim_timed_out": a.victim_timed_out, "control_victim_timed_out": c.victim_timed_out,
             "competitor_tokens": a.competitor_tokens, "competitor_requests": a.competitor_requests,
         })
@@ -136,6 +230,11 @@ def analyze_pair(
     return {
         "metric": metric,
         "preregistered_threshold": threshold,
+        "effect_direction": direction,
+        # pre-registered minimum (design doc: >= 5 paired seeds); fewer -> no claim label
+        "classification": (classify((lo, hi), threshold, direction) if len(ratios) >= MIN_SEEDS_FOR_CLAIM
+                           else ("unavailable" if not ratios else "insufficient_seeds")),
+        "n_seeds_with_metric": len(ratios),
         "n_seeds": len(per_seed),
         "per_seed": per_seed,
         "mean_ratio": mean_ratio,
@@ -151,7 +250,7 @@ def analyze_pair(
     }
 
 
-def _fmt(x: float, n: int = 2) -> str:
+def _fmt(x: float | None, n: int = 2) -> str:
     return "n/a" if x is None or not np.isfinite(x) else f"{x:.{n}f}"
 
 
@@ -178,7 +277,9 @@ def write_report(
          if synthetic else "> Live target measurements."), "",
         f"- Control: `{pairs['control_label']}`  ·  seeds: {a['n_seeds']}  ·  "
         f"degradation metric: `{a['metric']}`",
-        f"- **Pre-registered threshold: {a['preregistered_threshold']}×** (fixed before runs; ADR-Q08).", "",
+        f"- **Pre-registered threshold: {a['preregistered_threshold']}×** (fixed before runs; ADR-Q08), "
+        f"direction `{a.get('effect_direction', 'increase')}`; CI-based classification: "
+        f"**{a.get('classification', 'n/a')}** (seeds with metric: {a.get('n_seeds_with_metric', a['n_seeds'])}).", "",
         "## Victim degradation (attack vs matched control)", "",
         f"- Mean victim slowdown ratio: **{_fmt(a['mean_ratio'])}×**  "
         f"(median {_fmt(a['median_ratio'])}×, 95% bootstrap CI "
@@ -201,11 +302,40 @@ def write_report(
             f"| {r['seed']} | {_fmt(r['attack_ms'])} | {_fmt(r['control_ms'])} | {_fmt(r['ratio'])} | "
             f"{'yes' if r['crosses_threshold'] else 'no'} | "
             f"{r['attack_victim_timed_out']}/{r['control_victim_timed_out']} |")
+    by_seed = {(m.arm, m.seed): m for m in (*attack, *control)}
+    if any(m.prefix_cache_hit_ratio is not None for m in (*attack, *control)):
+        md += ["", "### Per-arm engine prefix-cache hit ratio (engine-global) and arm order", "",
+               "| seed | order | attack hit ratio | control hit ratio | unrelated traffic (a/c) |",
+               "|---|---|---|---|---|"]
+        order = pairs.get("arm_order") or {}
+        for sd in pairs["seeds"]:
+            at, ct = by_seed.get(("attack", sd)), by_seed.get(("control", sd))
+            hr = lambda m: "NA" if m is None or m.prefix_cache_hit_ratio is None else f"{m.prefix_cache_hit_ratio:.3f}"  # noqa: E731
+            uf = lambda m: "NA" if m is None or m.unrelated_traffic_suspected is None else str(m.unrelated_traffic_suspected)  # noqa: E731
+            md.append(f"| {sd} | {'→'.join(order.get(sd, ['attack', 'control']))} | {hr(at)} | {hr(ct)} | "
+                      f"{uf(at)}/{uf(ct)} |")
     verdict = ("effect crosses the pre-registered threshold on a majority of runs"
                if a["attack_success_rate"] >= 0.5 else
                "effect does NOT reach the pre-registered threshold on a majority of runs "
                "(reported as a negative result, per the plan)")
-    md += ["", "## Verdict", "", f"Under matched budgets, the {verdict}.", ""]
+    if any(m.authorized_tokens for m in (*attack, *control)):
+        md += ["", "### Cost accounting per arm (engine-global; n/a = not measured)", "",
+               "| arm | seed | authorized tok | prefill-computed tok | generation tok | engine prefill s | "
+               "engine decode s | engine busy s | GPU dyn. energy J | KV max | waiting max | leak |",
+               "|---|---|---|---|---|---|---|---|---|---|---|---|"]
+        cache_md = ["", "### Per-request prefix-cache hits (reported-only; null = missing, not 0)", "",
+                    "| arm | seed | victim coverage | victim hit ratio | competitor hit ratio |", "|---|---|---|---|---|"]
+        for m in sorted((*attack, *control), key=lambda x: (x.seed, x.arm)):
+            md.append(f"| {m.arm} | {m.seed} | {m.authorized_tokens} | {_fmt(m.prefill_computed_tokens, 0)} | "
+                      f"{_fmt(m.generation_tokens, 0)} | {_fmt(m.engine_prefill_time_s)} | {_fmt(m.engine_decode_time_s)} | "
+                      f"{_fmt(m.engine_busy_s)} | {_fmt(m.gpu_dynamic_energy_j, 1)} | {_fmt(m.kv_cache_usage_max, 3)} | "
+                      f"{_fmt(m.num_requests_waiting_max, 0)} | {m.leak_detected} |")
+            cache_md.append(f"| {m.arm} | {m.seed} | {_fmt(m.victim_cached_coverage, 3)} | "
+                            f"{_fmt(m.victim_cached_hit_ratio_reported, 3)} | {_fmt(m.competitor_cached_hit_ratio_reported, 3)} |")
+        if any(m.victim_cached_coverage is not None for m in (*attack, *control)):
+            md += cache_md
+    md += ["", "## Verdict", "", f"Under matched budgets, the {verdict}.",
+           f"Pre-registered CI classification: **{a.get('classification', 'n/a')}**.", ""]
     md_path = out_dir / "summary.md"
     md_path.write_text("\n".join(md) + "\n")
 
@@ -223,6 +353,15 @@ def write_report(
             "control": {str(s): str(p) for s, p in pairs["control"].items()},
         },
         "analysis": {k: v for k, v in a.items() if k != "per_seed"},
+        "protocol_version": pairs.get("protocol_version", 1),
+        "path": pairs.get("path", "gateway"),
+        "arm_order": {str(k): v for k, v in (pairs.get("arm_order") or {}).items()},
+        "per_arm_prefix_cache_hit_ratio": {
+            "attack": {str(m.seed): m.prefix_cache_hit_ratio for m in attack},
+            "control": {str(m.seed): m.prefix_cache_hit_ratio for m in control}},
+        "unrelated_traffic_suspected": {
+            "attack": {str(m.seed): m.unrelated_traffic_suspected for m in attack},
+            "control": {str(m.seed): m.unrelated_traffic_suspected for m in control}},
         "commands": commands,
     }
     man_path = out_dir / "manifest.json"

@@ -24,8 +24,9 @@ from typing import Literal
 from urllib.parse import urlparse
 
 import yaml
-from pydantic import BaseModel, ConfigDict, Field, PrivateAttr, model_validator
+from pydantic import BaseModel, ConfigDict, Field, PrivateAttr, field_validator, model_validator
 
+from quotashift.gateway.quotas import RateLimits
 from quotashift.schema import (
     ArrivalProcess,
     LengthDist,
@@ -40,8 +41,37 @@ from quotashift.workload import generator as gen
 
 SCENARIO_SCHEMA_VERSION = 1
 
-Pattern = Literal["steady", "burst_bounded"]
-RequestShape = Literal["short", "context_heavy", "decode_heavy", "mixed"]
+# "steady" is (historically) Poisson; "poisson" is an explicit alias with identical semantics;
+# "constant" is deterministic 1/rate spacing. Historical scenarios keep "steady" unchanged.
+Pattern = Literal["steady", "burst_bounded", "poisson", "constant"]
+RequestShape = Literal["short", "context_heavy", "decode_heavy", "mixed", "long_context"]
+
+# What each in-process control holds fixed vs lets vary relative to the attack arm. Victim traffic
+# is identical in every control. No control can match request count, rate, total tokens AND the
+# input/output composition simultaneously when shapes differ — each picks a subset (reported).
+CONTROL_DIMENSIONS: dict[str, dict[str, list[str]]] = {
+    "shuffled_phase_order": {"controlled": ["victim_traffic", "request_count", "total_tokens", "io_composition",
+                                            "request_multiset"], "varies": ["temporal_order_of_phases"]},
+    "uniform_arrivals": {"controlled": ["victim_traffic", "request_count", "total_tokens", "io_composition",
+                                        "request_bodies"], "varies": ["arrival_timing (burst -> uniform)"]},
+    "matched_total_short": {"controlled": ["victim_traffic", "total_tokens"],
+                            "varies": ["request_count", "request_rate", "io_composition"]},
+    "homogeneous_mixture": {"controlled": ["victim_traffic", "request_count", "arrival_times", "total_tokens"],
+                            "varies": ["per_request_size_distribution"]},
+    "rate_matched_short": {"controlled": ["victim_traffic", "request_count", "arrival_times", "request_rate"],
+                           "varies": ["total_tokens", "io_composition"]},
+    "benign_only": {"controlled": ["victim_traffic"], "varies": ["competitor_present"]},
+    # protocol v3 (A7–A9)
+    "prefix_unique": {"controlled": ["victim_traffic", "request_count", "arrival_times", "request_rate",
+                                     "total_tokens", "io_composition", "output_limits"],
+                      "varies": ["competitor_prefix_reuse (shared within arm -> unique per request)"]},
+    "identical_workload": {"controlled": ["victim_traffic", "request_count", "arrival_times", "request_rate",
+                                          "total_tokens", "io_composition", "output_limits"],
+                           "varies": ["nothing (A/A null; per-arm nonce only)"]},
+    "lifecycle_normal": {"controlled": ["victim_traffic", "request_count", "arrival_times", "total_tokens",
+                                        "io_composition", "output_limits"],
+                         "varies": ["request_lifecycle (cancel/timeout/retry -> complete)", "realized_work"]},
+}
 BudgetClass = Literal["total_requests", "input_tokens", "output_tokens", "wall_clock"]
 
 # Private-only endpoint allowlist (QUOTASHIFT_CLAUDE_CODE_PLAN.md §0.9, §1 Phase 1).
@@ -103,18 +133,68 @@ class Comparison(_Frozen):
         "uniform_arrivals",      # A1 — in-process, competitor arrivals re-timed evenly
         "matched_total_short",   # A2/A3 — in-process, competitor token budget as short requests
         "homogeneous_mixture",   # A4 — in-process, equal-sized mean-shape requests (count fixed)
+        "rate_matched_short",    # v2 — same competitor arrival times/count, shape -> short (tokens vary)
+        "prefix_unique",         # v3 A7 — same bodies/lengths; competitor prefixes unique instead of shared
+        "identical_workload",    # v3 A7-V — A/A null (identical workload, per-arm nonce)
+        "lifecycle_normal",      # v3 A8 — same requests, all complete normally (+ pre-scheduled retry twins)
         "benign_only",           # B0 — victim-only reference
     ]
     matched_request_budget: bool = True
     matched_token_budget: bool = True
     repetitions: int = Field(default=5, ge=1)
-    degradation_metric: Literal["ttft_p95", "e2e_p95"] = "ttft_p95"
+    degradation_metric: Literal["ttft_p95", "e2e_p95", "gpu_energy_per_1k_authorized_tokens",
+                                "engine_service_s_per_1k_authorized_tokens"] = "ttft_p95"
+    # v3: direction of the pre-registered effect. "increase" (historical): ratio >= threshold.
+    # "two_sided": ratio >= threshold OR ratio <= 1/threshold.
+    effect_direction: Literal["increase", "two_sided"] = "increase"
+    threshold_justification: str | None = None
     # Pre-registered threshold: the victim-slowdown ratio that counts as "impact".
     # Chosen before any run; never after seeing results (plan §5).
     preregistered_threshold: float = Field(default=1.5, gt=1.0)
     # Pre-registered budget tolerance: max relative difference between attack and
     # control along a matched dimension (request count / tokens). Fail-closed.
     budget_tolerance: float = Field(default=0.05, ge=0.0, lt=1.0)
+
+
+class PrefixCacheSpec(_Frozen):
+    """v3 (A7/A9) controlled prefix reuse. Prefixes are arm-salted: reuse happens only within an arm."""
+
+    victim_prefix_tokens: int = Field(default=0, ge=0)  # per-victim-tenant shared system prefix
+    competitor_prefix_tokens: int = Field(default=0, ge=0)
+    attack_competitor_mode: Literal["shared", "unique"] = "shared"
+    control_competitor_mode: Literal["shared", "unique", "none"] = "unique"  # none: leave control competitor as-is
+
+
+class LifecycleSpec(_Frozen):
+    """v3 (A8) bounded per-request lifecycle plans for competing tenants (attack arm only)."""
+
+    cancel_fraction: float = Field(default=0.0, ge=0.0, le=1.0)
+    cancel_after_chunks: int = Field(default=16, ge=1)
+    timeout_fraction: float = Field(default=0.0, ge=0.0, le=1.0)
+    timeout_after_s: float = Field(default=1.0, gt=0.0, le=60.0)
+    retry_on: list[Literal["cancel", "timeout"]] = Field(default_factory=list)
+    max_retries: int = Field(default=0, ge=0, le=2)  # hard bound; no unbounded retry loops
+    retry_backoff_s: float = Field(default=0.5, ge=0.0, le=30.0)
+    control_preschedule_retries: bool = False  # control gets equal-shaped twins at planned retry times
+
+    @model_validator(mode="after")
+    def _check(self) -> LifecycleSpec:
+        if self.cancel_fraction + self.timeout_fraction > 1.0:
+            raise ValueError("cancel_fraction + timeout_fraction must be <= 1")
+        if self.max_retries and not self.retry_on:
+            raise ValueError("max_retries > 0 needs retry_on")
+        if self.control_preschedule_retries and (self.retry_on != ["timeout"] or self.max_retries != 1):
+            raise ValueError("control_preschedule_retries supports exactly retry_on=[timeout], max_retries=1")
+        return self
+
+
+class ScenarioGateway(_Frozen):
+    """Optional fixed gateway controls for a scenario (identical in attack and control arms)."""
+
+    rate_limits: RateLimits | None = None
+    max_queue_per_tenant: int | None = Field(default=None, gt=0)
+    max_queue_total: int | None = Field(default=None, gt=0)
+    max_queue_wait_s: float | None = Field(default=60.0, gt=0)
 
 
 class Phase(_Frozen):
@@ -154,12 +234,31 @@ class ScenarioConfig(_Frozen):
     # Resolved relative to this scenario's file. Required unless the control is
     # generated in-process (shuffled_phase_order) or the scenario has no competitors.
     control_scenario: str | None = None
+    # ---- protocol v2 (prefix-cache isolation). v1 (default) == historical A1–A5 semantics.
+    # v2: per-arm salted-hash prompt nonce at the very start of every prompt (replacing filler of
+    # equal length, so planned token budgets are unchanged) + counterbalanced arm order across
+    # paired seeds + per-arm prefix-cache counter snapshots (see workload/isolation.py, ADR-Q13).
+    protocol_version: Literal[1, 2, 3] = 1
+    # ---- protocol v3 (A7–A9; docs/A7_A9_EXPERIMENT_DESIGN.md)
+    prefix_cache: PrefixCacheSpec | None = None
+    lifecycle: LifecycleSpec | None = None
+    metrics_interval_s: float | None = Field(default=None, gt=0.0, le=5.0)  # engine scrape interval override
+    cache_reset: Literal["none", "vllm_endpoint"] = "none"  # verified reset before each arm (fail closed)
+    isolation_salt: str = ""  # change per replication: the server cache persists across experiments
+    expect_prefix_caching: Literal["any", "on", "off"] = "any"  # fail closed if the server differs
+    gateway: ScenarioGateway | None = None  # fixed rate limits / queue caps (None = historical)
 
     # Directory of the file this scenario was loaded from (for resolving
     # `control_scenario`); set by `load_scenario`, None for in-memory configs.
     _source_dir: Path | None = PrivateAttr(default=None)
 
     # ---------------------------------------------------------------- validation
+
+    @field_validator("expect_prefix_caching", mode="before")
+    @classmethod
+    def _yaml_bool(cls, v: object) -> object:
+        # YAML 1.1 parses bare on/off as booleans
+        return {True: "on", False: "off"}.get(v, v) if isinstance(v, bool) else v
 
     @model_validator(mode="after")
     def _check(self) -> ScenarioConfig:
@@ -207,7 +306,14 @@ class ScenarioConfig(_Frozen):
         # YAML; the benign-only reference may use either an explicit B0 file or this
         # scenario's own victim traffic.
         ctrl = self.comparison.primary_control
-        _in_process = ("shuffled_phase_order", "uniform_arrivals", "matched_total_short", "homogeneous_mixture")
+        _in_process = ("shuffled_phase_order", "uniform_arrivals", "matched_total_short", "homogeneous_mixture",
+                       "rate_matched_short", "prefix_unique", "identical_workload", "lifecycle_normal")
+        dims = CONTROL_DIMENSIONS[ctrl]["controlled"]
+        if ctrl != "benign_only":
+            if self.comparison.matched_token_budget and "total_tokens" not in dims:
+                raise ValueError(f"{ctrl} does not control total tokens; set comparison.matched_token_budget: false")
+            if self.comparison.matched_request_budget and "request_count" not in dims:
+                raise ValueError(f"{ctrl} does not control request count; set comparison.matched_request_budget: false")
         if ctrl in _in_process:
             if self.control_scenario is not None:
                 raise ValueError(f"{ctrl} control is generated in-process; drop control_scenario")
@@ -222,6 +328,18 @@ class ScenarioConfig(_Frozen):
                 f"benign rate*runtime ~= {est_victim} req/tenant exceeds max_requests_per_tenant={s.max_requests_per_tenant}"
             )
         est_comp = round(sum((p.rate_rps or self.competitor_rate_rps) * p.duration_seconds for p in self.phases))
+        if self.lifecycle is not None:  # bounded retries count against the hard caps
+            est_comp = round(est_comp * (1 + self.lifecycle.max_retries))
+        v3_only = {"prefix_cache": self.prefix_cache, "lifecycle": self.lifecycle}
+        for name, val in v3_only.items():
+            if val is not None and self.protocol_version != 3:
+                raise ValueError(f"{name} requires protocol_version: 3")
+        if ctrl == "prefix_unique" and (self.prefix_cache is None or not self.prefix_cache.competitor_prefix_tokens):
+            raise ValueError("prefix_unique control needs prefix_cache.competitor_prefix_tokens > 0")
+        if ctrl == "lifecycle_normal" and self.lifecycle is None:
+            raise ValueError("lifecycle_normal control needs a lifecycle block")
+        if self.cache_reset != "none" and self.protocol_version != 3:
+            raise ValueError("cache_reset requires protocol_version: 3")
         if self.competing_tenants and est_comp > s.max_requests_per_tenant:
             raise ValueError(
                 f"competitor expected ~{est_comp} req/tenant exceeds max_requests_per_tenant={s.max_requests_per_tenant}"
@@ -250,6 +368,8 @@ class ScenarioConfig(_Frozen):
             p_med, max_out, o_med = in_cap, min(32, out_cap), min(24, out_cap)
         elif shape == "decode_heavy":  # long output, short input
             p_med, max_out, o_med = min(48, in_cap), out_cap, out_cap
+        elif shape == "long_context":  # long input AND moderate output (KV-cache pressure)
+            p_med, max_out, o_med = in_cap, min(256, out_cap), min(256, out_cap)
         else:  # mixed
             p_med, max_out, o_med = min(256, in_cap), min(128, out_cap), min(96, out_cap)
         prompt = LengthDist(dist="lognormal", median=float(max(2, p_med)), sigma=0.3, min=1, max=in_cap)
@@ -257,8 +377,10 @@ class ScenarioConfig(_Frozen):
         return prompt, max_out, realized
 
     def _arrival(self, pattern: Pattern, rate: float) -> ArrivalProcess:
-        if pattern == "steady":
+        if pattern in ("steady", "poisson"):
             return ArrivalProcess(process="poisson", rate_rps=rate)
+        if pattern == "constant":
+            return ArrivalProcess(process="constant", rate_rps=rate)
         # burst_bounded: on/off MMPP with a bounded burst multiplier, base is low.
         return ArrivalProcess(
             process="onoff",
@@ -416,6 +538,16 @@ class ScenarioConfig(_Frozen):
             return self._matched_total_short_control(seed), "matched_total_short"
         if ctrl == "homogeneous_mixture":
             return self._homogeneous_mixture_control(seed), "homogeneous_mixture"
+        if ctrl == "rate_matched_short":
+            return self._rate_matched_short_control(seed), "rate_matched_short"
+        if ctrl in ("prefix_unique", "identical_workload"):
+            # bodies identical; the arm difference is applied by workload.prefix_cache / isolation (paired_traces)
+            return self.build_trace(seed), ctrl
+        if ctrl == "lifecycle_normal":
+            from quotashift.workload.lifecycle import control_with_retry_twins
+
+            sd = self.seed if seed is None else seed
+            return control_with_retry_twins(self, self.build_trace(sd), sd), "lifecycle_normal"
         # benign_only
         if self.control_scenario:
             return self.load_control().build_trace(seed), f"control:{self.control_scenario}"
@@ -509,6 +641,28 @@ class ScenarioConfig(_Frozen):
                     break  # stopping now is at least as close as adding this request
                 out.append(it)
                 cum += t
+        out.sort(key=lambda it: (it.request.arrival_time_s, it.request.request_id))
+        return out
+
+    def _rate_matched_short_control(self, seed: int | None) -> list[TraceItem]:
+        """Rate-matched control: identical competitor arrival times and count, every competitor
+        request resized to the short shape (64/64). Request count and rate are matched exactly;
+        total tokens and input/output composition vary (reported, not gated)."""
+        seed = self.seed if seed is None else seed
+        trace = self.build_trace(seed)
+        out = [it for it in trace if it.request.workload_class != "competitor"]
+        short = min(64, self.safety.max_input_tokens_per_request), min(64, self.safety.max_output_tokens_per_request)
+        for tenant, atk in self._competitor_items(trace).items():
+            pool = self._fixed_shape_pool(
+                tenant, in_tokens=short[0], out_tokens=short[1], realized_tokens=min(48, short[1]),
+                rate=3.0 * len(atk) / self.runtime_seconds, seed=seed, label="ctl_rate_short")
+            pool.sort(key=lambda it: (it.request.arrival_time_s, it.request.request_id))
+            if len(pool) < len(atk):
+                raise ValueError(f"rate_matched_short pool too small for {tenant} ({len(pool)} < {len(atk)})")
+            for atk_it, pool_it in zip(atk, pool[: len(atk)], strict=True):
+                out.append(TraceItem(
+                    request=pool_it.request.model_copy(update={"arrival_time_s": atk_it.request.arrival_time_s}),
+                    oracle=pool_it.oracle))
         out.sort(key=lambda it: (it.request.arrival_time_s, it.request.request_id))
         return out
 

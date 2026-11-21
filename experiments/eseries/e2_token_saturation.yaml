@@ -1,0 +1,42 @@
+# E-series (multi-tenant characterization), protocol v2. Separate from the historical A1–A5 suite.
+# NOT YET RUN. Pre-registered fields (threshold/tolerance/metric) are fixed here before any run.
+# E2 RPM/TPM enforcement: competitor offered at 0.5x then 2x its TPM. Gateway path only. Run: run-local --live --path gateway --seed 0..2
+schema_version: 1
+scenario_id: e2_token_saturation
+protocol_version: 2
+expect_prefix_caching: any
+seed: 0
+model: Qwen/Qwen2.5-7B-Instruct
+model_max_len: 4096
+runtime_seconds: 180
+endpoint: http://localhost:8080
+victim_tenants: [t00, t01]
+competing_tenants: [t02]
+budget_class: total_requests
+safety:
+  max_total_requests: 1500
+  max_global_inflight: 8
+  max_requests_per_tenant: 1000
+  max_input_tokens_per_request: 1024
+  max_output_tokens_per_request: 256
+  max_runtime_seconds: 240
+  per_request_timeout_seconds: 120
+comparison:
+  primary_control: rate_matched_short
+  matched_request_budget: true
+  matched_token_budget: false
+  repetitions: 3
+  degradation_metric: ttft_p95
+  preregistered_threshold: 1.5
+  budget_tolerance: 0.05
+benign: {rate_rps: 0.5, request_shape: short, ttft_deadline_ms: 1000, e2e_deadline_ms: 30000}
+gateway:
+  rate_limits:
+    per_tenant: {t02: {rpm: 120, tpm: 30000}}
+    default_tenant: {rpm: 120, tpm: 60000}
+    global_tpm: 120000
+  max_queue_per_tenant: 64
+  max_queue_wait_s: 30
+phases:
+  - {name: under_quota, duration_seconds: 90, pattern: constant, request_shape: mixed, rate_rps: 0.45}
+  - {name: over_quota, duration_seconds: 90, pattern: constant, request_shape: mixed, rate_rps: 1.8}

@@ -51,12 +51,50 @@ Snapshot of RISK-Sched preserved as commit `273a57c` (first commit on `main`).
   warm-up excluded; attack-success rate vs pre-registered threshold; budget-normalized slowdown; bootstrap CI.
 - ✅ Emits `summary.csv`, `summary.md` (with verdict incl. negatives), `figure_*.png`, `manifest.json`
   (per-seed budget report, run dirs, commands). Mock output labelled `synthetic_backend: true`.
-- ✅ First live run (self-hosted vLLM 0.17.1, Qwen2.5-7B-Instruct, 5 seeds/scenario, 2026-11-20).
-  Headline: A2 prefill-heavy 3.16× (100% success); A1 burst 1.58× (60%, marginal); A3/A4/A5 negative under
-  matched budgets. All budgets matched on every seed; zero attack-arm timeouts. See `docs/RESULTS_selfhost.md`.
-- ⬜ AWS measurements still blocked on quota. More reps per scenario held pending owner approval.
-## Phase 6 — optional paper-strengthening ⬜
+- ✅ First live run (self-hosted vLLM 0.17.1, Qwen2.5-7B-Instruct, 2026-11-20). A3–A5 at 5 seeds; A1/A2
+  re-run at 20 seeds (42–61). Headline: A2 prefill-heavy 3.19× (CI [2.66, 3.75], 95% success); A1 burst 1.59×
+  (CI [1.53, 1.65], 70%); A3/A4/A5 negative under matched budgets. All budgets matched on every seed; zero
+  attack-arm timeouts. See `docs/RESULTS_selfhost.md`.
+- ⬜ AWS measurements still blocked on quota. More A3–A5 reps held pending owner approval.
+
+## Phase 6 — optional paper-strengthening 🟡
+- ✅ A2 prefill-concentration dose-response (L=128/256/512/768/1024, fixed ~30k-token budget, 5 seeds/point,
+  each point its own matched pair). Monotonic at the concentrated end (512→768→1024: 2.14→3.00→3.16×).
+  Caveat: fixed budget couples L to request rate, so the low-L end mixes prefill length with queue pressure.
+- 🟡 Rate-matched A2 sweep (`a2_rate_in{128,256,512,768}`, ADR-Q12): scenarios + tests + dry-runs done and
+  pre-registered; live run pending owner approval (~50 min self-host GPU).
+- ⬜ Second engine / vLLM version; second GPU type (AWS, blocked on quota).
+- ✅ Temporal order with token composition and offered load held fixed: covered by A5 (negative, n=5).
+- ⬜ Paper draft (`paper/` is empty).
+
+## Phase 7 — consolidation, protocol v2, E-series prep (2026-11-21) ✅ (prepared; no full runs)
+- ✅ Historical results/reports archived + verified outside the repo (docs/HISTORICAL_ARCHIVE.md); checksum test.
+- ✅ One gateway engine (`core.Gateway`) for the live runner and the FastAPI adapter (ADR-Q14); `multitenant/`
+  prototype migrated/documented and removed. Hashed keys, RPM/TPM (tenant + global) with reservation →
+  actual-usage reconciliation and refunds, queue capacity/timeout, streaming passthrough, disconnect cleanup,
+  retry/idempotency, optional vLLM-tokenizer input estimate. Defaults reproduce historical behaviour.
+- ✅ Engine counter deltas per arm (resets, unrelated traffic, prefix-cache hit ratio); GPU telemetry via
+  nvidia-smi / SSH prefix / DCGM / `quotashift gpu-exporter`; run manifests record path, policy, limits,
+  backend identity, vLLM version, GPU type, cache config, actual counts.
+- ✅ Workload: `constant`/`poisson` patterns, `long_context` shape, `rate_matched_short` control,
+  controlled-dimension descriptors, `--path direct|gateway`, scenario-level gateway limits.
+- ✅ Protocol v2 (ADR-Q13): per-arm salted nonce (budgets unchanged), counterbalanced arms, cache on/off
+  pre-check. `experiments/v2/` (A2–A5 + rate sweep, cache on/off) and `experiments/eseries/` (E0–E6).
+- ✅ Live harness smokes on .173 (2026-11-21): v2 paired smoke (2 seeds) — all 4 arms prefix-cache hit 0.000,
+  engine tokens == client tokens, no unrelated traffic, 0 preemptions; HTTP gateway smoke — exact tokenizer
+  estimate, RPM 429, streaming usage, disconnect cleanup. Harness validation only; no findings claimed.
+- ⬜ Suite R (A2–A5 v2 replication, cache on/off) and E0–E6 runs — see `experiments/PLAN.md`; GPU exporter on host.
+
+## Phase 8 — A7–A9 (protocol v3) ✅ designed + implemented + smoke-validated; full runs ⬜ (approval)
+- ✅ Design/pre-registration: docs/A7_A9_EXPERIMENT_DESIGN.md (hypotheses, threat model, controls, endpoints,
+  confounders, falsification; dated amendments). ADR-Q15.
+- ✅ Prefix-structure, lifecycle plans/client, stream cancel, verified cache reset, cost accounting, CI
+  classification, stop-on-leak. 19 configs in `experiments/v3/` (+ smokes); all pass the matched-budget gate.
+- ✅ GPU smokes 2026-11-21 (2 paired seeds each, ~16 min GPU): A7-V hit 0.000/0.000; A7 hit 0.52–0.55 (shared) vs
+  0.19–0.23 (unique), realized prompt tokens equal across arms; A8 no leaks, engine drain ≤ 0.05 s, retries 6/6
+  bounded; A9 primary unavailable (no power), secondaries populated. Harness validation only — no findings.
+- ⬜ Suite S full runs (120 runs, ~4.0 h) — experiments/PLAN.md; blocked items: verified reset (S1'), GPU power (A9 primary).
 
 ## Verification (this pass)
-`uv run pytest -q` → 129 passed (1 gpu-only deselected); `ruff` + `mypy` clean;
+`uv run pytest -q` → see Phase 8 report; `ruff` + `mypy` clean;
 `terraform fmt/validate/test` green. No AWS resources created.

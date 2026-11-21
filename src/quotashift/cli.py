@@ -121,10 +121,16 @@ def cmd_dry_run(a: argparse.Namespace) -> int:
         from quotashift.budget import budget_report, summarize_trace
 
         try:
-            control, label = sc.control_trace()
+            from quotashift.local import budget_view, paired_traces
+            from quotashift.scenario import CONTROL_DIMENSIONS
+
+            atk_items, control, label = paired_traces(sc, sc.seed)
             out["control"] = {
                 "control": label,
-                "report": budget_report(summarize_trace(items), summarize_trace(control), sc.comparison),
+                "protocol_version": sc.protocol_version,
+                "control_dimensions": CONTROL_DIMENSIONS.get(sc.comparison.primary_control),
+                "report": budget_report(summarize_trace(budget_view(sc, atk_items, sc.seed)), summarize_trace(control),
+                                        sc.comparison),
             }
         except (ValidationError, ValueError, FileNotFoundError) as e:
             out["control"] = {"error": str(e)}
@@ -152,12 +158,19 @@ def cmd_run_local(a: argparse.Namespace) -> int:
                   file=sys.stderr)
             return 3
     sc = load_scenario(_resolve(a.config))
-    out = run_scenario_local(sc, Path(a.results_root), phase_order=None, target=target)
+    if target is not None:
+        ok, msg = check_prefix_caching(sc, target)
+        if not ok:
+            print(msg, file=sys.stderr)
+            return 3
+    out = run_scenario_local(sc, Path(a.results_root), phase_order=None, target=target, path=a.path, seed=a.seed)
     s = json.loads((out / "metrics_summary.json").read_text())
     _print({"run_dir": str(out), "offered": s.get("offered"), "status_counts": s.get("status_counts"),
             "accounting_conserved": s.get("accounting_conserved"), "event_validation_ok": s.get("event_validation_ok"),
             "worst_tenant_slo_attainment": s.get("worst_tenant_slo_attainment"),
-            "synthetic_backend": s.get("synthetic_backend"),
+            "synthetic_backend": s.get("synthetic_backend"), "path": s.get("path"),
+            "engine_prefix_cache_hit_ratio": (s.get("engine_counters") or {}).get("prefix_cache_hit_ratio"),
+            "unrelated_traffic_suspected": (s.get("engine_counters") or {}).get("unrelated_traffic_suspected"),
             "target": target.name if target else "mock"})
     return 0 if s.get("accounting_conserved") and s.get("event_validation_ok") else 2
 
@@ -204,12 +217,16 @@ def cmd_budget(a: argparse.Namespace) -> int:
     except (ValidationError, ValueError) as e:
         print(f"INVALID: {a.config}\n{e}", file=sys.stderr)
         return 2
+    from quotashift.local import paired_traces
+
     try:
-        control, label = sc.control_trace()
+        atk_items, control, label = paired_traces(sc, sc.seed)
     except (ValueError, FileNotFoundError) as e:
         print(f"control unavailable: {e}", file=sys.stderr)
         return 2
-    attack = summarize_trace(sc.build_trace())
+    from quotashift.local import budget_view
+
+    attack = summarize_trace(budget_view(sc, atk_items, sc.seed))
     ctl = summarize_trace(control)
     try:
         report = verify_matched_budget(attack, ctl, sc.comparison)
@@ -217,7 +234,11 @@ def cmd_budget(a: argparse.Namespace) -> int:
         _print({"scenario_id": sc.scenario_id, "control": label, "matched": False, "report": e.report})
         print(str(e), file=sys.stderr)
         return 2
-    _print({"scenario_id": sc.scenario_id, "control": label, "matched": True, "report": report})
+    from quotashift.scenario import CONTROL_DIMENSIONS
+
+    _print({"scenario_id": sc.scenario_id, "control": label, "matched": True, "report": report,
+            "protocol_version": sc.protocol_version,
+            "control_dimensions": CONTROL_DIMENSIONS.get(sc.comparison.primary_control)})
     return 0
 
 
@@ -249,26 +270,85 @@ def cmd_experiment(a: argparse.Namespace) -> int:
         print("experiment needs a scenario with competing_tenants (an attack scenario).", file=sys.stderr)
         return 2
 
+    out_dir = Path(a.out) if a.out else (REPO / "reports" / sc.scenario_id)
+    if (out_dir / "manifest.json").exists() and not a.force:
+        print(f"refusing to overwrite existing report {out_dir} (historical results are immutable); "
+              "use --out <new dir> or --force", file=sys.stderr)
+        return 3
+    if target is not None:
+        ok, msg = check_prefix_caching(sc, target)
+        if not ok:
+            print(msg, file=sys.stderr)
+            return 3
     results_root = Path(a.results_root)
-    pairs = run_matched_pairs(sc, results_root, reps=a.reps, target=target)
+    from quotashift.local import CacheResetUnverified, LifecycleLeak
+
+    try:
+        pairs = run_matched_pairs(sc, results_root, reps=a.reps, target=target, path=a.path)
+    except (LifecycleLeak, CacheResetUnverified) as e:
+        print(f"STOPPED: {type(e).__name__}: {e}", file=sys.stderr)
+        return 4
     pairs["budget_tolerance"] = sc.comparison.budget_tolerance
     attack = [run_metrics(pairs["attack"][s], sc.scenario_id, "attack", s) for s in pairs["seeds"]]
     control = [run_metrics(pairs["control"][s], sc.scenario_id, "control", s) for s in pairs["seeds"]]
     analysis = analyze_pair(
         attack, control, metric=sc.comparison.degradation_metric,
-        threshold=sc.comparison.preregistered_threshold)
+        threshold=sc.comparison.preregistered_threshold, direction=sc.comparison.effect_direction)
     cmds = [
         f"uv run quotashift budget {a.config}",
-        f"uv run quotashift experiment {a.config} --reps {a.reps} --{'mock' if a.mock else 'live'}",
+        f"uv run quotashift experiment {a.config} --reps {a.reps} --{'mock' if a.mock else 'live'} --path {a.path}",
     ]
-    out_dir = Path(a.out) if a.out else (REPO / "reports" / sc.scenario_id)
     written = write_report(sc.scenario_id, pairs, analysis, attack, control, out_dir, commands=cmds)
     _print({
         "scenario_id": sc.scenario_id, "control": pairs["control_label"], "seeds": pairs["seeds"],
         "metric": analysis["metric"], "mean_ratio": analysis["mean_ratio"],
+        "classification": analysis.get("classification"), "effect_direction": analysis.get("effect_direction"),
         "ratio_ci95": analysis["ratio_ci95"], "attack_success_rate": analysis["attack_success_rate"],
         "synthetic_backend": target is None, **written,
     })
+    return 0
+
+
+def check_prefix_caching(sc, target) -> tuple[bool, str]:  # noqa: ANN001
+    """Fail closed when the scenario pre-registers a prefix-caching state the server does not have."""
+    if sc.expect_prefix_caching == "any":
+        return True, "any"
+    import httpx
+
+    from quotashift.instrumentation.prom import parse_prometheus_text, resolve
+
+    try:
+        snap = resolve(parse_prometheus_text(httpx.get(target.backend_url.rstrip("/") + "/metrics", timeout=5).text))
+    except httpx.HTTPError as e:
+        return False, f"cannot read server cache config ({type(e).__name__}); expected prefix caching {sc.expect_prefix_caching}"
+    val = (snap.info.get("vllm:cache_config_info") or {}).get("enable_prefix_caching")
+    if val is None:
+        return False, "server does not expose vllm:cache_config_info; cannot verify prefix-caching state"
+    actual = "on" if val.lower() == "true" else "off"
+    if actual != sc.expect_prefix_caching:
+        return False, (f"scenario expects prefix caching {sc.expect_prefix_caching} but server has it {actual}; "
+                       "restart vLLM with the pre-registered setting")
+    return True, actual
+
+
+def cmd_gpu_exporter(a: argparse.Namespace) -> int:
+    """Run ON the GPU host: expose nvidia-smi readings as Prometheus text (binds loopback by default)."""
+    import uvicorn
+    from starlette.applications import Starlette
+    from starlette.responses import PlainTextResponse
+    from starlette.routing import Route
+
+    from quotashift.instrumentation.gpu import GpuSampler, exporter_metrics_text
+
+    sampler = GpuSampler(index=a.gpu_index)
+    if not sampler.available:
+        print("nvidia-smi not found on this host; run the exporter on the GPU host", file=sys.stderr)
+        return 2
+
+    async def metrics(_req):  # noqa: ANN001, ANN202
+        return PlainTextResponse(exporter_metrics_text(sampler))
+
+    uvicorn.run(Starlette(routes=[Route("/metrics", metrics)]), host=a.host, port=a.port, log_level="warning")
     return 0
 
 
@@ -351,6 +431,9 @@ def main(argv: list[str] | None = None) -> int:
     rl.add_argument("--live", action="store_true", help="send to the active (or --target) self-hosted vLLM")
     rl.add_argument("--target", default=None, help="target profile name (default: active target)")
     rl.add_argument("--results-root", default=str(REPO / "results"))
+    rl.add_argument("--path", choices=["gateway", "direct"], default="gateway",
+                    help="gateway: admission/quota/queueing in front of vLLM (default); direct: pass-through")
+    rl.add_argument("--seed", type=int, default=None, help="override the scenario seed")
     rl.set_defaults(fn=cmd_run_local)
 
     tg = sub.add_parser("target", help="list/show/switch/check the backend target (aws|selfhost)")
@@ -370,7 +453,15 @@ def main(argv: list[str] | None = None) -> int:
     ex.add_argument("--target", default=None)
     ex.add_argument("--results-root", default=str(REPO / "results"))
     ex.add_argument("--out", default=None, help="report dir (default: reports/<scenario_id>)")
+    ex.add_argument("--path", choices=["gateway", "direct"], default="gateway")
+    ex.add_argument("--force", action="store_true", help="allow overwriting an existing report dir")
     ex.set_defaults(fn=cmd_experiment)
+
+    ge = sub.add_parser("gpu-exporter", help="run ON the GPU host: nvidia-smi -> Prometheus /metrics")
+    ge.add_argument("--host", default="127.0.0.1")
+    ge.add_argument("--port", type=int, default=9835)
+    ge.add_argument("--gpu-index", type=int, default=0)
+    ge.set_defaults(fn=cmd_gpu_exporter)
 
     sm = sub.add_parser("summarize")
     sm.add_argument("--input", required=True)

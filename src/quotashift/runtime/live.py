@@ -50,29 +50,50 @@ async def run_live(client, gateway: Gateway, backend: OpenAICompatBackend, cfg: 
             heapq.heappush(heap, (t, next(seq), it))
         wake.set()
 
+    plan_for = getattr(client, "plan_for", None)
+
     async def serve(rid: str) -> None:
         req = gateway.inflight[rid].req
+        plan = plan_for(rid) if plan_for else None
+        planned_timeout = plan.param if plan is not None and plan.action == "timeout_after_s" else None
+        stop_chunks = int(plan.param) if plan is not None and plan.action == "cancel_after_chunks" else None
+        t_deadline = None
         try:
             coro = backend.stream(req, on_first_token=lambda: gateway.on_first_token(rid, now()),
-                                  oracle_output_tokens=oracle.get(rid))
+                                  oracle_output_tokens=oracle.get(rid), stop_after_chunks=stop_chunks)
+            timeouts = []
             if cfg.request_timeout_s is not None:
-                remaining = cfg.request_timeout_s - (now() - gateway.recorder.rows[rid]["t_offered"])
-                res = await asyncio.wait_for(coro, timeout=max(0.001, remaining))
+                timeouts.append(cfg.request_timeout_s - (now() - gateway.recorder.rows[rid]["t_offered"]))
+            if planned_timeout is not None:
+                timeouts.append(planned_timeout - (now() - gateway.recorder.rows[rid]["t_sent"]))
+            if timeouts:
+                t_deadline = now() + max(0.001, min(timeouts))
+                res = await asyncio.wait_for(coro, timeout=max(0.001, min(timeouts)))
             else:
                 res = await coro
         except TimeoutError:
-            gateway.on_terminal(rid, now(), EventType.TIMED_OUT, detail="client_e2e_timeout")
+            if planned_timeout is not None:
+                gateway.recorder.annotate(rid, lifecycle_action="timeout_after_s",
+                                          cancel_close_s=max(0.0, now() - (t_deadline or now())))
+                gateway.on_terminal(rid, now(), EventType.TIMED_OUT, detail="planned_client_timeout")
+            else:
+                gateway.on_terminal(rid, now(), EventType.TIMED_OUT, detail="client_e2e_timeout")
         except asyncio.CancelledError:
             raise
         except Exception as e:  # noqa: BLE001 - every failure becomes an explicit row
             gateway.on_terminal(rid, now(), EventType.BACKEND_ERROR, detail=f"{type(e).__name__}:{e}"[:300])
         else:
             gateway.recorder.annotate(rid, output_tokens_source=res.output_tokens_source,
-                                      prompt_tokens_reported=res.prompt_tokens, n_stream_chunks=res.n_chunks,
+                                      prompt_tokens_reported=res.prompt_tokens, cached_tokens_reported=res.cached_tokens,
+                                      n_stream_chunks=res.n_chunks,
                                       max_itl_s=res.max_itl_s)
-            if res.ok:
+            if res.error == "client_cancel":
+                gateway.recorder.annotate(rid, lifecycle_action="cancel_after_chunks", cancel_close_s=res.cancel_close_s)
+                gateway.on_terminal(rid, now(), EventType.CANCELLED, output_tokens=res.output_tokens,
+                                    detail="planned_client_cancel", prompt_tokens=res.prompt_tokens)
+            elif res.ok:
                 gateway.on_terminal(rid, now(), EventType.COMPLETED, output_tokens=res.output_tokens,
-                                    detail=res.finish_reason)
+                                    detail=res.finish_reason, prompt_tokens=res.prompt_tokens)
             else:
                 gateway.on_terminal(rid, now(), EventType.BACKEND_ERROR, detail=res.error)
         finally:
@@ -84,7 +105,7 @@ async def run_live(client, gateway: Gateway, backend: OpenAICompatBackend, cfg: 
         while not stop.is_set():
             t = now()
             snap = await backend.scrape_metrics()
-            g = gpu.sample() if gpu else {}
+            g = (await gpu.asample()) if gpu else {}
             if snap is not None:
                 v = snap.values
                 obs = BackendObservation(

@@ -34,3 +34,18 @@ uv run quotashift summarize  --input results --output reports
 - Bootstrap confidence intervals across seeds/runs; full per-run manifests and hashes.
 - Lock model revision, vLLM version/flags, max context length, hardware, replica count, and benign arrival
   distribution across every compared run.
+
+## Protocol v2 (ADR-Q13) and the E-series
+- v2 scenarios (`protocol_version: 2`) live in `experiments/v2/` (A2–A5 replications, `_nocache` variants) and
+  `experiments/eseries/` (E0–E6). v1 files are never edited.
+- Before a v2 run: `quotashift budget <f>` (gate on the exact post-nonce traces) and `quotashift dry-run <f>`
+  (also lists which dimensions the control holds fixed vs lets vary). `expect_prefix_caching` must match the server.
+- Each arm records before/after engine counters; reports include per-arm prefix-cache hit ratio, arm order and
+  `unrelated_traffic_suspected`. Arms with suspected unrelated traffic are reported and excluded from claims.
+- Execution path: `--path gateway` (admission/quota/queueing) or `--path direct` (engine interference only).
+- Full run plan, counts, timings and disk: `experiments/PLAN.md`.
+
+## Protocol v3 (A7–A9)
+Design and pre-registration: docs/A7_A9_EXPERIMENT_DESIGN.md; configs `experiments/v3/`; plan `experiments/PLAN.md`
+§ Suite S. Lifecycle scenarios need an HTTP backend (`--live` or mock_http); `--mock` (in-process simulator) is
+refused. A cleanup/accounting leak stops the experiment (exit 4) and is recorded as a defect.

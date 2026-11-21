@@ -1,0 +1,48 @@
+# PROTOCOL v2 replication of `a2_rate_in256.yaml` (ADR-Q13) — prefix cache ON on the server.
+# Identical to the historical file except: scenario_id, protocol_version: 2 (per-arm salted
+# nonce replacing 4 filler words; counterbalanced arm order), expect_prefix_caching: on.
+# Pre-registered metric/threshold/tolerance unchanged. Historical results are not overwritten.
+# A2 rate-matched sweep point: competitor input length = 256 tokens at FIXED rate 0.6 rps.
+# Companion to the a2_sweep_in* budget-fixed sweep (ADR-Q12). There, holding the competitor
+# token budget fixed coupled input length L to request rate. Here the competitor arrival
+# process (steady Poisson, 0.6 rps, same seeds) is identical at every point and only the
+# per-request input length L varies, so a cross-point change in victim TTFT is attributable to
+# prefill length, not to queue pressure. Competitor total tokens scale with L by construction.
+# Per point, the in-process matched_total_short control re-expresses the SAME total as short
+# (64/64) requests, so the per-point ratio keeps its pre-registered meaning (ADR-Q08/Q11).
+# L=1024 is a2_prefill_heavy.yaml (identical rate and caps). Serving config is unchanged.
+schema_version: 1
+scenario_id: a2_rate_in256_v2
+protocol_version: 2
+expect_prefix_caching: "on"
+seed: 42
+model: mock-model
+model_max_len: 4096
+runtime_seconds: 60
+endpoint: http://localhost:8080
+victim_tenants: [victim_a, victim_b]
+competing_tenants: [synthetic_competitor]
+budget_class: input_tokens
+safety:
+  max_total_requests: 700
+  max_global_inflight: 4
+  max_requests_per_tenant: 600
+  max_input_tokens_per_request: 256
+  max_output_tokens_per_request: 256
+  max_runtime_seconds: 240
+  per_request_timeout_seconds: 120
+comparison:
+  primary_control: matched_total_short
+  matched_request_budget: false
+  matched_token_budget: true
+  repetitions: 5
+  degradation_metric: ttft_p95
+  preregistered_threshold: 1.5
+  budget_tolerance: 0.05
+benign:
+  rate_rps: 0.3
+  request_shape: short
+  ttft_deadline_ms: 2000
+  e2e_deadline_ms: 30000
+phases:
+  - {name: prefill, duration_seconds: 60, pattern: steady, request_shape: context_heavy, rate_rps: 0.6}

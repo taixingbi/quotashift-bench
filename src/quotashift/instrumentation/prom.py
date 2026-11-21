@@ -69,6 +69,7 @@ class MetricSnapshot:
     resolved_names: dict[str, str | None]
     histograms: dict[str, list[tuple[float, float]]] = field(default_factory=dict)
     histogram_sums: dict[str, tuple[float, float]] = field(default_factory=dict)  # (sum, count)
+    info: dict[str, dict[str, str]] = field(default_factory=dict)  # *_info series labels (e.g. cache_config_info)
 
     @property
     def missing(self) -> tuple[str, ...]:
@@ -106,7 +107,8 @@ def resolve(samples: list[Sample]) -> MetricSnapshot:
                 sums[logical] = (ssum, scnt)
                 break
         names.setdefault(logical, None)
-    return MetricSnapshot(values, names, hists, sums)
+    info = {name: dict(rows[0].labels) for name, rows in by_name.items() if name.endswith("_info") and rows}
+    return MetricSnapshot(values, names, hists, sums, info)
 
 
 def hist_delta(after: list[tuple[float, float]], before: list[tuple[float, float]] | None) -> list[tuple[float, float]]:

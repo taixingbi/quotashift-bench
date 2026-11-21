@@ -46,7 +46,7 @@ def config_hash(obj) -> str:
 
 def build_manifest(*, repo: Path, experiment_id: str, run_id: str, scheduler: dict, seed: int,
                    config_resolved: dict, backend_kind: str, backend_info: dict | None,
-                   trace_sha256: str | None, clock: str) -> dict:
+                   trace_sha256: str | None, clock: str, gpu_info: dict | None = None) -> dict:
     synthetic = backend_kind in ("mock", "mock_http")
     return {
         "schema_version": SCHEMA_VERSION,
@@ -68,5 +68,5 @@ def build_manifest(*, repo: Path, experiment_id: str, run_id: str, scheduler: di
         "platform": platform.platform(),
         "machine": platform.machine(),
         "packages": package_versions(),
-        "gpu": GpuSampler().static_info(),
+        "gpu": gpu_info if gpu_info is not None else GpuSampler().static_info(),
     }

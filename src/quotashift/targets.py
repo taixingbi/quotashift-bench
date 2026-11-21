@@ -36,6 +36,11 @@ class TargetProfile(BaseModel):
     model: str
     model_revision: str | None = None
     max_model_len: int = Field(gt=0)
+    # Hardware provenance. `gpu_type_source` says whether it was measured on the host or stated by
+    # the owner; telemetry needs an exporter running ON the GPU host (quotashift gpu-exporter / DCGM).
+    gpu_type: str | None = None
+    gpu_type_source: Literal["owner_stated", "measured"] | None = None
+    gpu_exporter_url: str | None = None
 
     @model_validator(mode="after")
     def _check(self) -> TargetProfile:
@@ -44,6 +49,10 @@ class TargetProfile(BaseModel):
         ok, reason = endpoint_is_private(self.backend_url)
         if not ok:
             raise ValueError(f"target {self.name}: backend_url rejected: {reason}")
+        if self.gpu_exporter_url:
+            ok, reason = endpoint_is_private(self.gpu_exporter_url)
+            if not ok:
+                raise ValueError(f"target {self.name}: gpu_exporter_url rejected: {reason}")
         return self
 
 
@@ -107,5 +116,62 @@ def check_target(prof: TargetProfile, timeout_s: float = 10.0) -> dict:
         problems.append(f"model {prof.model!r} not served (have {sorted(served)})")
     elif m.get("max_model_len") is not None and m["max_model_len"] != prof.max_model_len:
         problems.append(f"server max_model_len={m['max_model_len']} != profile {prof.max_model_len}")
+    caps = probe_capabilities(prof, timeout_s=timeout_s)
+    if prof.gpu_exporter_url and not (caps.get("gpu_exporter") or {}).get("power_w_ok"):
+        problems.append(f"gpu_exporter_url set but no power reading from {prof.gpu_exporter_url}")
     return {"reachable": True, "url": url, "served_models": sorted(served), "ok": not problems,
-            "problems": problems}
+            "problems": problems, "capabilities": caps}
+
+
+def parse_capabilities(openapi_paths: list[str] | None, metrics_text: str | None,
+                       exporter_text: str | None) -> dict:
+    """Pure parser behind `probe_capabilities` (unit-tested). None input -> that part unknown."""
+    from quotashift.instrumentation.gpu import parse_exporter_text
+    from quotashift.instrumentation.prom import parse_prometheus_text
+
+    out: dict = {}
+    if openapi_paths is not None:
+        # listed only when vLLM runs with VLLM_SERVER_DEV_MODE=1 (needed for A7's verified reset)
+        out["reset_prefix_cache_listed"] = "/reset_prefix_cache" in openapi_paths
+    if metrics_text is not None:
+        ms = parse_prometheus_text(metrics_text)
+        cc = next((m.labels for m in ms if m.name == "vllm:cache_config_info"), {})
+        val = {m.name: m.value for m in ms}
+        out["prefix_caching"] = {"True": True, "False": False}.get(cc.get("enable_prefix_caching", ""))
+        out["gpu_memory_utilization"] = float(cc["gpu_memory_utilization"]) if "gpu_memory_utilization" in cc else None
+        out["num_gpu_blocks"] = int(cc["num_gpu_blocks"]) if cc.get("num_gpu_blocks", "None") != "None" else None
+        out["process_start_time_seconds"] = val.get("process_start_time_seconds")
+        out["engine_idle"] = (val.get("vllm:num_requests_running") == 0 and val.get("vllm:num_requests_waiting") == 0)
+    if exporter_text is not None:
+        g = parse_exporter_text(exporter_text, 0)
+        out["gpu_exporter"] = {"power_w_ok": g.get("power_w") is not None, "power_w": g.get("power_w"),
+                               "sm_clock_mhz": g.get("sm_clock_mhz"), "gpu_util_perc": g.get("gpu_util_perc")}
+    return out
+
+
+def probe_capabilities(prof: TargetProfile, timeout_s: float = 10.0) -> dict:
+    """Read-only (GET only): dev-mode reset endpoint listed, prefix caching, serving config, GPU exporter.
+    `prompt_tokens_details` can't be checked without sending a request, so it isn't checked here."""
+    base = prof.backend_url.rstrip("/")
+
+    def get(u: str) -> httpx.Response | None:
+        try:
+            r = httpx.get(u, timeout=timeout_s)
+            r.raise_for_status()
+            return r
+        except httpx.HTTPError:
+            return None
+
+    oa = get(base + "/openapi.json")
+    paths: list[str] | None = None
+    if oa is not None:
+        try:
+            paths = sorted(oa.json().get("paths", {}))
+        except ValueError:
+            paths = None
+    met = get(base + "/metrics")
+    exp = get(prof.gpu_exporter_url) if prof.gpu_exporter_url else None
+    caps = parse_capabilities(paths, met.text if met is not None else None, exp.text if exp is not None else None)
+    if prof.gpu_exporter_url and exp is None:
+        caps["gpu_exporter"] = {"power_w_ok": False, "error": f"unreachable: {prof.gpu_exporter_url}"}
+    return caps

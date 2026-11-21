@@ -1,0 +1,45 @@
+# PROTOCOL v2 replication of `a2_prefill_heavy.yaml` (ADR-Q13) — prefix cache ON on the server.
+# Identical to the historical file except: scenario_id, protocol_version: 2 (per-arm salted
+# nonce replacing 4 filler words; counterbalanced arm order), expect_prefix_caching: on.
+# Pre-registered metric/threshold/tolerance unchanged. Historical results are not overwritten.
+# A2 — prefill-heavy competitor (plan §2).
+# Independent variable: competitor input-context size. The competitor sends long-input
+# (context_heavy) requests. Control (in-process, matched_total_short): the SAME total
+# token budget delivered as short-input requests. Request count is free and reported;
+# the total token budget is matched within one request per tenant on every seed, so a
+# victim-degradation difference is attributable to prefill cost, not to more work.
+schema_version: 1
+scenario_id: a2_prefill_heavy_v2
+protocol_version: 2
+expect_prefix_caching: "on"
+seed: 42
+model: mock-model
+model_max_len: 4096
+runtime_seconds: 60
+endpoint: http://localhost:8080
+victim_tenants: [victim_a, victim_b]
+competing_tenants: [synthetic_competitor]
+budget_class: input_tokens
+safety:
+  max_total_requests: 700
+  max_global_inflight: 4
+  max_requests_per_tenant: 600
+  max_input_tokens_per_request: 1024
+  max_output_tokens_per_request: 256
+  max_runtime_seconds: 240
+  per_request_timeout_seconds: 120
+comparison:
+  primary_control: matched_total_short
+  matched_request_budget: false   # A2 trades input length for request count
+  matched_token_budget: true      # total (prefill + decode) tokens held fixed
+  repetitions: 5
+  degradation_metric: ttft_p95
+  preregistered_threshold: 1.5
+  budget_tolerance: 0.05
+benign:
+  rate_rps: 0.3
+  request_shape: short
+  ttft_deadline_ms: 2000
+  e2e_deadline_ms: 30000
+phases:
+  - {name: prefill, duration_seconds: 60, pattern: steady, request_shape: context_heavy, rate_rps: 0.6}

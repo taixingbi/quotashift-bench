@@ -100,6 +100,23 @@ class Accountant:
         c.requests_admitted += 1
         c.reserved_peak = max(c.reserved_peak, self.ledger.reserved.get(tenant, 0))
 
+    def rollback(self, tenant: str, request_id: str) -> None:
+        """Undo `admit` for a request that never reached the backend (queue full/timeout,
+        rate limit, client disconnect while queued). Releases its reservation without
+        charge and frees the id, so the request consumes no budget and may be retried."""
+        if request_id not in self._seen or request_id in self._recorded:
+            return
+        self._seen.discard(request_id)
+        if self.ledger.holds(request_id):
+            self.ledger.release(request_id, 0)
+        self.total_admitted -= 1
+        c = self._c(tenant)
+        c.requests_admitted -= 1
+        c.requests_rejected += 1
+
+    def is_seen(self, request_id: str) -> bool:
+        return request_id in self._seen
+
     def record(self, tenant: str, request_id: str, input_tokens: int, output_tokens: int, ok: bool) -> None:
         """Record terminal outcome exactly once per request_id and release tokens."""
         if request_id in self._recorded:

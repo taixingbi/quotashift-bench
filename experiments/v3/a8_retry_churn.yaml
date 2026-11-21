@@ -1,0 +1,37 @@
+# PROTOCOL v3 (A7-A9 series) — A8b timeout(50%, 1.0 s) + 1 bounded retry (0.5 s backoff) vs complete + pre-scheduled retry twins
+# Design + pre-registration: docs/A7_A9_EXPERIMENT_DESIGN.md. NOT YET RUN.
+schema_version: 1
+scenario_id: a8_retry_churn
+protocol_version: 3
+expect_prefix_caching: "on"
+seed: 42
+model: Qwen/Qwen2.5-7B-Instruct
+model_max_len: 4096
+runtime_seconds: 90
+endpoint: http://localhost:8080
+victim_tenants: [v00, v01, v02]
+competing_tenants: [comp]
+budget_class: total_requests
+safety:
+  max_total_requests: 1500
+  max_global_inflight: 8
+  max_requests_per_tenant: 900
+  max_input_tokens_per_request: 512
+  max_output_tokens_per_request: 256
+  max_runtime_seconds: 240
+  per_request_timeout_seconds: 120
+comparison:
+  primary_control: lifecycle_normal
+  matched_request_budget: true
+  matched_token_budget: true
+  repetitions: 5
+  degradation_metric: ttft_p95
+  effect_direction: increase
+  preregistered_threshold: 1.25
+  budget_tolerance: 0.05
+  threshold_justification: "1.25x = smallest practically relevant effect on one shared GPU; >= 2x the expected A/A noise half-width (A7-V measures it first; if wider, suite is exploratory). Not inherited from A1-A5."
+benign: {rate_rps: 0.4, request_shape: short, ttft_deadline_ms: 2000, e2e_deadline_ms: 30000}
+phases:
+  - {name: main, duration_seconds: 90, pattern: steady, request_shape: decode_heavy, rate_rps: 0.8}
+lifecycle: {timeout_fraction: 0.5, timeout_after_s: 1.0, retry_on: [timeout], max_retries: 1, retry_backoff_s: 0.5, control_preschedule_retries: true}
+metrics_interval_s: 0.25

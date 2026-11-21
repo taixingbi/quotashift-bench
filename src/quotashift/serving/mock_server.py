@@ -4,17 +4,24 @@ Runs `EngineModel` in (scaled) real time. Exposes /v1/completions (streaming
 and non-streaming), /v1/models, /version, /health, /tokenize and a
 Prometheus-format /metrics using vLLM V1-style metric names. Every response
 and metric page identifies itself as a MOCK.
+
+Prefix-cache *counters* (`prefix_cache_queries_total` / `prefix_cache_hits_total`) are
+emulated with 16-token block hashing over whitespace tokens and an LRU of block hashes,
+so cache-isolation logic can be tested on CPU. Cache hits do NOT change mock latency
+(the engine model is unchanged), so mock timings stay comparable with earlier mock runs.
 """
 
 from __future__ import annotations
 
 import asyncio
 import contextlib
+import hashlib
 import json
 import math
 import time
 import uuid
 import zlib
+from collections import OrderedDict
 
 from starlette.applications import Starlette
 from starlette.requests import Request as HTTPRequest
@@ -40,6 +47,36 @@ class MockVLLM:
         self.ttft_sum = 0.0
         self.wake = asyncio.Event()
         self._task: asyncio.Task | None = None
+        self.prefix_caching = True
+        # Which endpoints report `cached_tokens: 0` on a miss (instead of `prompt_tokens_details: null`).
+        # Mirrors the self-hosted target as measured 2026-11-21 08:45 local: vLLM 0.17.1 + the owner's local
+        # reporting patch on both chat and completions serving. Stock 0.17.1 behaviour = frozenset().
+        self.zero_hit_details_endpoints: frozenset[str] = frozenset({"chat", "completions"})
+        self.prefix_queries = 0
+        self.prefix_hits = 0
+        self._blocks: OrderedDict[str, None] = OrderedDict()
+        self._max_blocks = 8192
+
+    def observe_prefix(self, words: list[str]) -> int:
+        """Count prefix-cache queries/hits for a prompt (16-word blocks, chained hashes); returns this
+        request's hit tokens."""
+        self.prefix_queries += len(words)
+        if not self.prefix_caching:
+            return 0
+        before = self.prefix_hits
+        h, matching = hashlib.sha256(), True
+        for i in range(0, len(words) - len(words) % 16, 16):
+            h.update(" ".join(words[i:i + 16]).encode())
+            k = h.hexdigest()
+            if matching and k in self._blocks:
+                self.prefix_hits += 16
+                self._blocks.move_to_end(k)
+            else:
+                matching = False
+                self._blocks[k] = None
+                if len(self._blocks) > self._max_blocks:
+                    self._blocks.popitem(last=False)
+        return self.prefix_hits - before
 
     async def start(self) -> None:
         self._task = asyncio.create_task(self._loop())
@@ -91,6 +128,9 @@ class MockVLLM:
             f'vllm:num_preemptions_total{{model_name="{self.model_name}"}} {o["num_preemptions_total"]}',
             f'vllm:prompt_tokens_total{{model_name="{self.model_name}"}} {o["prompt_tokens_total"]}',
             f'vllm:generation_tokens_total{{model_name="{self.model_name}"}} {o["generation_tokens_total"]}',
+            f'vllm:prefix_cache_queries_total{{model_name="{self.model_name}"}} {self.prefix_queries}',
+            f'vllm:prefix_cache_hits_total{{model_name="{self.model_name}"}} {self.prefix_hits}',
+            f'vllm:cache_config_info{{block_size="16",enable_prefix_caching="{self.prefix_caching}",engine="0"}} 1.0',
         ]
         cum = 0
         for le, c in zip(TTFT_BUCKETS, self.ttft_counts, strict=False):
@@ -135,6 +175,11 @@ def build_app(mock: MockVLLM) -> Starlette:
             mock.queues.pop(rid, None)
             return JSONResponse({"error": {"message": f"MOCK: {ev.detail}", "type": "BadRequestError"}}, status_code=400)
         mock.t_add[rid] = time.monotonic()
+        hit = mock.observe_prefix(key.split() if not key.endswith(f"#{n_prompt}") else [key])
+        # like the target with --enable-prompt-tokens-details: hits -> cached_tokens; a miss -> 0 on patched
+        # endpoints, null on unpatched ones (see zero_hit_details_endpoints)
+        zero_ok = ("chat" if chat else "completions") in mock.zero_hit_details_endpoints
+        details = {"cached_tokens": hit} if (hit > 0 or zero_ok) else None
         mock.wake.set()
         include_usage = bool((body.get("stream_options") or {}).get("include_usage"))
         obj = "chat.completion.chunk" if chat else "text_completion"
@@ -161,7 +206,8 @@ def build_app(mock: MockVLLM) -> Starlette:
                         if include_usage:
                             yield "data: " + json.dumps({"id": rid, "object": obj, "choices": [],
                                                          "usage": {"prompt_tokens": n_prompt, "completion_tokens": e.generated,
-                                                                   "total_tokens": n_prompt + e.generated}}) + "\n\n"
+                                                                   "total_tokens": n_prompt + e.generated,
+                                                                   "prompt_tokens_details": details}}) + "\n\n"
                         finished = True
                         yield "data: [DONE]\n\n"
                         return
@@ -181,10 +227,12 @@ def build_app(mock: MockVLLM) -> Starlette:
             msg = {"role": "assistant", "content": full}
             return JSONResponse({"id": rid, "object": "chat.completion", "model": mock.model_name,
                                  "choices": [{"index": 0, "message": msg, "finish_reason": "stop"}],
-                                 "usage": {"prompt_tokens": n_prompt, "completion_tokens": n, "total_tokens": n_prompt + n}})
+                                 "usage": {"prompt_tokens": n_prompt, "completion_tokens": n, "total_tokens": n_prompt + n,
+                                           "prompt_tokens_details": details}})
         return JSONResponse({"id": rid, "object": "text_completion", "model": mock.model_name,
                              "choices": [{"index": 0, "text": full, "finish_reason": "stop"}],
-                             "usage": {"prompt_tokens": n_prompt, "completion_tokens": n, "total_tokens": n_prompt + n}})
+                             "usage": {"prompt_tokens": n_prompt, "completion_tokens": n, "total_tokens": n_prompt + n,
+                                           "prompt_tokens_details": details}})
 
     async def completions(request: HTTPRequest):
         body = await request.json()
@@ -218,9 +266,17 @@ def build_app(mock: MockVLLM) -> Starlette:
     async def version(_: HTTPRequest):
         return JSONResponse({"version": "quotashift-mock-0.1", "mock": True, "engine_params": mock.engine.params.model_dump()})
 
+    async def reset_prefix_cache(_: HTTPRequest):
+        mock._blocks.clear()
+        return PlainTextResponse("")
+
     async def tokenize(request: HTTPRequest):
         body = await request.json()
-        toks = [zlib.crc32(w.encode()) % 50000 for w in str(body.get("prompt", "")).split()]
+        if isinstance(body.get("messages"), list):
+            text = _messages_prompt(body["messages"])[1]
+        else:
+            text = str(body.get("prompt", ""))
+        toks = [zlib.crc32(w.encode()) % 50000 for w in text.split()]
         return JSONResponse({"count": len(toks), "max_model_len": mock.engine.params.max_model_len, "tokens": toks})
 
     @contextlib.asynccontextmanager
@@ -240,6 +296,7 @@ def build_app(mock: MockVLLM) -> Starlette:
             Route("/v1/models", models),
             Route("/version", version),
             Route("/tokenize", tokenize, methods=["POST"]),
+            Route("/reset_prefix_cache", reset_prefix_cache, methods=["POST"]),
         ],
         lifespan=lifespan,
     )

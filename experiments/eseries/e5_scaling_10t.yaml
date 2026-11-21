@@ -1,0 +1,32 @@
+# E-series (multi-tenant characterization), protocol v2. Separate from the historical A1–A5 suite.
+# NOT YET RUN. Pre-registered fields (threshold/tolerance/metric) are fixed here before any run.
+# E5 scaling: 10 tenants, total offered load fixed at 3.0 rps (0.3 rps/tenant), mixed shape. Run: run-local --live --path direct|gateway --seed 0..4
+schema_version: 1
+scenario_id: e5_scaling_10t
+protocol_version: 2
+expect_prefix_caching: any
+seed: 0
+model: Qwen/Qwen2.5-7B-Instruct
+model_max_len: 4096
+runtime_seconds: 120
+endpoint: http://localhost:8080
+victim_tenants: [t00, t01, t02, t03, t04, t05, t06, t07, t08, t09]
+competing_tenants: []
+budget_class: total_requests
+safety:
+  max_total_requests: 800
+  max_global_inflight: 8
+  max_requests_per_tenant: 400
+  max_input_tokens_per_request: 1024
+  max_output_tokens_per_request: 256
+  max_runtime_seconds: 240
+  per_request_timeout_seconds: 120
+comparison:
+  primary_control: benign_only
+  matched_request_budget: true
+  matched_token_budget: true
+  repetitions: 5
+  degradation_metric: ttft_p95
+  preregistered_threshold: 1.5
+  budget_tolerance: 0.05
+benign: {rate_rps: 0.3, request_shape: mixed, ttft_deadline_ms: 1000, e2e_deadline_ms: 30000}

@@ -51,3 +51,14 @@ requests as independent units.
 - `completed_eventually_rps`: all completions incl. drain / window — *not* a throughput measure past saturation.
 - Knee (provisional): highest offered rate with mean `completed_rps ≥ 0.95 × offered` and mean P95 TTFT ≤ threshold.
 - Cell throughput: `Σ output tokens / (last completion − first offer)` in a closed-loop cell.
+
+## Engine-global (per arm; `instrumentation/engine_counters.py`)
+Scope: the whole vLLM server, not one tenant. From `/metrics` snapshots taken immediately before and after each arm.
+| Metric | Definition |
+|---|---|
+| counter delta | `after − before` for prompt/generation tokens, preemptions, prefix-cache queries/hits; `"reset"` if it decreased |
+| `prefix_cache_hit_ratio` | Δhits / Δqueries over the arm (None if unavailable) |
+| engine histogram means | Δsum / Δcount for TTFT, ITL, E2E, queue, prefill, decode (vLLM's own clocks) |
+| `unrelated_traffic_suspected` | engine busy at start, any counter reset, or engine Δprompt/Δgeneration tokens exceed the arm's own reported usage by > max(64, 2%) |
+| GPU (time series) | util %, VRAM used/total MiB, power W, temperature C, SM/memory clocks MHz; missing = None |
+Per-tenant metrics (gateway rows) and engine-global metrics are stored and reported separately.

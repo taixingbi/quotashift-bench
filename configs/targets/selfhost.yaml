@@ -6,3 +6,9 @@ backend_url: http://192.168.86.173:8000
 model: Qwen/Qwen2.5-7B-Instruct
 model_revision: null   # not reported by the server; record the host's --revision here once known
 max_model_len: 4096
+# Hardware measured on the host 2026-11-21 via nvidia_gpu_exporter v2.0.0 (nvidia_smi_gpu_info): RTX 3090,
+# uuid a837190a-d9c2-ed45-994b-55319c6e258e, driver 595.71.05, CUDA 13.2, power limit 350 W.
+gpu_type: NVIDIA GeForce RTX 3090
+gpu_type_source: measured
+# nvidia_gpu_exporter on the GPU host (read from the runner without SSH); board power is nvidia-smi power.draw.
+gpu_exporter_url: http://192.168.86.173:9835/metrics

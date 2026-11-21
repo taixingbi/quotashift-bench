@@ -1,6 +1,6 @@
 # QuotaShift — Self-hosted GPU results (Phase 5, first live run)
 
-**Status:** real GPU measurements (`synthetic_backend: false`), 5 matched seeds per scenario.
+**Status:** real GPU measurements (`synthetic_backend: false`); A1/A2 at 20 matched seeds, A3–A5 at 5.
 These are the project's first non-mock attack-effect numbers. Reported per ADR-Q08/Q11, negatives included.
 
 ## Locked configuration (identical across every scenario and its control)

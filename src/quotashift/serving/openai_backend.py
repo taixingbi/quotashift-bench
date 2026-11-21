@@ -23,17 +23,29 @@ from quotashift.schema import Request
 MOCK_ORACLE_HEADER = "x-mock-oracle-output-tokens"
 
 
+def cached_tokens_of(usage: dict | None) -> int | None:
+    """Per-request prefix-cache hit tokens from an OpenAI-style usage block.
+
+    vLLM reports `prompt_tokens_details.cached_tokens` only with `--enable-prompt-tokens-details`, and 0.17.1
+    returns `prompt_tokens_details: null` for a cold request. Absent/null -> None (missing telemetry, NOT 0)."""
+    d = (usage or {}).get("prompt_tokens_details")
+    v = d.get("cached_tokens") if isinstance(d, dict) else None
+    return int(v) if isinstance(v, (int, float)) and not isinstance(v, bool) else None
+
+
 @dataclass
 class StreamResult:
     ok: bool
     output_tokens: int | None = None
     output_tokens_source: str | None = None
     prompt_tokens: int | None = None
+    cached_tokens: int | None = None  # usage.prompt_tokens_details.cached_tokens; None = not reported
     n_chunks: int = 0
     max_itl_s: float | None = None
     finish_reason: str | None = None
     error: str | None = None
     http_status: int | None = None
+    cancel_close_s: float | None = None  # client cancel: decision -> stream closed (v3 A8)
 
 
 @dataclass
@@ -79,7 +91,10 @@ class OpenAICompatBackend:
         req: Request,
         on_first_token: Callable[[], None],
         oracle_output_tokens: int | None = None,
+        stop_after_chunks: int | None = None,
     ) -> StreamResult:
+        """Stream one request. `stop_after_chunks`: documented client-side cancellation — close the stream
+        after N content chunks (result ok=False, error="client_cancel", n_chunks = chunks received)."""
         headers = {}
         if self.send_mock_oracle_header and oracle_output_tokens is not None:
             headers[MOCK_ORACLE_HEADER] = str(oracle_output_tokens)
@@ -87,6 +102,7 @@ class OpenAICompatBackend:
         last_t: float | None = None
         max_itl = 0.0
         content_chunks = 0
+        t_decision: float | None = None
         try:
             async with self._client.stream("POST", "/v1/completions", json=self._body(req), headers=headers) as r:
                 res.http_status = r.status_code
@@ -105,6 +121,7 @@ class OpenAICompatBackend:
                         u = chunk["usage"]
                         res.output_tokens = u.get("completion_tokens")
                         res.prompt_tokens = u.get("prompt_tokens")
+                        res.cached_tokens = cached_tokens_of(u)
                         res.output_tokens_source = "usage"
                     for ch in chunk.get("choices") or []:
                         if ch.get("text"):
@@ -117,12 +134,20 @@ class OpenAICompatBackend:
                             content_chunks += 1
                         if ch.get("finish_reason"):
                             res.finish_reason = ch["finish_reason"]
+                    if stop_after_chunks is not None and content_chunks >= stop_after_chunks:
+                        t_decision = time.monotonic()
+                        break  # leaving the context manager closes the HTTP stream
         except (httpx.HTTPError, json.JSONDecodeError) as e:
             res.error = f"{type(e).__name__}:{e}"[:300]
             res.n_chunks = content_chunks
             return res
         res.n_chunks = content_chunks
         res.max_itl_s = max_itl if content_chunks > 1 else None
+        if t_decision is not None:
+            res.cancel_close_s = time.monotonic() - t_decision
+            res.error = "client_cancel"
+            res.output_tokens, res.output_tokens_source = content_chunks, "chunks_lower_bound"
+            return res
         if res.output_tokens is None:
             res.output_tokens = content_chunks
             res.output_tokens_source = "chunks_lower_bound"

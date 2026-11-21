@@ -108,6 +108,7 @@ def test_uniform_arrivals_changes_only_competitor_timing(repo):
     ("a2_prefill_heavy", "matched_total_short", False),
     ("a3_decode_heavy", "matched_total_short", False),
     ("a4_mixed_shapes", "homogeneous_mixture", True),
+    *[(f"a2_rate_in{L}", "matched_total_short", False) for L in (128, 256, 512, 768)],
 ])
 def test_shape_controls_match_total_tokens_every_seed(repo, name, ctrl, exact_count):
     sc = load_scenario(repo / "experiments" / f"{name}.yaml")
@@ -157,3 +158,22 @@ def test_shuffled_control_rejects_control_scenario_field(repo):
     base["control_scenario"] = "somewhere.yaml"
     with pytest.raises((pydantic.ValidationError, ValueError), match="generated in-process"):
         ScenarioConfig.model_validate(base)
+
+
+def test_a2_rate_sweep_holds_competitor_arrivals_fixed(repo):
+    # ADR-Q12: across rate-matched points only input length varies; competitor arrival times
+    # (and count) are identical to the L=1024 reference for the same seed.
+    ref = load_scenario(repo / "experiments" / "a2_prefill_heavy.yaml")
+    for seed in (42, 43, 44, 45, 46):
+        ref_t = [i.request.arrival_time_s for i in ref.build_trace(seed=seed)
+                 if i.request.workload_class == "competitor"]
+        prev_in = None
+        for L in (128, 256, 512, 768):
+            sc = load_scenario(repo / "experiments" / f"a2_rate_in{L}.yaml")
+            comp = [i.request for i in sc.build_trace(seed=seed) if i.request.workload_class == "competitor"]
+            assert [r.arrival_time_s for r in comp] == ref_t, (L, seed)
+            assert all(r.input_token_count <= L for r in comp)
+            tot = sum(r.input_token_count for r in comp)
+            if prev_in is not None:
+                assert tot > prev_in  # longer L => more prefill at identical arrivals
+            prev_in = tot

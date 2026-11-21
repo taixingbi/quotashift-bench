@@ -72,6 +72,7 @@ class RunRecorder:
             "output_tokens": None,  # realized, from backend usage / engine
             "output_tokens_source": None,
             "prompt_tokens_reported": None,
+            "cached_tokens_reported": None,  # per-request prefix-cache hits; None = not reported (not 0)
             "n_stream_chunks": None,
             "max_itl_s": None,
         }

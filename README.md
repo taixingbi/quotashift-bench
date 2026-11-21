@@ -7,12 +7,16 @@ distributions produce significantly different *cross-tenant* service degradation
 It benchmarks only the **attack side** — workload synthesis, controlled replay, and characterization of
 cross-tenant impact — in an owned, isolated AWS account/VPC. It introduces **no scheduler and no defense**.
 
-Status: **Phase 0 + Phase 1 complete (local, zero-GPU); Terraform prepared for review, nothing deployed.**
+Status: **live self-hosted A1–A5 results (protocol v1, archived); consolidated gateway + protocol v2 (prefix-cache
+isolation) + E0–E6 prepared, not yet run** — see `IMPLEMENTATION_STATUS.md`, `experiments/PLAN.md`.
+Terraform prepared for review, nothing deployed (no new AWS work).
 
 - Plan: `QUOTASHIFT_CLAUDE_CODE_PLAN.md` · Status: `IMPLEMENTATION_STATUS.md`
 - Architecture & boundaries: `docs/ARCHITECTURE.md`, `docs/DECISIONS.md`, `docs/THREAT_MODEL.md`
 - Protocol / metrics: `docs/EXPERIMENT_PROTOCOL.md`, `docs/METRIC_DEFINITIONS.md`
 - Reproduce / AWS: `docs/REPRODUCIBILITY.md`, `docs/TERRAFORM_PROPOSAL.md`, `docs/aws_cost_controls.md`
+
+Self-hosted GPU target setup and pre-flight: [docs/SELFHOST.md](docs/SELFHOST.md).
 
 ## Quickstart (no AWS, no GPU)
 ```bash
@@ -34,9 +38,13 @@ make tf-fmt tf-validate tf-test
   contract, phase program) and deterministic, phase-aware schedule compilation (stable SHA-256).
 - `src/quotashift/gateway/` — internal FastAPI gateway: synthetic-tenant auth, fixed per-tenant/total/in-flight/
   token caps (fail-closed), idempotent per-request accounting, per-tenant attribution, private-only egress.
-- `src/quotashift/serving/` — mock vLLM (OpenAI `/v1/chat/completions` + `/v1/completions`, streaming + usage).
+- `src/quotashift/serving/` — mock vLLM (OpenAI `/v1/chat/completions` + `/v1/completions`, streaming + usage,
+  emulated prefix-cache counters).
+- `src/quotashift/workload/isolation.py` — protocol v2 per-arm nonce; `instrumentation/engine_counters.py` —
+  per-arm engine deltas; `quotashift gpu-exporter` — GPU telemetry (run on the GPU host).
+- Historical archive: `docs/HISTORICAL_ARCHIVE.md`. Experiment series: `experiments/` (v1, frozen),
+  `experiments/v2/`, `experiments/eseries/`.
 - `infra/terraform/` — private-by-default VPC, one shared GPU vLLM backend (desired 0), gateway + generator
   Fargate tasks, S3/ECR/logs, cost gates. Approval-gated via `scripts/aws_ops.sh`.
 
 Mock runs are simulator plumbing (`synthetic_backend: true` in every manifest), never GPU measurements.
-# quotashift-bench

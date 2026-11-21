@@ -79,8 +79,8 @@ class LengthDist(_Frozen):
 
 
 class ArrivalProcess(_Frozen):
-    process: Literal["poisson", "gamma", "onoff"] = "poisson"
-    rate_rps: float = Field(gt=0)  # mean rate (poisson/gamma) or OFF-state rate (onoff)
+    process: Literal["poisson", "gamma", "onoff", "constant"] = "poisson"
+    rate_rps: float = Field(gt=0)  # mean rate (poisson/gamma/constant) or OFF-state rate (onoff)
     cv: float = 1.0  # gamma renewal coefficient of variation
     burst_rate_rps: float | None = None  # onoff ON-state rate
     mean_on_s: float | None = None

@@ -50,11 +50,39 @@ class Forwarder:
         self.validate_body(body)
         payload = dict(body)
         payload["model"] = self.model  # pin the model; ignore any client value
-        payload["stream"] = False  # Phase 1 records usage from the final body
+        payload["stream"] = False  # non-streaming path records usage from the final body
         try:
             return await self._client.post("/v1/chat/completions", json=payload)
         except httpx.HTTPError as e:
             raise ForwardError(502, {"error": {"type": "backend_unreachable", "reason": f"{type(e).__name__}"}}) from e
+
+    async def open_stream(self, body: dict[str, Any]) -> httpx.Response:
+        """Open a streaming chat completion (caller must `aclose()` the response).
+
+        `stream_options.include_usage` is always requested so the gateway can reconcile
+        reservations with actual usage."""
+        self.validate_body(body)
+        payload = dict(body)
+        payload["model"] = self.model
+        payload["stream"] = True
+        payload["stream_options"] = {**(payload.get("stream_options") or {}), "include_usage": True}
+        try:
+            req = self._client.build_request("POST", "/v1/chat/completions", json=payload)
+            return await self._client.send(req, stream=True)
+        except httpx.HTTPError as e:
+            raise ForwardError(502, {"error": {"type": "backend_unreachable", "reason": f"{type(e).__name__}"}}) from e
+
+    async def tokenize_chat(self, messages: list) -> int | None:
+        """Exact prompt-token count via vLLM `/tokenize` (chat template applied). None on failure."""
+        try:
+            r = await self._client.post("/tokenize", json={"model": self.model, "messages": messages}, timeout=10.0)
+            if r.status_code != 200:
+                return None
+            data = r.json()
+            n = data.get("count")
+            return int(n) if n is not None else len(data.get("tokens") or [])
+        except (httpx.HTTPError, ValueError):
+            return None
 
     async def healthz(self) -> bool:
         try:

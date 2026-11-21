@@ -57,6 +57,13 @@ def sample_arrivals(proc: ArrivalProcess, duration_s: float, rng: np.random.Gene
             if t >= duration_s:
                 break
             times.append(t)
+    elif proc.process == "constant":
+        # deterministic spacing 1/rate with one seeded phase offset (no inter-arrival jitter)
+        gap = 1.0 / proc.rate_rps
+        t = float(rng.uniform(0.0, gap))
+        while t < duration_s:
+            times.append(t)
+            t += gap
     elif proc.process == "gamma":
         shape = 1.0 / proc.cv**2
         scale = 1.0 / (proc.rate_rps * shape)
