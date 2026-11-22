@@ -137,7 +137,7 @@ No long GPU sweep starts automatically; each block is started explicitly.
 
 (none)
 
-## Suite S — A7–A9 (protocol v3, `experiments/v3/`; design: docs/A7_A9_EXPERIMENT_DESIGN.md) — IN PROGRESS (S0 done 2026-11-21)
+## Suite S — A7–A9 (protocol v3, `experiments/v3/`; design: docs/A7_A9_EXPERIMENT_DESIGN.md) — DONE 2026-11-21 (audited; corrected; long context re-run as v3.1)
 
 Phase 3 smokes ran 2026-11-21 (`experiments/v3/smoke/`, reports in `reports/v3/smoke/`); harness validation only.
 
@@ -171,6 +171,16 @@ GPU power verified 2026-11-21 06:36–06:51 local: `gpu_exporter_url: http://192
 (nvidia_gpu_exporter). Each run now waits for GPU idle clocks before the arm (about 3.5 s) and records the
 post-arm power tail (about 22 s), which adds about 25 s per run. The idle-baseline defect and its fix are in the
 design doc amendments.
+
+### Suite S outcome (2026-11-21, after audit and corrections)
+
+- S1–S5 ran 15:18–20:15 EST. Forensic audit: `reports/v3/SUITE_S_FORENSIC_AUDIT.md`; corrected analysis:
+  `reports/v3/SUITE_S_CORRECTED_ANALYSIS.md`; ADR-Q16/Q17: `docs/ADR_TTFT_METRIC_CORRECTION.md`.
+- `a9_{tok,rate}_longctx` (v3) are **invalid** (competitor HTTP 400). Re-run as protocol v3.1
+  (`docs/PROTOCOL_V3_1_LONGCTX_AMENDMENT.md`, `experiments/v3_1/`) 21:24–22:16 EST at 02448f8: rate-matched **valid,
+  supported** (0.213 [0.185, 0.241]); token-matched **invalid** (pre-registered competitor-completion gate: the short
+  control completed 74.6–76.0% of its requests in seeds 45–46).
+- All other S blocks stand as pre-registered; see the corrected analysis for post-hoc TTFT/SLO/energy context.
 
 ### S0 result (2026-11-21 09:37:04–10:02:14 EST, server start 1795268683.89, code = commit dbd7f17)
 
