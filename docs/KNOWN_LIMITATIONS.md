@@ -134,3 +134,21 @@
   the GPU idle-baseline check.
 - `prompt_tokens_by_source_total` sources summed to 4 tokens more than `prompt_tokens_total` in one 18,250-token
   arm. This is reported, not reconciled away.
+
+### Suite S audit findings (2026-11-21; reports/v3/SUITE_S_FORENSIC_AUDIT.md)
+- **Planned token unit.** Every scenario before v3.1 plans `input_token_count` in whitespace words. Pseudo-syllable
+  filler is ~2.03–2.14 Qwen2.5 tokens per word; the single-token prefix/nonce vocabulary is 1.0 (A7 competitor
+  prompts 1.21 overall). "Authorized tokens" and token-matched budgets of v1–v3 are therefore in planned (word)
+  units, not tokenizer tokens; realized tokens differ by family. The design-doc sentence "Tokenized lengths are
+  verified equal across arms on the live tokenizer (single-token vocab)" holds for the nonce/prefix words only.
+  Victim prompts are still identical across arms. v3.1 (`prompt_token_unit: tokenizer`) fixes this for new series.
+- **A9 long context v3 is invalid** (112/116 competitor requests HTTP 400); kept as data, excluded from conclusions.
+- **TTFT definition.** Pre-registered `ttft_p95` results (A1–A9) are backend TTFT and exclude gateway queueing
+  (ADR-Q16). User-facing values are post-hoc.
+- **Censoring.** Latency percentiles are over completed requests; gateway-queue timeouts (60 s) drop the slowest
+  victims. Read every latency ratio with offered-load SLO success and the timeout counts.
+- **A9 energy is nearly flat per arm** (≈27–37 kJ; ~300 W mean board power) at this load, so per-token ratios are
+  dominated by their denominators; board power includes the (identical) victims' work.
+- **Model revision.** The server reports `revision=None` (`/server_info`); the SHA in SELFHOST/REPRODUCIBILITY is
+  the hub `main` SHA looked up on 2026-11-19, not verified against the loaded weights.
+- **Run manifests** do not list dirty files; report manifests before 2026-11-21 21:00 have no `git` block.

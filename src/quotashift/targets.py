@@ -204,6 +204,8 @@ def write_target_snapshot(prof: TargetProfile, out: Path, *, timeout_s: float = 
         exp = get(prof.gpu_exporter_url)
         files["gpu_info.prom"] = None if exp is None else "\n".join(
             ln for ln in exp.splitlines() if ln.startswith("nvidia_smi_gpu_info")) + "\n"
+    rev = model_revision_provenance(prof, timeout_s=timeout_s)
+    files["model_revision.json"] = json.dumps(rev, indent=2)
     for name, text in files.items():
         if text is not None:
             (out / name).write_text(text)
@@ -211,3 +213,34 @@ def write_target_snapshot(prof: TargetProfile, out: Path, *, timeout_s: float = 
            "check": chk, "files": {k: v is not None for k, v in files.items()}}
     (out / "target_check.json").write_text(json.dumps(rec, indent=2, default=str))
     return rec
+
+
+def model_revision_provenance(prof: TargetProfile, *, timeout_s: float = 10.0) -> dict:
+    """Model revision as the server states it (`/server_info` -> vllm_config `revision=` / `tokenizer_revision=`),
+    beside the profile's documented value. Never invents a revision: when the server reports None, the status says
+    so explicitly. Only the vllm_config string is read (environment sections are not stored)."""
+    import re
+
+    base = prof.backend_url.rstrip("/")
+    reported: dict[str, str | None] = {"revision": None, "tokenizer_revision": None}
+    err = None
+    try:
+        r = httpx.get(base + "/server_info", timeout=timeout_s)
+        r.raise_for_status()
+        cfg = str(r.json().get("vllm_config", ""))
+        for k in reported:
+            m = re.search(rf"(?<![a-z_]){k}=([^,\s)]+)", cfg)
+            reported[k] = None if m is None or m.group(1) == "None" else m.group(1)
+    except (httpx.HTTPError, ValueError) as e:
+        err = f"{type(e).__name__}"
+    documented = prof.model_revision
+    if reported["revision"]:
+        status = f"server-reported revision {reported['revision']}"
+    elif err:
+        status = f"server_info unavailable ({err}); documented revision {documented or 'none'} (unverified)"
+    else:
+        status = ("server reports revision=None (resolved from the hub default at load time); documented revision "
+                  f"{documented or 'none'} is not server-verified")
+    return {"model_revision_server_reported": reported["revision"],
+            "tokenizer_revision_server_reported": reported["tokenizer_revision"],
+            "model_revision_documented": documented, "model_revision_status": status}

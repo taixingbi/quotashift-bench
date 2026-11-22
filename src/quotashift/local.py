@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from typing import Any
 
 from quotashift.config import BackendConfig, ExperimentConfig, GatewayConfig, LedgerConfig, RunControl
 from quotashift.runtime.runner import REPO, run_experiment
@@ -146,6 +147,17 @@ def run_matched_pairs(
     from quotashift.budget import budget_report, summarize_trace
 
     seeds = [scenario.seed + i for i in range(reps)]
+    from quotashift.workload.tokenize import VllmTokenizer, WhitespaceTokenizer, verify_trace
+
+    count = VllmTokenizer(target.backend_url, target.model) if target is not None else WhitespaceTokenizer()
+    exact = scenario.prompt_token_unit == "tokenizer"
+    tokenization: dict[str, Any] = {"tokenizer": count.identity, "prompt_token_unit": scenario.prompt_token_unit,
+                                    "per_seed": {}}
+    for s in seeds:  # fail closed BEFORE any request is sent: every planned request must fit the context
+        a_tr, c_tr, _ = paired_traces(scenario, s, count)
+        tokenization["per_seed"][s] = {
+            arm: verify_trace(tr, count, max_model_len=scenario.model_max_len, exact=exact, label=f"{arm} seed {s}")
+            for arm, tr in (("attack", budget_view(scenario, a_tr, s)), ("control", c_tr))}
     attack: dict[int, Path] = {}
     control: dict[int, Path] = {}
     budgets: dict[int, dict] = {}
@@ -157,7 +169,7 @@ def run_matched_pairs(
     if guard_start is not None:  # refuse BEFORE any run: identical prompts already sent to this server start
         prior: list[Path] = []
         for s in seeds:
-            a_tr, c_tr, _ = paired_traces(scenario, s)
+            a_tr, c_tr, _ = paired_traces(scenario, s, count)
             prior += warm_cache_reruns(results_root, f"{scenario.scenario_id}__attack", a_tr, guard_start)
             prior += warm_cache_reruns(results_root, f"{scenario.scenario_id}__control", c_tr, guard_start)
         if prior:
@@ -168,7 +180,7 @@ def run_matched_pairs(
     label: str = scenario.comparison.primary_control
     v2 = scenario.protocol_version >= 2
     for i, s in enumerate(seeds):
-        atk_trace, ctl_trace, label = paired_traces(scenario, s)
+        atk_trace, ctl_trace, label = paired_traces(scenario, s, count)
         # budget gate is evaluated on exactly the traces that will be sent (post-nonce in v2)
         budgets[s] = budget_report(summarize_trace(budget_view(scenario, atk_trace, s)), summarize_trace(ctl_trace),
                                    scenario.comparison)
@@ -205,7 +217,7 @@ def run_matched_pairs(
                 raise LifecycleLeak(f"cleanup check failed after {arm} seed {s}: {chk} (run dir {out})")
     return {"seeds": seeds, "attack": attack, "control": control, "control_label": label, "budgets": budgets,
             "arm_order": order, "protocol_version": scenario.protocol_version, "path": path,
-            "cache_resets": resets}
+            "cache_resets": resets, "tokenization": tokenization}
 
 
 def budget_view(scenario: ScenarioConfig, atk: list, seed: int) -> list:
@@ -234,8 +246,22 @@ class CacheResetUnverified(RuntimeError):
     """A pre-registered cache reset could not be verified; fail closed."""
 
 
-def paired_traces(scenario: ScenarioConfig, seed: int) -> tuple[list, list, str]:
-    """(attack, control) traces exactly as sent. v2 applies the per-arm salted nonce to both."""
+def paired_traces(scenario: ScenarioConfig, seed: int, count=None) -> tuple[list, list, str]:  # noqa: ANN001
+    """(attack, control) traces exactly as sent. v2 applies the per-arm salted nonce to both.
+
+    v3.1 (`prompt_token_unit: tokenizer`): after nonce/prefix structure, every prompt is calibrated so `count`
+    (the live model tokenizer; whitespace when offline) gives exactly `input_token_count` tokens."""
+    atk, ctl, label = _paired_traces_raw(scenario, seed)
+    if scenario.prompt_token_unit == "tokenizer":
+        from quotashift.workload.tokenize import WhitespaceTokenizer, calibrate_trace
+
+        fn = count if count is not None else WhitespaceTokenizer()
+        atk, _ = calibrate_trace(atk, fn)
+        ctl, _ = calibrate_trace(ctl, fn)
+    return atk, ctl, label
+
+
+def _paired_traces_raw(scenario: ScenarioConfig, seed: int) -> tuple[list, list, str]:
     atk = scenario.build_trace(seed=seed)
     ctl, label = scenario.control_trace(seed=seed)
     if scenario.protocol_version == 3 and scenario.prefix_cache is not None:

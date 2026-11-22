@@ -247,10 +247,17 @@ def cmd_budget(a: argparse.Namespace) -> int:
 
 def cmd_experiment(a: argparse.Namespace) -> int:
     """Run an attack/control pair over N seeds and write the attack-effect report."""
-    from quotashift.evaluation.attack_effect import analyze_pair, run_metrics, write_report
+    from quotashift.evaluation.attack_effect import (
+        analyze_pair,
+        run_metrics,
+        secondary_endpoints,
+        write_report,
+    )
+    from quotashift.evaluation.validity import apply_gates, run_manifest_provenance, validity_gates
     from quotashift.local import run_matched_pairs
     from quotashift.scenario import load_scenario
-    from quotashift.targets import active_target, load_target
+    from quotashift.targets import active_target, load_target, model_revision_provenance
+    from quotashift.workload.tokenize import TokenizedContextInvalid
 
     if a.mock == a.live:
         print("experiment requires exactly one of --mock or --live.", file=sys.stderr)
@@ -301,24 +308,44 @@ def cmd_experiment(a: argparse.Namespace) -> int:
     except (LifecycleLeak, CacheResetUnverified, ServerRestarted, EngineNotReady) as e:
         print(f"STOPPED: {type(e).__name__}: {e}", file=sys.stderr)
         return 4
+    except TokenizedContextInvalid as e:
+        print(f"REFUSED (tokenized context, nothing sent): {e}", file=sys.stderr)
+        return 3
     pairs["budget_tolerance"] = sc.comparison.budget_tolerance
     attack = [run_metrics(pairs["attack"][s], sc.scenario_id, "attack", s) for s in pairs["seeds"]]
     control = [run_metrics(pairs["control"][s], sc.scenario_id, "control", s) for s in pairs["seeds"]]
     analysis = analyze_pair(
         attack, control, metric=sc.comparison.degradation_metric,
         threshold=sc.comparison.preregistered_threshold, direction=sc.comparison.effect_direction)
+    secondary = secondary_endpoints(attack, control, threshold=sc.comparison.preregistered_threshold)
+    run_dirs = [*pairs["attack"].values(), *pairs["control"].values()]
+    prov = run_manifest_provenance(run_dirs)
+    if target is not None:
+        prov.update(model_revision_provenance(target))
+    pairs["provenance"] = prov
+    validity = validity_gates(
+        attack, control, analysis, max_model_len=sc.model_max_len, prompt_token_unit=sc.prompt_token_unit,
+        designed_early_termination=sc.lifecycle is not None, provenance=prov,
+        tokenization=pairs.get("tokenization"), synthetic=target is None)
+    analysis = apply_gates(analysis, validity)
     cmds = [
         f"uv run quotashift budget {a.config}",
         f"uv run quotashift experiment {a.config} --reps {a.reps} --{'mock' if a.mock else 'live'} --path {a.path}",
     ]
-    written = write_report(sc.scenario_id, pairs, analysis, attack, control, out_dir, commands=cmds)
+    written = write_report(sc.scenario_id, pairs, analysis, attack, control, out_dir, commands=cmds,
+                           secondary=secondary, validity=validity)
     _print({
         "scenario_id": sc.scenario_id, "control": pairs["control_label"], "seeds": pairs["seeds"],
         "metric": analysis["metric"], "mean_ratio": analysis["mean_ratio"],
         "classification": analysis.get("classification"), "effect_direction": analysis.get("effect_direction"),
         "ratio_ci95": analysis["ratio_ci95"], "attack_success_rate": analysis["attack_success_rate"],
-        "synthetic_backend": target is None, **written,
+        "synthetic_backend": target is None, "validity_passed": validity["passed"], **written,
     })
+    if not validity["passed"]:
+        failed = [c["name"] for c in validity["checks"] if c["severity"] == "fail" and not c["passed"]]
+        print(f"INVALID: validity gates failed: {failed} (classification set to 'invalid'; report written)",
+              file=sys.stderr)
+        return 5
     return 0
 
 

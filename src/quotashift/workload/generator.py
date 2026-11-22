@@ -89,8 +89,18 @@ def sample_arrivals(proc: ArrivalProcess, duration_s: float, rng: np.random.Gene
     return np.asarray(times, dtype=float)
 
 
-def synthetic_prompt(n_tokens: int, rng: np.random.Generator) -> str:
-    # Pseudo-words; mock backends count whitespace-separated words as tokens.
+def synthetic_prompt(n_tokens: int, rng: np.random.Generator, vocab: str = "pseudo_syllable") -> str:
+    """`n_tokens` filler words. Mock backends count whitespace-separated words as tokens.
+
+    pseudo_syllable (historical): ~2.1 real Qwen2.5 tokens per word, so planned counts are whitespace words.
+    single_token (v3.1): words from the verified single-token vocabulary; real counts are then fixed exactly by
+    `workload.tokenize.calibrate_trace` against the live tokenizer.
+    """
+    if vocab == "single_token":
+        from quotashift.workload.isolation import NONCE_VOCAB
+
+        idx = rng.integers(0, len(NONCE_VOCAB), size=n_tokens)
+        return " ".join(NONCE_VOCAB[i] for i in idx)
     syll = ["ka", "lo", "mi", "ten", "ra", "so", "vel", "dun", "pi", "or", "ex", "qua"]
     idx = rng.integers(0, len(syll), size=(n_tokens, 2))
     return " ".join(syll[a] + syll[b] for a, b in idx)
@@ -111,7 +121,7 @@ def _tenant_items(cfg: WorkloadConfig, t: TenantProfile, seed: int) -> list[Trac
         rid = f"{t.tenant_id}-{seed}-{i:06d}"
         nonce = f"[req {rid}]"  # unique prefix => no accidental cross-request prefix-cache hits
         if cfg.prompt_mode == "synthetic_text":
-            text = nonce + " " + synthetic_prompt(int(p_len[i]) - 2 if p_len[i] > 2 else 1, text_rng)
+            text = nonce + " " + synthetic_prompt(int(p_len[i]) - 2 if p_len[i] > 2 else 1, text_rng, cfg.prompt_vocab)
             ids = None
         else:
             text = None

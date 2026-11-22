@@ -152,3 +152,17 @@ classification (supported / negative / inconclusive / unavailable), per-arm cost
 engine time sums, busy time, KV/waiting, GPU dynamic energy when power is sampled), and stop-on-leak cleanup gates.
 Thresholds (1.25×) are justified per scenario, not inherited from A1–A5. Lifecycle plans refuse the in-process
 simulator (it cannot cancel streams). No defense, scheduling change or public target is involved.
+
+## ADR-Q16 — TTFT definitions and metric-labelled reports (2026-11-21)
+User-facing TTFT = `t_first_token − t_offered`; backend TTFT = `t_first_token − t_sent`; gateway queue =
+`t_sent − t_offered`; offered-load SLO success = victims meeting SLO / victims offered. The historical key
+`ttft_p95` keeps its computed meaning (backend TTFT) so A1–A9 results reproduce unchanged; user-facing reanalysis
+is a labelled post-hoc correction. Reports derive every label/unit from `MetricInfo` and fail closed on mismatch.
+Full record: `docs/ADR_TTFT_METRIC_CORRECTION.md`.
+
+## ADR-Q17 — Fail-closed validity gates and tokenizer-sized prompts (2026-11-21)
+`evaluation/validity.py` gates (HTTP 400/backend errors ≤ 1%, admission and competitor completion ≥ 95%, primary
+metric present, tokenized context fits, planned = reported tokens for tokenizer-unit scenarios, clean provenance,
+victim censoring ≤ 5% for latency primaries) set the classification to `invalid` and exit 5. Protocol v3.1
+(`docs/PROTOCOL_V3_1_LONGCTX_AMENDMENT.md`) sizes prompts in real tokens (`prompt_token_unit: tokenizer`) and
+tokenizes every request on the live server before sending anything. Thresholds fixed before any v3.1 run.

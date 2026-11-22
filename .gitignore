@@ -21,3 +21,6 @@ infra/terraform/local-state/
 # Phase 5 generated reports (summary.csv/md, figures, manifest)
 reports/*
 !reports/.gitkeep
+
+# Suite S original-data archive: tarball stays local; checksums/file lists are tracked
+archive/*/*.tar.gz

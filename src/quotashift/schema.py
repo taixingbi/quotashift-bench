@@ -124,6 +124,10 @@ class WorkloadConfig(_Frozen):
     max_requests: int | None = Field(default=None, gt=0)
     max_model_len: int = Field(default=8192, gt=0)
     prompt_mode: Literal["synthetic_text", "token_ids"] = "synthetic_text"
+    # Filler vocabulary for synthetic_text prompts. "pseudo_syllable" (historical default, A1-A9 v3): two-syllable
+    # pseudo-words, ~2.1 Qwen2.5 tokens each. "single_token" (protocol v3.1): workload.isolation.NONCE_VOCAB,
+    # every word verified as exactly one Qwen2.5 token; used with tokenizer calibration (workload/tokenize.py).
+    prompt_vocab: Literal["pseudo_syllable", "single_token"] = "pseudo_syllable"
     tenants: list[TenantProfile]
 
     @field_validator("tenants")

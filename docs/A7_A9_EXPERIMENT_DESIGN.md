@@ -48,6 +48,8 @@ reported where n ≥ 20 completed victim requests per arm (else P50/P95 only, fl
   prompt reuse), identical structure in both arms, so victim cache benefit can be displaced or not.
 - **Matched:** request ids, count, arrival times, every request's word/token count, max_tokens, victim traffic,
   serving config. Tokenized lengths are verified equal across arms on the live tokenizer (single-token vocab).
+  **[Correction 2026-11-21, ADR-Q17]** This holds for the nonce/prefix vocabulary only; the pseudo-syllable filler is
+  ~2.1 tokens per word, so v3 token counts are whitespace words (docs/KNOWN_LIMITATIONS.md). v3.1 fixes this.
 - **Mechanism observable:** engine Δprefix hits / Δqueries, prefill-computed tokens, KV usage, waiting depth.
 - **Primary metric:** victim TTFT P95 ratio A7-A / A7-C, two-sided, threshold 1.25 (effect if ≥ 1.25 or ≤ 0.8).
 - **Confounders:** residual cache residency from the previous arm (handled by per-arm salting + counterbalanced
@@ -201,3 +203,11 @@ See `experiments/PLAN.md` § Suite S (A7–A9). Each block is launched explicitl
   pre-registered estimate), and a warm-cache re-run guard. The guard came from an invalid smoke: an A7 smoke repeated
   on the same server start with the same salt hit 98.6% of prompt tokens in both arms, because the prefix cache
   persists across runs. Each Suite S block therefore runs once per salt per server start.
+
+## Amendment 2026-11-21 — Suite S audit and protocol v3.1
+
+- Audit: `reports/v3/SUITE_S_FORENSIC_AUDIT.md`; corrected analysis: `reports/v3/SUITE_S_CORRECTED_ANALYSIS.md`.
+- `a9_tok_longctx` and `a9_rate_longctx` (v3) are **invalid** (competitor HTTP 400 on context length) and are
+  replaced by the v3.1 blocks in `docs/PROTOCOL_V3_1_LONGCTX_AMENDMENT.md`. All other thresholds, metrics and
+  classifications are unchanged.
+- TTFT definitions and report labels: ADR-Q16; validity gates: ADR-Q17 (`docs/ADR_TTFT_METRIC_CORRECTION.md`).

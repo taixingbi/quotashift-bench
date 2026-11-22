@@ -44,6 +44,8 @@ SCENARIO_SCHEMA_VERSION = 1
 # "steady" is (historically) Poisson; "poisson" is an explicit alias with identical semantics;
 # "constant" is deterministic 1/rate spacing. Historical scenarios keep "steady" unchanged.
 Pattern = Literal["steady", "burst_bounded", "poisson", "constant"]
+TOKENIZER_MIN_PROMPT_TOKENS = 32  # protocol v3.1 floor for tokenizer-sized prompts (tag + nonce + >= 8 filler)
+
 RequestShape = Literal["short", "context_heavy", "decode_heavy", "mixed", "long_context"]
 
 # What each in-process control holds fixed vs lets vary relative to the attack arm. Victim traffic
@@ -142,7 +144,7 @@ class Comparison(_Frozen):
     matched_request_budget: bool = True
     matched_token_budget: bool = True
     repetitions: int = Field(default=5, ge=1)
-    degradation_metric: Literal["ttft_p95", "e2e_p95", "gpu_energy_per_1k_authorized_tokens",
+    degradation_metric: Literal["ttft_p95", "backend_ttft_p95", "user_ttft_p95", "e2e_p95", "gpu_energy_per_1k_authorized_tokens",
                                 "engine_service_s_per_1k_authorized_tokens"] = "ttft_p95"
     # v3: direction of the pre-registered effect. "increase" (historical): ratio >= threshold.
     # "two_sided": ratio >= threshold OR ratio <= 1/threshold.
@@ -247,6 +249,12 @@ class ScenarioConfig(_Frozen):
     isolation_salt: str = ""  # change per replication: the server cache persists across experiments
     expect_prefix_caching: Literal["any", "on", "off"] = "any"  # fail closed if the server differs
     gateway: ScenarioGateway | None = None  # fixed rate limits / queue caps (None = historical)
+    # ---- protocol v3.1 amendment (docs/PROTOCOL_V3_1_LONGCTX_AMENDMENT.md). "whitespace" (historical default):
+    # input_token_count counts whitespace words of pseudo-syllable filler (~2.1 real tokens each).
+    # "tokenizer": single-token filler + per-request calibration so the live model tokenizer counts exactly
+    # input_token_count prompt tokens (verified fail-closed before any request is sent).
+    prompt_token_unit: Literal["whitespace", "tokenizer"] = "whitespace"
+    protocol_amendment: str | None = None  # e.g. "3.1"; label only (the semantics are carried by the fields above)
 
     # Directory of the file this scenario was loaded from (for resolving
     # `control_scenario`); set by `load_scenario`, None for in-memory configs.
@@ -372,7 +380,9 @@ class ScenarioConfig(_Frozen):
             p_med, max_out, o_med = in_cap, min(256, out_cap), min(256, out_cap)
         else:  # mixed
             p_med, max_out, o_med = min(256, in_cap), min(128, out_cap), min(96, out_cap)
-        prompt = LengthDist(dist="lognormal", median=float(max(2, p_med)), sigma=0.3, min=1, max=in_cap)
+        # v3.1: a tokenizer-sized prompt must hold the "[req <id>]" tag (~16-20 Qwen tokens) + 4 nonce words + filler
+        lo = TOKENIZER_MIN_PROMPT_TOKENS if self.prompt_token_unit == "tokenizer" else 1
+        prompt = LengthDist(dist="lognormal", median=float(max(2, p_med)), sigma=0.3, min=lo, max=in_cap)
         realized = LengthDist(dist="lognormal", median=float(max(1, o_med)), sigma=0.3, min=1, max=max_out)
         return prompt, max_out, realized
 
@@ -480,6 +490,7 @@ class ScenarioConfig(_Frozen):
             workload_id=f"{self.scenario_id}:{tp.tenant_id}:{phase}",
             duration_s=duration,
             max_model_len=self.model_max_len,
+            prompt_vocab="single_token" if self.prompt_token_unit == "tokenizer" else "pseudo_syllable",
             tenants=[tp],
         )
         raw = gen.generate_trace(seg, seed)

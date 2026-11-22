@@ -1,5 +1,10 @@
 # Metric Definitions
 
+> **ADR-Q16 (2026-11-21):** the attack-effect analysis (`evaluation/attack_effect.py`) historically computed its
+> victim `ttft_p95` as **backend TTFT** (`t_first_token − t_sent`), not the user-facing `ttft_ms` below. That key
+> keeps its historical meaning; new analyses name `user_ttft_p95` / `backend_ttft_p95` / `gateway_queue_p95`
+> explicitly. See `docs/ADR_TTFT_METRIC_CORRECTION.md`.
+
 Implemented in `src/quotashift/evaluation/metrics.py`; tested in `tests/unit/test_metrics.py`.
 All per-request times are on the runner's single clock (monotonic in live runs, virtual in simulation).
 
