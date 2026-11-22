@@ -137,13 +137,13 @@ No long GPU sweep starts automatically; each block is started explicitly.
 
 (none)
 
-## Suite S — A7–A9 (protocol v3, `experiments/v3/`; design: docs/A7_A9_EXPERIMENT_DESIGN.md) — NOT STARTED
+## Suite S — A7–A9 (protocol v3, `experiments/v3/`; design: docs/A7_A9_EXPERIMENT_DESIGN.md) — IN PROGRESS (S0 done 2026-11-21)
 
 Phase 3 smokes ran 2026-11-21 (`experiments/v3/smoke/`, reports in `reports/v3/smoke/`); harness validation only.
 
 | Block | File(s) | Seeds × arms | Runs | Est. time | Status |
 |---|---|---|---|---|---|
-| S0 A7-V A/A null (run first; sets noise floor) | `a7v_cache_isolation_validation` | 5 × 2 | 10 | ~21 min | ready |
+| S0 A7-V A/A null (run first; sets noise floor) | `a7v_cache_isolation_validation` | 5 × 2 | 10 | ~21 min (actual 25 min 10 s) | **done 09:37–10:02 local: passes precision gate** |
 | S1 A7 cache state (exploratory: no verified reset) | `a7_prefix_cache` | 5 × 2 | 10 | ~21 min | ready |
 | S1' A7 with verified reset (confirmatory) | `a7_prefix_cache_reset` | 5 × 2 | 10 | ~21 min | ready: dev mode on since 2026-11-21 11:05 UTC; `reset_and_verify` passed (hits 96 → 0) |
 | S2 A8a cancel/timeout churn | `a8_lifecycle_churn` | 5 × 2 | 10 | ~16 min | ready |
@@ -171,6 +171,17 @@ GPU power verified 2026-11-21 06:36–06:51 local: `gpu_exporter_url: http://192
 (nvidia_gpu_exporter). Each run now waits for GPU idle clocks before the arm (about 3.5 s) and records the
 post-arm power tail (about 22 s), which adds about 25 s per run. The idle-baseline defect and its fix are in the
 design doc amendments.
+
+### S0 result (2026-11-21 09:37:04–10:02:14 EST, server start 1795268683.89, code = commit dbd7f17)
+
+- A/A victim TTFT P95 ratio over 5 paired seeds: mean 0.962, SD 0.055. Pre-registered percentile-bootstrap 95% CI
+  [0.918, 1.006], **half-width 0.044 ≤ 0.25 → passes the precision gate**; classification negative (CI contains 1).
+  Sensitivity check (not pre-registered): t-based CI [0.893, 1.031], half-width 0.069.
+- All 10 arms: engine prefix hit ratio 0.000, per-request `cached_tokens` coverage 1.0, reconciliation residual 0,
+  attribution exact, no restart, `prefill_est_minus_measured` 0, 1958/1958 requests completed, no leaks.
+- One verified hygiene reset before the run (hits 96 → 0, `prerun_cache_reset.json`); no per-arm reset
+  (`cache_reset: none` as pre-registered). No warm-cache contamination found.
+- Remaining blocks S1–S5 run in plan order, each preceded by the same hygiene reset (not a per-arm reset).
 
 ### Step 0 implemented (2026-11-21 09:00–09:08 local)
 
