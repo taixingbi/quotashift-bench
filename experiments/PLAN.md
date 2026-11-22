@@ -213,9 +213,22 @@ design doc amendments.
 - **Suite S consequence:** each `experiments/v3/*.yaml` block runs once per server start with its current salt. A
   repeat (for example after a failure) needs a new `isolation_salt`, or a server restart, which starts a new series.
 
-## Protocol v4 (`experiments/v4/`; design: docs/PROTOCOL_V4.md) — DESIGNED, NOT RUN
+## Protocol v4 (`experiments/v4/`; design: docs/PROTOCOL_V4.md) — SMOKES + CALIBRATION DONE; R1–R3 NOT RUN
 
 R1 feasible token-matched comparison (calibrated common load), R2 request-granularity sweeps (R2-F fixed output,
 R2-B balanced), R3 gateway vs direct-vLLM replay. 45 generated YAMLs (`scripts/build_v4.py`), frozen on the live
 tokenizer (`experiments/v4/FROZEN_TRACES.json`, `scripts/freeze_v4.py`). Budget: 35 blocks / 178 arms ≈ 7.7 h GPU,
 staged S (smokes) → C (calibration, selects L*) → R1 → R2-F → R2-B → R3; each stage needs owner approval.
+
+**Stages S + C (2026-11-22, commit 46e37f6, clean tree, server start 1795268683.89 throughout; owner-approved).**
+- Server, read-only (/version, /server_info, /metrics; no host shell): vLLM 0.17.1, fp16, max_model_len 4096,
+  gpu_memory_utilization 0.8, prefix caching on, chunked prefill on, 4662 KV blocks. max_num_batched_tokens 2048 and
+  max_num_seqs 256 are inferred from defaults-derived config fields, not verified. Model revision UNVERIFIED (revision=None).
+- S (08:09–08:19 EST): 4/4 smokes passed all gates + telemetry/cache-isolation/conservation checks. R2-F s96 (gateway
+  and direct) classified feasible, not the expected overload (expectation only, not a rule).
+- C (08:20–09:08 EST): 9/9 probes passed integrity gates; 100% competitor completion, 0 victim censoring everywhere.
+  Gateway saturation (limit 0.25): L200 P 0.011, D 0.092, S 0.035; L300 P 0.016, **D 0.367**, S 0.134; L400 P 0.006,
+  **D 0.807**, **S 0.341**. Frozen rule ⇒ **L\* = 200**. No rerun, no threshold change. Engine waiting 0 and KV ≤ 4.8% in
+  every probe: the 8-slot gateway is the binding constraint (D L300 victim user TTFT P95 ≈ 2.2 s, of which ≈ 2.1 s is gateway queue).
+- Local reports (gitignored): reports/v4/{smoke,calibration}/, calibration/CALIBRATION_REPORT.md.
+- Next, pending owner review: R1 at L200 (30 arms ≈ 80 min); remaining R1–R3 152 arms ≈ 6.7 h.
