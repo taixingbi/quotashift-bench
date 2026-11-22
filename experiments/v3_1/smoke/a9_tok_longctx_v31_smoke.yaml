@@ -4,12 +4,13 @@
 # experiments/v3/a9_tok_longctx.yaml: prompt sizes are in real Qwen2.5 tokens (prompt_token_unit: tokenizer,
 # single-token filler, per-request calibration + fail-closed tokenized-context check), with a 32-token prompt floor,
 # a new scenario_id and a new isolation_salt. Threshold, metric, direction, rates and shapes are unchanged.
-# SMOKE (harness validation only, 1 seed, 40 s; never pooled with the full run).
+# SMOKE (harness validation only, 1 seed, 40 s; never pooled with the full run). Salt r2: the r1 tok smoke
+# (21:16 EST) passed every measurement gate but failed `provenance` (an untracked file was created during the run).
 schema_version: 1
 scenario_id: a9_tok_longctx_v31_smoke
 protocol_amendment: "3.1"
 prompt_token_unit: tokenizer
-isolation_salt: v31-longctx-tok-smoke-r1
+isolation_salt: v31-longctx-tok-smoke-r2
 protocol_version: 3
 expect_prefix_caching: "on"
 seed: 42
