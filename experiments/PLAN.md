@@ -213,7 +213,7 @@ design doc amendments.
 - **Suite S consequence:** each `experiments/v3/*.yaml` block runs once per server start with its current salt. A
   repeat (for example after a failure) needs a new `isolation_salt`, or a server restart, which starts a new series.
 
-## Protocol v4 (`experiments/v4/`; design: docs/PROTOCOL_V4.md) — SMOKES + CALIBRATION DONE; R1–R3 NOT RUN
+## Protocol v4 (`experiments/v4/`; design: docs/PROTOCOL_V4.md) — SMOKES, CALIBRATION, R1 DONE; R2–R3 NOT RUN
 
 R1 feasible token-matched comparison (calibrated common load), R2 request-granularity sweeps (R2-F fixed output,
 R2-B balanced), R3 gateway vs direct-vLLM replay. 45 generated YAMLs (`scripts/build_v4.py`), frozen on the live
@@ -232,3 +232,16 @@ staged S (smokes) → C (calibration, selects L*) → R1 → R2-F → R2-B → R
   every probe: the 8-slot gateway is the binding constraint (D L300 victim user TTFT P95 ≈ 2.2 s, of which ≈ 2.1 s is gateway queue).
 - Local reports (gitignored): reports/v4/{smoke,calibration}/, calibration/CALIBRATION_REPORT.md.
 - Next, pending owner review: R1 at L200 (30 arms ≈ 80 min); remaining R1–R3 152 arms ≈ 6.7 h.
+
+**Stage R1 at L\* = 200 (2026-11-22 09:40–10:56 EST, 76 min, commit 05ae0ed, clean tree, same server start; owner-approved).**
+3 blocks x 5 seeds (42–46), 30 arms; all validity gates + telemetry/cache-isolation/conservation checks passed; competitor
+completion 100%, victim censoring 0, prefix hit 0, engine waiting 0, KV <= 3.8%. Primary: victim user TTFT P95 ratio, two-sided 1.25x.
+- A/A short: 0.956 [0.848, 1.038] — negative (noise floor; per seed 1.08, 1.02, 0.76, 0.98, 0.95).
+- Prefill 1024/32 (23 req) vs token-matched short 64/64 (190 req): 1.047 [0.878, 1.216] — **negative**. Secondary: backend TTFT
+  P95 1.14x, dynamic energy 0.88x (752 vs 853 J/1k realized tokens), engine service per authorized token 0.42x.
+- Decode 64/256 (75 req) vs short (188 req): **4.36 [2.24, 6.34] — supported**, bimodal per seed (1.04, 6.33, 6.39, 6.28, 1.77).
+  Entirely gateway queueing: user TTFT P95 801 vs 180 ms, gateway queue P95 697 vs 20 ms, backend TTFT P95 168 vs 166 ms
+  (1.01x, negative); gateway saturation 0.110 vs 0.028; SLO success 0.987 vs 1.000. Energy 1.04x/realized token.
+- Interpretation (pre-registered R3 rule applies): an admission effect of the 8-slot FCFS gateway (long-held decode slots), not
+  demonstrated GPU interference. Local reports: reports/v4/r1/ (gitignored).
+- Next, pending owner approval: R2-F (48 arms), R2-B (36), R3 direct (38) — 122 arms ≈ 5.4 h.
