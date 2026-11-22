@@ -77,6 +77,9 @@ METRIC_INFO: dict[str, MetricInfo] = {
         "gpu_energy_per_1k_realized_tokens", "GPU Dynamic Energy per 1,000 Realized Tokens",
         "J per 1,000 realized tokens", "cost",
         "arm-window GPU dynamic energy / (engine-reported prompt + output tokens of completed requests / 1000)"),
+    "gpu_dynamic_energy_abs": MetricInfo(
+        "gpu_dynamic_energy_abs", "Absolute GPU Dynamic Energy per Arm", "J per arm", "cost",
+        "arm-window GPU dynamic energy (board power minus pre-arm idle), not normalized"),
     "gpu_energy_with_tail_per_1k_authorized_tokens": MetricInfo(
         "gpu_energy_with_tail_per_1k_authorized_tokens", "GPU Dynamic Energy incl. Post-arm Tail per 1,000 "
         "Authorized Tokens", "J per 1,000 authorized tokens", "cost",
@@ -179,6 +182,28 @@ class RunMetrics:
     token_count_mismatch_completed: int | None = None  # completed requests with usage.prompt_tokens != planned
     token_count_reported_completed: int | None = None  # completed requests that report usage.prompt_tokens
     requests_completed: int | None = None
+    # protocol v4 (R1-R3): request-level vs engine-level pressure, from the arm's scrape time series
+    window_s: float | None = None
+    gw_inflight_cap: int | None = None             # harness concurrency cap (gateway max_global_inflight; 512 direct)
+    gw_inflight_mean: float | None = None
+    gw_saturation_fraction: float | None = None    # scrapes with gateway in-flight == cap
+    gw_queue_mean: float | None = None             # requests waiting in the gateway (all tenants)
+    gw_queue_max: float | None = None
+    engine_running_mean: float | None = None
+    engine_running_max: float | None = None
+    engine_waiting_mean: float | None = None
+    request_bound_fraction: float | None = None    # gateway at cap with a queue while vLLM has nothing waiting
+    engine_bound_fraction: float | None = None     # vLLM itself has requests waiting
+    competitor_arrival_span_fraction: float | None = None  # (last - first competitor arrival) / window
+    competitor_first_arrival_fraction: float | None = None  # first competitor arrival / window
+    competitor_last_arrival_fraction: float | None = None   # last competitor arrival / window
+    output_mismatch_completed: int | None = None   # completed requests with output_tokens != max_output_tokens
+    realized_tokens_per_s: float | None = None
+    competitor_realized_tokens_per_s: float | None = None
+    # per-request means over completed victims (additive: user TTFT = gateway queue + backend TTFT)
+    victim_user_ttft_mean_ms: float | None = None
+    victim_backend_ttft_mean_ms: float | None = None
+    victim_gateway_queue_mean_ms: float | None = None
 
     def as_row(self) -> dict:
         return {k: getattr(self, k) for k in self.__dataclass_fields__}
@@ -231,6 +256,17 @@ def run_metrics(run_dir: Path, scenario: str, arm: str, seed: int) -> RunMetrics
     n_rep = int(rep_pt.notna().sum()) if rep_pt is not None else None
     n_mis = (int((rep_pt.notna() & (rep_pt != done_all["input_token_count"])).sum()) if rep_pt is not None else None)
     comp_done = comp_all[comp_all["terminal_status"] == "completed"]
+    window = _f(summary.get("window_s"))
+    cap = None
+    cfg_path = run_dir / "config.resolved.yaml"
+    if cfg_path.exists():
+        import yaml
+
+        cap = ((yaml.safe_load(cfg_path.read_text()) or {}).get("run") or {}).get("max_concurrency_cap")
+    pr = _pressure(run_dir, cap)
+    arr = comp_all["trace_arrival_s"]
+    span = (float(arr.max() - arr.min()) / window) if len(arr) > 1 and window else None
+    out_mis = (int((_num(done_all["output_tokens"]) != done_all["max_output_tokens"]).sum()) if len(done_all) else 0)
     ec = summary.get("engine_counters") or {}
     ca = summary.get("cost_accounting") or {}
     from quotashift.evaluation.cache_hits import cached_token_summary
@@ -302,7 +338,42 @@ def run_metrics(run_dir: Path, scenario: str, arm: str, seed: int) -> RunMetrics
         gpu_dynamic_energy_with_tail_j=_f(ca.get("gpu_dynamic_energy_with_tail_j")),
         gpu_power_mean_w=pw_mean, gpu_power_samples=pw_n, gpu_idle_power_w=_f(ca.get("gpu_idle_power_w")),
         token_count_mismatch_completed=n_mis, token_count_reported_completed=n_rep, requests_completed=int(len(done_all)),
+        window_s=window, gw_inflight_cap=int(cap) if cap is not None else None, **pr,
+        competitor_arrival_span_fraction=span, output_mismatch_completed=out_mis,
+        competitor_first_arrival_fraction=(float(arr.min()) / window) if len(arr) and window else None,
+        competitor_last_arrival_fraction=(float(arr.max()) / window) if len(arr) and window else None,
+        victim_user_ttft_mean_ms=_f(float(vic_ok["user_ttft_ms"].mean())) if len(vic_ok) else None,
+        victim_backend_ttft_mean_ms=_f(float(vic_ok["backend_ttft_ms"].mean())) if len(vic_ok) else None,
+        victim_gateway_queue_mean_ms=_f(float(vic_ok["gateway_queue_ms"].mean())) if len(vic_ok) else None,
+        realized_tokens_per_s=(real_tok / window) if real_tok is not None and window else None,
+        competitor_realized_tokens_per_s=(
+            float(_num(comp_done["prompt_tokens_reported"]).sum() + _num(comp_done["output_tokens"]).sum()) / window
+            if "prompt_tokens_reported" in df and window else None),
     )
+
+
+def _pressure(run_dir: Path, cap: int | None) -> dict:
+    """Gateway vs engine pressure fractions over the arm's scrapes (None when no time series)."""
+    keys = ("gw_inflight_mean", "gw_saturation_fraction", "gw_queue_mean", "gw_queue_max", "engine_running_mean",
+            "engine_running_max", "engine_waiting_mean", "request_bound_fraction", "engine_bound_fraction")
+    p = run_dir / "metrics_timeseries.parquet"
+    if not p.exists():
+        return dict.fromkeys(keys)
+    ts = pd.read_parquet(p)
+    if not len(ts):
+        return dict.fromkeys(keys)
+    q = ts[[c for c in ts.columns if c.startswith("gw_queue_")]].sum(axis=1) if any(
+        c.startswith("gw_queue_") for c in ts.columns) else pd.Series(0.0, index=ts.index)
+    infl = ts["gw_inflight"] if "gw_inflight" in ts else pd.Series(np.nan, index=ts.index)
+    run = ts["num_requests_running"] if "num_requests_running" in ts else pd.Series(np.nan, index=ts.index)
+    wait = ts["num_requests_waiting"] if "num_requests_waiting" in ts else pd.Series(np.nan, index=ts.index)
+    sat = (infl >= cap) if cap else pd.Series(False, index=ts.index)
+    return {"gw_inflight_mean": _f(float(infl.mean())), "gw_saturation_fraction": _f(float(sat.mean())),
+            "gw_queue_mean": _f(float(q.mean())), "gw_queue_max": _f(float(q.max())),
+            "engine_running_mean": _f(float(run.mean())), "engine_running_max": _f(float(run.max())),
+            "engine_waiting_mean": _f(float(wait.mean())),
+            "request_bound_fraction": _f(float((sat & (q > 0) & (wait.fillna(0) == 0)).mean())),
+            "engine_bound_fraction": _f(float((wait.fillna(0) > 0).mean()))}
 
 
 def bootstrap_ci(values: list[float], *, n: int = 10000, seed: int = 0, alpha: float = 0.05) -> tuple[float, float]:
@@ -346,6 +417,8 @@ def _metric_value(m: RunMetrics, metric: str) -> float:
         return _per_1k(m.gpu_dynamic_energy_j, int(m.realized_tokens) if m.realized_tokens else None)
     if metric == "gpu_energy_with_tail_per_1k_authorized_tokens":
         return _per_1k(m.gpu_dynamic_energy_with_tail_j, m.authorized_tokens)
+    if metric == "gpu_dynamic_energy_abs":
+        return _nan(m.gpu_dynamic_energy_j)
     if metric == "gpu_energy_per_1k_authorized_tokens":
         return _per_1k(m.gpu_dynamic_energy_j, m.authorized_tokens)
     if metric == "engine_service_s_per_1k_authorized_tokens":
@@ -440,7 +513,7 @@ def analyze_pair(
 # Secondary endpoints always reported beside the pre-registered primary (ADR-Q16). They carry no claim:
 # user-facing TTFT and offered-load SLO success are post-hoc for every series run before 2026-11-21.
 SECONDARY_METRICS = ("backend_ttft_p95", "user_ttft_p95", "gateway_queue_p95", "e2e_p95", "victim_slo_success_offered",
-                     "gpu_energy_per_1k_authorized_tokens", "gpu_energy_per_1k_realized_tokens",
+                     "gpu_dynamic_energy_abs", "gpu_energy_per_1k_authorized_tokens", "gpu_energy_per_1k_realized_tokens",
                      "gpu_energy_with_tail_per_1k_authorized_tokens", "engine_service_s_per_1k_authorized_tokens")
 
 

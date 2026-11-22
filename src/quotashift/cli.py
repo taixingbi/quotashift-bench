@@ -288,7 +288,13 @@ def cmd_experiment(a: argparse.Namespace) -> int:
             print(msg, file=sys.stderr)
             return 3
     results_root = Path(a.results_root)
-    from quotashift.local import CacheResetUnverified, LifecycleLeak, ServerRestarted, WarmCacheRerun
+    from quotashift.local import (
+        CacheResetUnverified,
+        FrozenTraceMismatch,
+        LifecycleLeak,
+        ServerRestarted,
+        WarmCacheRerun,
+    )
     from quotashift.runtime.runner import EngineNotReady
 
     if target is not None:
@@ -311,6 +317,9 @@ def cmd_experiment(a: argparse.Namespace) -> int:
     except TokenizedContextInvalid as e:
         print(f"REFUSED (tokenized context, nothing sent): {e}", file=sys.stderr)
         return 3
+    except FrozenTraceMismatch as e:
+        print(f"REFUSED (frozen v4 trace mismatch, nothing sent): {e}", file=sys.stderr)
+        return 3
     pairs["budget_tolerance"] = sc.comparison.budget_tolerance
     attack = [run_metrics(pairs["attack"][s], sc.scenario_id, "attack", s) for s in pairs["seeds"]]
     control = [run_metrics(pairs["control"][s], sc.scenario_id, "control", s) for s in pairs["seeds"]]
@@ -326,7 +335,10 @@ def cmd_experiment(a: argparse.Namespace) -> int:
     validity = validity_gates(
         attack, control, analysis, max_model_len=sc.model_max_len, prompt_token_unit=sc.prompt_token_unit,
         designed_early_termination=sc.lifecycle is not None, provenance=prov,
-        tokenization=pairs.get("tokenization"), synthetic=target is None)
+        tokenization=pairs.get("tokenization"), synthetic=target is None, protocol_version=sc.protocol_version,
+        ignore_eos=sc.ignore_eos, feasibility_gates=sc.comparison.feasibility_gates)
+    if validity.get("regime") is not None:
+        analysis["regime"] = validity["regime"]
     analysis = apply_gates(analysis, validity)
     cmds = [
         f"uv run quotashift budget {a.config}",
@@ -339,7 +351,8 @@ def cmd_experiment(a: argparse.Namespace) -> int:
         "metric": analysis["metric"], "mean_ratio": analysis["mean_ratio"],
         "classification": analysis.get("classification"), "effect_direction": analysis.get("effect_direction"),
         "ratio_ci95": analysis["ratio_ci95"], "attack_success_rate": analysis["attack_success_rate"],
-        "synthetic_backend": target is None, "validity_passed": validity["passed"], **written,
+        "synthetic_backend": target is None, "validity_passed": validity["passed"], "regime": validity.get("regime"),
+        **written,
     })
     if not validity["passed"]:
         failed = [c["name"] for c in validity["checks"] if c["severity"] == "fail" and not c["passed"]]

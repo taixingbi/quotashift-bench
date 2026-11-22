@@ -152,3 +152,12 @@
 - **Model revision.** The server reports `revision=None` (`/server_info`); the SHA in SELFHOST/REPRODUCIBILITY is
   the hub `main` SHA looked up on 2026-11-19, not verified against the loaded weights.
 - **Run manifests** do not list dirty files; report manifests before 2026-11-21 21:00 have no `git` block.
+
+### matched_total_short front-loads its budget (found 2026-11-21 during the v4 design review)
+- `_matched_total_short_control` generates its short-request pool at 2x the rate needed for the matched token total
+  and keeps the earliest requests until the total is reached, so the control's whole competitor budget arrives in the
+  first ~50% of the window (last arrival ~28–30 s of 60 s in A2; ~56–65 s of 120 s in A9-tok and v3.1 long context).
+  Historical token-matched comparisons (A2, A3, A9-tok) therefore change request granularity AND temporal concentration
+  (2x offered rate) together; the control's gateway congestion and victim censoring (corrected analysis §2) are partly
+  caused by this. Results stay as recorded; v4 uses `token_matched_fixed` (full-window arrivals) and an
+  `arrival_coverage` gate. `rate_matched_short` (A9-rate) keeps the attack's own arrival times and is not affected.

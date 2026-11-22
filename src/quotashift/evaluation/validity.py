@@ -24,6 +24,11 @@ MAX_HTTP_400_FRACTION = 0.01        # HTTP 400 / requests sent, per arm
 MIN_ADMISSION_FRACTION = 0.95       # admitted / offered, per class, per arm
 MIN_COMPETITOR_COMPLETION = 0.95    # (completed + designed client cancels/timeouts) / offered, per arm
 MAX_VICTIM_CENSORED_FRACTION = 0.05  # (offered - completed) / offered victims, per arm (latency endpoints)
+# v4 arrival coverage: in every arm the first competitor arrival is in the first quarter of the window and the last
+# in the final quarter. A front-loaded budget (historical matched_total_short: last arrival ~0.5) fails; N iid uniform
+# arrivals fail with probability 2 * 0.75**N (< 0.3% for the smallest v4 count, N = 23).
+MAX_FIRST_ARRIVAL_FRACTION = 0.25
+MIN_LAST_ARRIVAL_FRACTION = 0.75
 
 
 def _chk(name: str, passed: bool | None, detail: str, severity: str = "fail") -> dict[str, Any]:
@@ -64,7 +69,8 @@ def run_manifest_provenance(run_dirs: list[Path]) -> dict[str, Any]:
 def validity_gates(attack: list[RunMetrics], control: list[RunMetrics], analysis: dict, *, max_model_len: int,
                    prompt_token_unit: str = "whitespace", designed_early_termination: bool = False,
                    provenance: dict[str, Any] | None = None, tokenization: dict | None = None,
-                   synthetic: bool = False) -> dict[str, Any]:
+                   synthetic: bool = False, protocol_version: int = 3, ignore_eos: bool = False,
+                   feasibility_gates: str = "enforce") -> dict[str, Any]:
     """Evaluate every gate on one experiment; `passed` is False if any fail-severity gate fails or is unavailable."""
     arms = [*attack, *control]
     checks: list[dict[str, Any]] = []
@@ -168,14 +174,41 @@ def validity_gates(attack: list[RunMetrics], control: list[RunMetrics], analysis
                        f"{'primary' if sev == 'fail' else 'secondary latency endpoints only'}"
                        if worst is not None else "unavailable", severity=sev))
 
+    # 9-10. protocol v4: load covers the window; realized output equals the authorized output
+    if protocol_version >= 4:
+        withc = [m for m in arms if m.competitor_offered]
+        firsts = [m.competitor_first_arrival_fraction for m in withc]
+        lasts = [m.competitor_last_arrival_fraction for m in withc]
+        avail = bool(withc) and all(x is not None for x in (*firsts, *lasts))
+        fmax = max([x for x in firsts if x is not None] or [0.0])
+        lmin = min([x for x in lasts if x is not None] or [0.0])
+        checks.append(_chk("arrival_coverage",
+                           (fmax <= MAX_FIRST_ARRIVAL_FRACTION and lmin >= MIN_LAST_ARRIVAL_FRACTION) if avail else None,
+                           f"latest first arrival {fmax:.3f} (max {MAX_FIRST_ARRIVAL_FRACTION}), earliest last arrival "
+                           f"{lmin:.3f} (min {MIN_LAST_ARRIVAL_FRACTION}) of the window" if withc else "no competitor"))
+    if ignore_eos:
+        mis = [m.output_mismatch_completed for m in arms]
+        checks.append(_chk("realized_output_equals_authorized", (sum(x or 0 for x in mis) == 0)
+                           if all(x is not None for x in mis) else None,
+                           f"{sum(x or 0 for x in mis)} completed request(s) with output_tokens != max_output_tokens"))
+    # v4 R2: feasibility gates classify the operating regime instead of invalidating the point
+    feas = {"competitor_completion", "victim_latency_censoring"}
+    regime = None
+    if feasibility_gates == "classify":
+        fc = [g for g in checks if g["name"] in feas]
+        regime = "feasible" if all(g["passed"] for g in fc) else "overload"
+        for g in fc:
+            g["severity"] = "regime"
     passed = all(c["passed"] for c in checks if c["severity"] == "fail")
     flags = [c["name"] for c in checks if c["severity"] == "flag" and not c["passed"]]
-    return {"passed": passed, "checks": checks, "flags": flags,
+    return {"passed": passed, "checks": checks, "flags": flags, "regime": regime,
             "thresholds": {"max_backend_error_fraction": MAX_BACKEND_ERROR_FRACTION,
                            "max_http_400_fraction": MAX_HTTP_400_FRACTION,
                            "min_admission_fraction": MIN_ADMISSION_FRACTION,
                            "min_competitor_completion": MIN_COMPETITOR_COMPLETION,
-                           "max_victim_censored_fraction": MAX_VICTIM_CENSORED_FRACTION}}
+                           "max_victim_censored_fraction": MAX_VICTIM_CENSORED_FRACTION,
+                           "max_first_arrival_fraction": MAX_FIRST_ARRIVAL_FRACTION,
+                           "min_last_arrival_fraction": MIN_LAST_ARRIVAL_FRACTION}}
 
 
 def apply_gates(analysis: dict, validity: dict) -> dict:

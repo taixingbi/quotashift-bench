@@ -212,3 +212,10 @@ design doc amendments.
   (from 2026-11-21 09:00 local onward).
 - **Suite S consequence:** each `experiments/v3/*.yaml` block runs once per server start with its current salt. A
   repeat (for example after a failure) needs a new `isolation_salt`, or a server restart, which starts a new series.
+
+## Protocol v4 (`experiments/v4/`; design: docs/PROTOCOL_V4.md) — DESIGNED, NOT RUN
+
+R1 feasible token-matched comparison (calibrated common load), R2 request-granularity sweeps (R2-F fixed output,
+R2-B balanced), R3 gateway vs direct-vLLM replay. 45 generated YAMLs (`scripts/build_v4.py`), frozen on the live
+tokenizer (`experiments/v4/FROZEN_TRACES.json`, `scripts/freeze_v4.py`). Budget: 35 blocks / 178 arms ≈ 7.7 h GPU,
+staged S (smokes) → C (calibration, selects L*) → R1 → R2-F → R2-B → R3; each stage needs owner approval.

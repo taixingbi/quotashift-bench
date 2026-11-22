@@ -244,3 +244,17 @@ def model_revision_provenance(prof: TargetProfile, *, timeout_s: float = 10.0) -
     return {"model_revision_server_reported": reported["revision"],
             "tokenizer_revision_server_reported": reported["tokenizer_revision"],
             "model_revision_documented": documented, "model_revision_status": status}
+
+
+def current_server_identity(prof: TargetProfile, *, timeout_s: float = 10.0) -> dict:
+    """vLLM version, process start and model-revision status right now (GET only) — recorded with frozen traces."""
+    base = prof.backend_url.rstrip("/")
+    ver = None
+    try:
+        ver = httpx.get(base + "/version", timeout=timeout_s).json().get("version")
+    except (httpx.HTTPError, ValueError):
+        pass
+    from quotashift.local import current_server_start
+
+    return {"vllm_version": ver, "process_start_time_seconds": current_server_start(prof),
+            **model_revision_provenance(prof, timeout_s=timeout_s)}

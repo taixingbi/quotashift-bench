@@ -163,6 +163,11 @@ def run_experiment(cfg: ExperimentConfig, scheduler: str, seed: int, results_roo
     out_dir = results_root / cfg.experiment_id / run_id
     out_dir.mkdir(parents=True, exist_ok=False)
     trace_sha = write_trace_jsonl(items, out_dir / "trace.jsonl")
+    if cfg.backend.kind == "mock" and cfg.backend.ignore_eos:
+        # the in-process engine model takes output length from the oracle; ignore_eos means realized == max_tokens
+        # (as vLLM does). Applied after hashing, so trace_sha256 is the trace as planned/frozen.
+        items = [type(it)(request=it.request, oracle=it.oracle.model_copy(
+            update={"realized_output_tokens": it.request.max_output_tokens})) for it in items]
 
     clock = "virtual" if cfg.backend.kind == "mock" else "monotonic"
     recorder = RunRecorder(cfg.experiment_id, run_id, clock=clock)

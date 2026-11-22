@@ -31,6 +31,7 @@ from quotashift.schema import (
     ArrivalProcess,
     LengthDist,
     OracleInfo,
+    Request,
     SLOSpec,
     SLOType,
     TenantProfile,
@@ -63,6 +64,10 @@ CONTROL_DIMENSIONS: dict[str, dict[str, list[str]]] = {
     "rate_matched_short": {"controlled": ["victim_traffic", "request_count", "arrival_times", "request_rate"],
                            "varies": ["total_tokens", "io_composition"]},
     "benign_only": {"controlled": ["victim_traffic"], "varies": ["competitor_present"]},
+    # protocol v4 (docs/PROTOCOL_V4.md)
+    "token_matched_fixed": {"controlled": ["victim_traffic", "total_tokens", "realized_tokens (ignore_eos)",
+                                           "arrival_law (N iid uniform over the whole window)", "window"],
+                            "varies": ["request_count", "tokens_per_request", "io_composition"]},
     # protocol v3 (A7–A9)
     "prefix_unique": {"controlled": ["victim_traffic", "request_count", "arrival_times", "request_rate",
                                      "total_tokens", "io_composition", "output_limits"],
@@ -140,9 +145,14 @@ class Comparison(_Frozen):
         "identical_workload",    # v3 A7-V — A/A null (identical workload, per-arm nonce)
         "lifecycle_normal",      # v3 A8 — same requests, all complete normally (+ pre-scheduled retry twins)
         "benign_only",           # B0 — victim-only reference
+        "token_matched_fixed",   # v4 R1 — competitor token budget as fixed-shape requests spread over the WHOLE window
     ]
     matched_request_budget: bool = True
     matched_token_budget: bool = True
+    control_shape: ControlShape | None = None  # v4 token_matched_fixed only
+    # v4: "enforce" (default) — competitor completion / victim censoring gates invalidate the block;
+    # "classify" (R2 sweep) — they classify the point as feasible / overload instead (integrity gates still fail).
+    feasibility_gates: Literal["enforce", "classify"] = "enforce"
     repetitions: int = Field(default=5, ge=1)
     degradation_metric: Literal["ttft_p95", "backend_ttft_p95", "user_ttft_p95", "e2e_p95", "gpu_energy_per_1k_authorized_tokens",
                                 "engine_service_s_per_1k_authorized_tokens"] = "ttft_p95"
@@ -205,6 +215,27 @@ class Phase(_Frozen):
     pattern: Pattern = "steady"
     request_shape: RequestShape = "short"
     rate_rps: float | None = Field(default=None, gt=0)  # competitor offered rate in this phase
+    # protocol v4: fixed-size competitor requests with an EXACT count; arrivals are `request_count` iid uniform
+    # times over the phase (a Poisson process conditioned on its count), so the load covers the whole phase.
+    input_tokens: int | None = Field(default=None, gt=0)
+    output_tokens: int | None = Field(default=None, gt=0)
+    request_count: int | None = Field(default=None, gt=0)
+
+    @model_validator(mode="after")
+    def _fixed(self) -> Phase:
+        fixed = (self.input_tokens, self.output_tokens, self.request_count)
+        if any(v is not None for v in fixed) and any(v is None for v in fixed):
+            raise ValueError("input_tokens, output_tokens and request_count must be given together")
+        if self.request_count is not None and self.rate_rps is not None:
+            raise ValueError("give either rate_rps or request_count, not both")
+        return self
+
+
+class ControlShape(_Frozen):
+    """v4 token_matched_fixed control: the shape of every control competitor request (real tokens)."""
+
+    input_tokens: int = Field(gt=0)
+    output_tokens: int = Field(gt=0)
 
 
 class BenignProfile(_Frozen):
@@ -240,7 +271,7 @@ class ScenarioConfig(_Frozen):
     # v2: per-arm salted-hash prompt nonce at the very start of every prompt (replacing filler of
     # equal length, so planned token budgets are unchanged) + counterbalanced arm order across
     # paired seeds + per-arm prefix-cache counter snapshots (see workload/isolation.py, ADR-Q13).
-    protocol_version: Literal[1, 2, 3] = 1
+    protocol_version: Literal[1, 2, 3, 4] = 1
     # ---- protocol v3 (A7–A9; docs/A7_A9_EXPERIMENT_DESIGN.md)
     prefix_cache: PrefixCacheSpec | None = None
     lifecycle: LifecycleSpec | None = None
@@ -255,6 +286,10 @@ class ScenarioConfig(_Frozen):
     # input_token_count prompt tokens (verified fail-closed before any request is sent).
     prompt_token_unit: Literal["whitespace", "tokenizer"] = "whitespace"
     protocol_amendment: str | None = None  # e.g. "3.1"; label only (the semantics are carried by the fields above)
+    # ---- protocol v4 (docs/PROTOCOL_V4.md)
+    ignore_eos: bool = False  # vLLM ignore_eos: realized output == requested max_tokens (exact token accounting)
+    # frozen trace manifest (relative to this file): every arm/seed trace hash must match BEFORE anything is sent
+    frozen_traces: str | None = None
 
     # Directory of the file this scenario was loaded from (for resolving
     # `control_scenario`); set by `load_scenario`, None for in-memory configs.
@@ -315,7 +350,8 @@ class ScenarioConfig(_Frozen):
         # scenario's own victim traffic.
         ctrl = self.comparison.primary_control
         _in_process = ("shuffled_phase_order", "uniform_arrivals", "matched_total_short", "homogeneous_mixture",
-                       "rate_matched_short", "prefix_unique", "identical_workload", "lifecycle_normal")
+                       "rate_matched_short", "prefix_unique", "identical_workload", "lifecycle_normal",
+                       "token_matched_fixed")
         dims = CONTROL_DIMENSIONS[ctrl]["controlled"]
         if ctrl != "benign_only":
             if self.comparison.matched_token_budget and "total_tokens" not in dims:
@@ -335,7 +371,26 @@ class ScenarioConfig(_Frozen):
             raise ValueError(
                 f"benign rate*runtime ~= {est_victim} req/tenant exceeds max_requests_per_tenant={s.max_requests_per_tenant}"
             )
-        est_comp = round(sum((p.rate_rps or self.competitor_rate_rps) * p.duration_seconds for p in self.phases))
+        est_comp = round(sum(p.request_count if p.request_count is not None
+                             else (p.rate_rps or self.competitor_rate_rps) * p.duration_seconds for p in self.phases))
+        if ctrl == "token_matched_fixed":
+            cs = self.comparison.control_shape
+            if cs is None:
+                raise ValueError("token_matched_fixed control needs comparison.control_shape")
+            if cs.input_tokens > s.max_input_tokens_per_request or cs.output_tokens > s.max_output_tokens_per_request:
+                raise ValueError("control_shape exceeds the safety per-request caps")
+            if not all(p.request_count is not None for p in self.phases):
+                raise ValueError("token_matched_fixed needs fixed-size phases (input_tokens/output_tokens/request_count)")
+            budget = sum(p.request_count * (p.input_tokens + p.output_tokens) for p in self.phases)  # type: ignore[operator,misc]
+            est_comp = max(est_comp, round(budget / (cs.input_tokens + cs.output_tokens)))
+        for p in self.phases:
+            if p.request_count is not None:
+                if p.input_tokens > s.max_input_tokens_per_request or p.output_tokens > s.max_output_tokens_per_request:  # type: ignore[operator]
+                    raise ValueError(f"phase {p.name}: fixed request size exceeds the safety per-request caps")
+                if self.protocol_version < 4:
+                    raise ValueError("fixed-size phases (request_count) require protocol_version: 4")
+        if self.protocol_version >= 4 and self.prompt_token_unit != "tokenizer":
+            raise ValueError("protocol_version 4 requires prompt_token_unit: tokenizer")
         if self.lifecycle is not None:  # bounded retries count against the hard caps
             est_comp = round(est_comp * (1 + self.lifecycle.max_retries))
         v3_only = {"prefix_cache": self.prefix_cache, "lifecycle": self.lifecycle}
@@ -470,6 +525,12 @@ class ScenarioConfig(_Frozen):
         for t in self.competing_tenants:
             offset = 0.0
             for ph in phases:
+                if ph.request_count is not None:  # v4 fixed-size, exact-count phase
+                    items.extend(self._fixed_count_items(
+                        t, in_tok=ph.input_tokens, out_tok=ph.output_tokens, n=ph.request_count,  # type: ignore[arg-type]
+                        t_offset=offset, duration=ph.duration_seconds, seed=seed, label=ph.name))
+                    offset += ph.duration_seconds
+                    continue
                 tp = self._tenant_profile(
                     t, ph.request_shape, self._arrival(ph.pattern, ph.rate_rps or self.competitor_rate_rps), "competitor"
                 )
@@ -504,6 +565,52 @@ class ScenarioConfig(_Frozen):
                 "trace_id": f"{self.scenario_id}-s{seed}",
             })
             out.append(TraceItem(request=req, oracle=OracleInfo(request_id=rid, realized_output_tokens=it.oracle.realized_output_tokens)))
+        return out
+
+    def _fixed_count_items(self, tenant: str, *, in_tok: int, out_tok: int, n: int, t_offset: float, duration: float,
+                           seed: int, label: str) -> list[TraceItem]:
+        """v4: exactly `n` competitor requests of `in_tok`/`out_tok` (real tokens after calibration), arrivals
+        n iid uniform times over [t_offset, t_offset + duration) — a Poisson process conditioned on its count —
+        so the offered load covers the whole window (no front-loading). Deterministic in (scenario, seed, label)."""
+        import zlib
+
+        import numpy as np
+
+        key = zlib.crc32(f"{tenant}|{label}".encode())
+        times = np.sort(np.random.default_rng(np.random.SeedSequence(entropy=seed, spawn_key=(key, 101)))
+                        .uniform(0.0, duration, size=n)) + t_offset
+        text_rng = np.random.default_rng(np.random.SeedSequence(entropy=seed, spawn_key=(key, 102)))
+        vocab = "single_token" if self.prompt_token_unit == "tokenizer" else "pseudo_syllable"
+        slo = self._slo("short")
+        out: list[TraceItem] = []
+        for i, t in enumerate(times):
+            rid = f"{tenant}-{label}-{seed}-{i:06d}"
+            text = f"[req {rid}] " + gen.synthetic_prompt(max(1, in_tok - 2), text_rng, vocab)
+            req = Request(request_id=rid, tenant_id=tenant, arrival_time_s=float(t), prompt_text=text,
+                          input_token_count=in_tok, max_output_tokens=out_tok, workload_class="competitor",
+                          slo_type=slo.slo_type, ttft_deadline_ms=slo.ttft_deadline_ms, tpot_target_ms=slo.tpot_target_ms,
+                          e2e_deadline_ms=slo.e2e_deadline_ms, priority_weight=1.0, seed=seed,
+                          trace_id=f"{self.scenario_id}-s{seed}")
+            out.append(TraceItem(request=req, oracle=OracleInfo(request_id=rid, realized_output_tokens=out_tok)))
+        return out
+
+    def _token_matched_fixed_control(self, seed: int | None) -> list[TraceItem]:
+        """v4 R1 control: per competitor tenant, the attack's authorized token total re-expressed as
+        N = round(total / (in + out)) requests of `comparison.control_shape`, arrivals N iid uniform over the
+        WHOLE runtime (unlike the historical matched_total_short, which generated its pool at 2x rate and kept the
+        earliest requests, front-loading the budget into the first ~half of the window). Victims untouched."""
+        seed = self.seed if seed is None else seed
+        cs = self.comparison.control_shape
+        assert cs is not None
+        trace = self.build_trace(seed)
+        out = [it for it in trace if it.request.workload_class != "competitor"]
+        per = cs.input_tokens + cs.output_tokens
+        for tenant, atk in self._competitor_items(trace).items():
+            target = sum(it.request.input_token_count + it.request.max_output_tokens for it in atk)
+            n = max(1, round(target / per))
+            out.extend(self._fixed_count_items(tenant, in_tok=cs.input_tokens, out_tok=cs.output_tokens, n=n,
+                                               t_offset=0.0, duration=self.runtime_seconds, seed=seed, label="ctl_tmf"))
+        out.sort(key=lambda it: (it.request.arrival_time_s, it.request.request_id))
         return out
 
     def schedule_hash(self, seed: int | None = None, *, phase_order: list[str] | None = None) -> str:
@@ -551,6 +658,8 @@ class ScenarioConfig(_Frozen):
             return self._homogeneous_mixture_control(seed), "homogeneous_mixture"
         if ctrl == "rate_matched_short":
             return self._rate_matched_short_control(seed), "rate_matched_short"
+        if ctrl == "token_matched_fixed":
+            return self._token_matched_fixed_control(seed), "token_matched_fixed"
         if ctrl in ("prefix_unique", "identical_workload"):
             # bodies identical; the arm difference is applied by workload.prefix_cache / isolation (paired_traces)
             return self.build_trace(seed), ctrl

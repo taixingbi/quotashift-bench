@@ -166,3 +166,13 @@ metric present, tokenized context fits, planned = reported tokens for tokenizer-
 victim censoring ≤ 5% for latency primaries) set the classification to `invalid` and exit 5. Protocol v3.1
 (`docs/PROTOCOL_V3_1_LONGCTX_AMENDMENT.md`) sizes prompts in real tokens (`prompt_token_unit: tokenizer`) and
 tokenizes every request on the live server before sending anything. Thresholds fixed before any v3.1 run.
+
+## ADR-Q18 — Protocol v4: feasibility-calibrated, real-token, full-window comparisons (2026-11-21, pre-registration draft)
+v4 (`docs/PROTOCOL_V4.md`) studies request granularity, token accounting, GPU compute and gateway concurrency:
+R1 token-matched P/D vs short at a calibrated common feasible load (selection rule fixed before calibration), R2
+fixed-budget granularity sweeps (feasible vs overload reported separately), R3 gateway vs direct-vLLM replay.
+New mechanisms: fixed-size exact-count phases with arrivals iid uniform over the window; the `token_matched_fixed`
+control (budget spread over the WHOLE window — the historical `matched_total_short` front-loads it, see
+KNOWN_LIMITATIONS); `ignore_eos` (realized = authorized); frozen trace manifest enforced before sending;
+`arrival_coverage` and `realized_output_equals_authorized` gates; `feasibility_gates: classify` for sweeps. Historical
+A1–A9 results and controls are unchanged. No v4 GPU run is made before owner approval of each stage.

@@ -21,13 +21,13 @@ from quotashift.targets import TargetProfile
 def backend_for(scenario: ScenarioConfig, target: TargetProfile | None) -> BackendConfig:
     """Mock backend when `target` is None; otherwise the target's real vLLM."""
     if target is None:
-        return BackendConfig(kind="mock", model=scenario.model)
+        return BackendConfig(kind="mock", model=scenario.model, ignore_eos=scenario.ignore_eos)
     s = scenario.safety
     need = s.max_input_tokens_per_request + s.max_output_tokens_per_request
     if need > target.max_model_len:
         raise ValueError(f"scenario per-request tokens {need} exceed target {target.name} "
                          f"max_model_len={target.max_model_len}")
-    return BackendConfig(kind="vllm", base_url=target.backend_url, model=target.model,
+    return BackendConfig(kind="vllm", base_url=target.backend_url, model=target.model, ignore_eos=scenario.ignore_eos,
                          model_revision=target.model_revision,
                          gpu_source="exporter" if target.gpu_exporter_url else "nvidia-smi",
                          gpu_exporter_url=target.gpu_exporter_url,
@@ -153,8 +153,11 @@ def run_matched_pairs(
     exact = scenario.prompt_token_unit == "tokenizer"
     tokenization: dict[str, Any] = {"tokenizer": count.identity, "prompt_token_unit": scenario.prompt_token_unit,
                                     "per_seed": {}}
+    frozen = load_frozen_traces(scenario)
     for s in seeds:  # fail closed BEFORE any request is sent: every planned request must fit the context
         a_tr, c_tr, _ = paired_traces(scenario, s, count)
+        if frozen is not None:  # v4: the traces about to be sent must be exactly the reviewed, frozen ones
+            check_frozen(frozen, scenario, s, a_tr, c_tr)
         tokenization["per_seed"][s] = {
             arm: verify_trace(tr, count, max_model_len=scenario.model_max_len, exact=exact, label=f"{arm} seed {s}")
             for arm, tr in (("attack", budget_view(scenario, a_tr, s)), ("control", c_tr))}
@@ -228,6 +231,33 @@ def budget_view(scenario: ScenarioConfig, atk: list, seed: int) -> list:
 
         return control_with_retry_twins(scenario, atk, seed)
     return atk
+
+
+class FrozenTraceMismatch(RuntimeError):
+    """A v4 trace differs from the frozen, reviewed manifest (or is missing from it); nothing was sent."""
+
+
+def load_frozen_traces(scenario: ScenarioConfig) -> dict | None:
+    if scenario.frozen_traces is None:
+        return None
+    base = scenario._source_dir or Path.cwd()
+    p = (base / scenario.frozen_traces).resolve()
+    if not p.exists():
+        raise FrozenTraceMismatch(f"frozen trace manifest {p} not found (run scripts/freeze_v4.py)")
+    return json.loads(p.read_text())
+
+
+def check_frozen(frozen: dict, scenario: ScenarioConfig, seed: int, atk: list, ctl: list) -> None:
+    from quotashift.workload.generator import trace_hash
+
+    ent = (frozen.get("scenarios") or {}).get(scenario.scenario_id, {}).get(str(seed))
+    if ent is None:
+        raise FrozenTraceMismatch(f"{scenario.scenario_id} seed {seed} is not in the frozen manifest")
+    for arm, tr in (("attack", atk), ("control", ctl)):
+        h = trace_hash(tr)
+        if h != ent[arm]["trace_sha256"]:
+            raise FrozenTraceMismatch(f"{scenario.scenario_id} seed {seed} {arm}: trace {h[:12]} != frozen "
+                                      f"{ent[arm]['trace_sha256'][:12]}")
 
 
 class LifecycleLeak(RuntimeError):
