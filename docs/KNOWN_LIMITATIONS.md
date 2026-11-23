@@ -172,3 +172,23 @@
 - **Status.** Both rules were frozen before the runs and are kept as registered. Report victim SLO success and gateway-queue
   time beside each classification. Any revised rule would be a new, separately pre-registered amendment.
 - **Inference.** R2 uses 3 seeds per point and is descriptive only.
+
+### Post-hoc findings from the v4 slot-time analysis (2026-11-22, exploratory)
+- **Telemetry scrape lag.**
+  - `metrics_timeseries` stamps each scrape about 0.15 s before the gateway in-flight count is read (vLLM and GPU
+    metrics are fetched first).
+  - Sampled `gw_inflight` matches the in-flight count rebuilt from request timestamps 66% of the time at lag 0, and
+    91–99.5% with a +0.15 s shift.
+  - Use the rebuilt occupancy for slot analyses.
+- **P95 threshold fragility.**
+  - With about 100–115 victims per run, P95 sits at about the 6th-largest value.
+  - The v4 R1 decode per-seed P95 ratios split into about 1.0–1.8 vs about 6.3, depending on whether ≥ about 7 victims
+    happen to arrive during transient gateway-saturation episodes. Within-seed bootstrap ranges reach 439–3,080 ms.
+  - The pre-registered result stands; magnitude statements should cite the mean ratio (1.80) and tail mass (6.2% vs
+    0.5% of victims over 500 ms) alongside it.
+- **A/A shares the trace.** v4 A/A arms (`identical_workload`) replay the same trace, so the A/A noise floor excludes
+  variation between traces. For example, seed 44 is bursty in both arms.
+- **Engine queue time not recorded in v4.** It is unavailable per request. vLLM exposes a
+  `request_queue_time_seconds` histogram that v4 did not capture.
+- **Committed raw data in a public repo.** Commit `c11decc` published local usernames, a private LAN IP and GPU device
+  identifiers in run metadata. No credentials were found. See `docs/RAW_DATA_AUDIT.md`.

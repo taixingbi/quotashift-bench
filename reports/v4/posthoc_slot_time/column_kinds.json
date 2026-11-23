@@ -1,0 +1,16 @@
+{
+ "hold_*": "measured",
+ "competitor_slot_s": "measured",
+ "victim_slot_s": "measured",
+ "slot_s_per_1k_auth_tokens": "measured",
+ "occ_*": "derived",
+ "frac_time_at_ref_cap": "derived",
+ "sat_episode_*": "derived",
+ "victim_arrivals_during_saturation": "derived",
+ "victim_queue_*": "measured",
+ "spearman_queue_vs_occupancy": "derived",
+ "recon_vs_scrape_*": "derived (validation)",
+ "slot_demand_fraction": "derived",
+ "fcfs_cap*": "estimate",
+ "engine_waiting_*": "measured (sampled ~0.7 s)"
+}

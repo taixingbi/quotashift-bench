@@ -3,6 +3,20 @@
 **Status:** real GPU measurements (`synthetic_backend: false`); A1/A2 at 20 matched seeds, A3–A5 at 5.
 These are the project's first non-mock attack-effect numbers. Reported per ADR-Q08/Q11, negatives included.
 
+> **SUPERSEDED (2026-11-22). Read this before citing any A2 number in this document.**
+> The A2 prefill-heavy headline (3.19×) and the Phase 6 A2 dose-response sweep (L=128…1024: 1.73× → 3.16×) are kept
+> below exactly as measured. The pre-registered metric was backend TTFT (`ttft_p95`, ADR-Q16). The corrected analysis
+> (ADR-Q16/Q17, `scripts/reanalyze_suite.py`, post-hoc) invalidates every A2 comparison:
+> - **Control could not run its budget.** The token-matched `matched_total_short` control fails competitor completion.
+>   Its victims waited 51–60 s at the gateway (P95), and 19–60% of them were censored.
+> - **Front-loaded budget.** The control delivers its budget in the first half of the window (KNOWN_LIMITATIONS).
+> - **User-facing TTFT reverses the ratio** (0.012–0.106).
+>
+> These numbers describe a congested, front-loaded control, not a prefill effect. Protocol v4 (README "Current
+> findings") re-tested prefill-heavy vs short at a calibrated feasible load and found **negative** (1.05×). A1, A3–A5 are
+> also re-analysed in `reports/corrected/2026-11-21_adr_q16/`. The model revision quoted below is a hub SHA, not
+> verified against the loaded weights.
+
 ## Locked configuration (identical across every scenario and its control)
 
 - **Target:** self-hosted vLLM `0.17.1`, serving `Qwen/Qwen2.5-7B-Instruct`
@@ -20,6 +34,8 @@ These are the project's first non-mock attack-effect numbers. Reported per ADR-Q
   Total GPU wall-clock ≈ 2h45m.
 
 ## Headline results
+
+*(A2 row superseded — see the banner at the top; values kept as measured.)*
 
 | Scenario | Control | Mean ratio | Median | 95% bootstrap CI | Attack success | Verdict |
 |---|---|---|---|---|---|---|
@@ -95,6 +111,8 @@ Schedule hashes (`schedule_sha256`, deterministic, wall-clock-independent):
 | stateful_sequences | `d5f2ab6f07799a4cc42a2057955cecbf98931f49c6d344da8738c0fd3534f9e4` |
 
 ## Phase 6 — A2 prefill-concentration dose-response
+
+*(Superseded — every sweep point fails the ADR-Q17 gates with the same congested control; see the banner at the top. Values kept as measured.)*
 
 To turn the A2 point finding into a mechanism, the competitor's ~30 k-token budget was held fixed and
 re-packed across a sweep of per-request input lengths L (fewer long-prefill requests as L grows; count/rate

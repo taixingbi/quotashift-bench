@@ -176,3 +176,19 @@ control (budget spread over the WHOLE window — the historical `matched_total_s
 KNOWN_LIMITATIONS); `ignore_eos` (realized = authorized); frozen trace manifest enforced before sending;
 `arrival_coverage` and `realized_output_equals_authorized` gates; `feasibility_gates: classify` for sweeps. Historical
 A1–A9 results and controls are unchanged. No v4 GPU run is made before owner approval of each stage.
+
+## ADR-Q19 — PROPOSED (not accepted): gateway concurrency cap as a pre-registered blocking factor (Protocol v5 draft, 2026-11-22)
+- **Context.** v4 R3 showed that the R1 decode effect is admission queueing at the 8-slot FCFS gateway. The post-hoc
+  slot-time analysis (`reports/v4/posthoc_slot_time/`, exploratory) supports a slot-occupancy mechanism.
+- **Proposal.** v5 (`docs/PROTOCOL_V5_DRAFT.md`) varies the gateway cap C ∈ {8, 16, 32} **between blocks**, keeping it
+  identical within each block's attack/control pair, with a direct-vLLM reference.
+- **Rule this relaxes.** It interprets the CLAUDE.md rule "the serving config is fixed and identical across a scenario
+  and its control" as holding *within* each comparison pair. It makes a serving parameter a characterization factor:
+  not tuned and not a defense. **This needs explicit owner approval**, because the workload is no longer the only
+  varied quantity across the study.
+- **Other changes.**
+  - The primary endpoint changes from P95 to mean user-facing TTFT, motivated by v4's P95 threshold fragility.
+  - Execution and victim-SLO feasibility are separate criteria.
+  - A/A arms use independent traces.
+  - Engine queue histograms are captured.
+- **Unchanged.** v4 and its results.

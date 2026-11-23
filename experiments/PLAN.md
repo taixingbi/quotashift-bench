@@ -264,3 +264,9 @@ tokens = authorized at every point; victim censoring 0 everywhere. R2 is 3 seeds
   -> 227 ms; s256 831 -> 235 ms; s1024 526 -> 418 ms. Backend TTFT P95 rises 8–80 ms on the direct path (engine runs up to 25
   concurrent, never queues): a real but small GPU contribution. Main v4 finding: at this serving config, shape-dependent victim
   harm is dominated by gateway admission queueing, not GPU interference. Local reports: reports/v4/{r2,r3}/ (gitignored).
+
+**Post-v4 (2026-11-22, offline, no GPU).**
+- Post-hoc exploratory slot-time analysis and R1 decode statistical audit: `reports/v4/posthoc_slot_time/SLOT_TIME_ANALYSIS.md`
+  (`scripts/v4_posthoc_slot_time.py`).
+- Raw-data audit and storage proposal: `docs/RAW_DATA_AUDIT.md`.
+- Protocol v5 DRAFT (cap 8/16/32 × shape; not frozen, not run; ADR-Q19 proposed): `docs/PROTOCOL_V5_DRAFT.md`.

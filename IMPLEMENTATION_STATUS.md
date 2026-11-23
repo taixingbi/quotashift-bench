@@ -68,6 +68,11 @@ Snapshot of RISK-Sched preserved as commit `273a57c` (first commit on `main`).
 ## Phase 6 — optional paper-strengthening 🟡
 - ✅ A2 prefill-concentration dose-response (L=128/256/512/768/1024, fixed ~30k-token budget, 5 seeds/point,
   each point its own matched pair). Monotonic at the concentrated end (512→768→1024: 2.14→3.00→3.16×).
+  **SUPERSEDED**:
+  - Every sweep point fails the ADR-Q17 gates. The control could not run its budget: control-victim gateway queue P95
+    51–58 s, 19–53% censored.
+  - User-facing TTFT ratios are 0.012–0.106.
+  - Values are kept as measured; see `docs/RESULTS_selfhost.md` banner.
   Caveat: fixed budget couples L to request rate, so the low-L end mixes prefill length with queue pressure.
 - 🟡 Rate-matched A2 sweep (`a2_rate_in{128,256,512,768}`, ADR-Q12): scenarios + tests + dry-runs done and
   pre-registered; live run pending owner approval (~50 min self-host GPU).
