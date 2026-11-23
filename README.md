@@ -7,9 +7,39 @@ distributions produce significantly different *cross-tenant* service degradation
 It benchmarks only the **attack side** — workload synthesis, controlled replay, and characterization of
 cross-tenant impact — in an owned, isolated AWS account/VPC. It introduces **no scheduler and no defense**.
 
-Status: **live self-hosted A1–A5 results (protocol v1, archived); consolidated gateway + protocol v2 (prefix-cache
-isolation) + E0–E6 prepared, not yet run** — see `IMPLEMENTATION_STATUS.md`, `experiments/PLAN.md`.
-Terraform prepared for review, nothing deployed (no new AWS work).
+Status: **Protocol v4 complete on the self-hosted GPU (2026-11-22)**: 4/4 smokes, 9/9 calibration probes,
+frozen L\* = 200 authorized tok/s, then R1, R2 and R3 executed with every validity gate passing. Historical A1–A9 and
+v3.1 results are preserved unchanged. See `IMPLEMENTATION_STATUS.md` and `experiments/PLAN.md`. Terraform is prepared
+for review; nothing is deployed and no AWS work was done.
+
+## Current findings (read before citing any historical number)
+
+- **The historical A2 "3.19× prefill-heavy" headline is superseded.** It reproduces exactly as computed (pre-registered
+  `ttft_p95` = backend TTFT, ADR-Q16), but the corrected analysis invalidates the comparison:
+  - The token-matched short control could not execute its budget: 4,573 of 5,700 competitor requests completed.
+  - Control victims waited about 58 s at the gateway (P95), 60% were censored, and offered-load SLO success was 1.4%.
+  - On user-facing TTFT the ratio is 0.018, and the ADR-Q17 gates fail (competitor completion, censoring, provenance,
+    tokenization).
+  - The historical control also front-loads its budget into the first half of the window (`docs/KNOWN_LIMITATIONS.md`).
+  - Treat 3.19× as a measurement of a congested, front-loaded control, not as a prefill effect. The original record in
+    `docs/RESULTS_selfhost.md` is kept as measured. The post-hoc reanalysis is `scripts/reanalyze_suite.py`.
+- **Protocol v4** (`docs/PROTOCOL_V4.md`, frozen; results in `experiments/PLAN.md`):
+  - **R1, at L\* = 200.** Decode-heavy vs short is supported (4.36×). Prefill-heavy vs short is negative (1.05×).
+    - R1 matches *real tokenizer* token budgets, but it intentionally varies request count and input/output composition:
+      23 requests of 1024/32 or 75 of 64/256, against about 190 of 64/64.
+    - It is therefore a comparison of request shape at equal authorized tokens, not of equal request counts.
+  - **R3, gateway vs direct vLLM.** The decode effect disappears when the same frozen traces are sent directly to
+    vLLM (0.996×).
+    - R3 compares two execution paths with different admission and batching behaviour. Direct vLLM ran up to 25
+      concurrent requests, against the gateway's 8 slots.
+    - It does not isolate the gateway's software overhead. The gateway/direct difference is admission queueing plus a
+      change in engine batching.
+  - **R2, request-granularity sweeps.** Three seeds per point, so the results are descriptive only, not strong
+    inferential evidence.
+    - They show shape-dependent victim delay that is dominated by gateway queueing at this serving configuration.
+    - The frozen regime classifier labelled every point "feasible", including points where victim SLO success was 6%.
+  - **Main v4 finding.** Shape-dependent victim harm is dominated by gateway admission queueing, not GPU interference;
+    a small backend contribution remains.
 
 - Plan: `QUOTASHIFT_CLAUDE_CODE_PLAN.md` · Status: `IMPLEMENTATION_STATUS.md`
 - Architecture & boundaries: `docs/ARCHITECTURE.md`, `docs/DECISIONS.md`, `docs/THREAT_MODEL.md`

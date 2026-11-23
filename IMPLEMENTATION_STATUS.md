@@ -52,7 +52,15 @@ Snapshot of RISK-Sched preserved as commit `273a57c` (first commit on `main`).
 - ✅ Emits `summary.csv`, `summary.md` (with verdict incl. negatives), `figure_*.png`, `manifest.json`
   (per-seed budget report, run dirs, commands). Mock output labelled `synthetic_backend: true`.
 - ✅ First live run (self-hosted vLLM 0.17.1, Qwen2.5-7B-Instruct, 2026-11-20). A3–A5 at 5 seeds; A1/A2
-  re-run at 20 seeds (42–61). Headline: A2 prefill-heavy 3.19× (CI [2.66, 3.75], 95% success); A1 burst 1.59×
+  re-run at 20 seeds (42–61). Historical headline: A2 prefill-heavy 3.19× (CI [2.66, 3.75], 95% success).
+  **SUPERSEDED** by the corrected analysis (ADR-Q16/Q17; see README "Current findings"):
+  - The pre-registered metric was backend TTFT.
+  - The token-matched control failed to execute its budget: 4,573/5,700 competitor requests completed, control-victim
+    gateway queue P95 ≈ 58 s, 60% censored.
+  - User-facing TTFT ratio is 0.018 and the validity gates fail.
+  - The historical number is kept as measured; do not cite it as a prefill effect.
+
+  A1 burst 1.59×
   (CI [1.53, 1.65], 70%); A3/A4/A5 negative under matched budgets. All budgets matched on every seed; zero
   attack-arm timeouts. See `docs/RESULTS_selfhost.md`.
 - ⬜ AWS measurements still blocked on quota. More A3–A5 reps held pending owner approval.
@@ -85,7 +93,7 @@ Snapshot of RISK-Sched preserved as commit `273a57c` (first commit on `main`).
   estimate, RPM 429, streaming usage, disconnect cleanup. Harness validation only; no findings claimed.
 - ⬜ Suite R (A2–A5 v2 replication, cache on/off) and E0–E6 runs — see `experiments/PLAN.md`; GPU exporter on host.
 
-## Phase 8 — A7–A9 (protocol v3) ✅ designed + implemented + smoke-validated; full runs ⬜ (approval)
+## Phase 8 — A7–A9 (protocol v3) ✅ designed, implemented, run (Suite S, 2026-11-21) and audited
 - ✅ Design/pre-registration: docs/A7_A9_EXPERIMENT_DESIGN.md (hypotheses, threat model, controls, endpoints,
   confounders, falsification; dated amendments). ADR-Q15.
 - ✅ Prefix-structure, lifecycle plans/client, stream cancel, verified cache reset, cost accounting, CI
@@ -93,8 +101,51 @@ Snapshot of RISK-Sched preserved as commit `273a57c` (first commit on `main`).
 - ✅ GPU smokes 2026-11-21 (2 paired seeds each, ~16 min GPU): A7-V hit 0.000/0.000; A7 hit 0.52–0.55 (shared) vs
   0.19–0.23 (unique), realized prompt tokens equal across arms; A8 no leaks, engine drain ≤ 0.05 s, retries 6/6
   bounded; A9 primary unavailable (no power), secondaries populated. Harness validation only — no findings.
-- ⬜ Suite S full runs (120 runs, ~4.0 h) — experiments/PLAN.md; blocked items: verified reset (S1'), GPU power (A9 primary).
+- ✅ Suite S run 2026-11-21; forensic audit + corrected analysis (ADR-Q16/Q17); v3 long-context blocks invalidated,
+  v3.1 reruns recorded — see experiments/PLAN.md.
+
+## Phase 9 — Protocol v4 (feasibility-calibrated, real-token) ✅ complete (2026-11-22)
+
+**Design.** `docs/PROTOCOL_V4.md` (ADR-Q18) is frozen.
+- 45 generated YAMLs in `experiments/v4/`.
+- `experiments/v4/FROZEN_TRACES.json` holds 278 arm traces tokenized on the live Qwen2.5 tokenizer and enforced before
+  sending.
+- Thresholds, candidate loads, controls and validity gates are unchanged since the freeze (commit 46e37f6).
+
+**Server.** Same vLLM server start (1795268683.89) for every v4 run.
+- `max_num_seqs` 256 and `max_num_batched_tokens` 2048 are inferred, not verified.
+- The model revision is **unverified**: the server reports `revision=None`.
+
+**Stages.** Every block in every stage exited 0, passed every validity gate, and passed the telemetry,
+cache-isolation and request-conservation checks.
+
+| Stage | Commit | Blocks | Arms | Wall time |
+|---|---|---|---|---|
+| Smokes | 46e37f6 | 4/4 | — | 10.7 min |
+| Calibration | 46e37f6 | 9/9 | — | 48 min |
+| R1 at L\* = 200 | 05ae0ed | 3 × 5 seeds | 30 | 76 min |
+| R2-F (8 sizes) + R2-B (6 sizes) | 6c5615b | 14 × 3 seeds | — | — |
+| R3 direct | 6c5615b | 5 | — | — |
+| R2 + R3 together | 6c5615b | 19 | 122 | 5 h 10 min |
+
+**Calibration.** Gateway saturation was within the 0.25 limit at L200 for P/D/S. D failed it at L300 (0.367), and D and
+S failed it at L400. The frozen monotone rule therefore gives **L\* = 200**. No probe was rerun.
+
+**Interpretation constraints (part of the accepted state):**
+- **R1** matches real authorized token budgets, but it *intentionally* varies request count and input/output composition
+  (P 23 × 1024/32 and D 75 × 64/256, against about 190 × 64/64 short).
+- **R3** compares two execution paths with different admission (8-slot FCFS gateway vs none) and batching (engine
+  concurrency up to 25 direct). It is not a measurement of isolated gateway software overhead.
+- **R2** has 3 seeds per point and is descriptive only, not strong inferential evidence. The frozen regime and
+  limiting-resource classifiers under-report victim harm (KNOWN_LIMITATIONS); the frozen classifications are kept.
+
+**Results.**
+- **R1:** A/A 0.956 (negative); prefill vs short 1.047 (negative); decode vs short 4.36 [2.24, 6.34] (supported).
+- **R3:** decode replayed direct to vLLM gives 0.996 [0.958, 1.026] (negative). The R1 decode effect is gateway
+  admission queueing.
+
+Full numbers are in `experiments/PLAN.md`. Raw reports are local and gitignored (`reports/v4/`).
 
 ## Verification (this pass)
-`uv run pytest -q` → see Phase 8 report; `ruff` + `mypy` clean;
+`uv run pytest -q` → see Phase 9 report; `ruff` + `mypy` clean;
 `terraform fmt/validate/test` green. No AWS resources created.

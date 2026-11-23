@@ -161,3 +161,14 @@
   (2x offered rate) together; the control's gateway congestion and victim censoring (corrected analysis §2) are partly
   caused by this. Results stay as recorded; v4 uses `token_matched_fixed` (full-window arrivals) and an
   `arrival_coverage` gate. `rate_matched_short` (A9-rate) keeps the attack's own arrival times and is not affected.
+
+### v4 R2 regime and limiting-resource classifiers under-report victim harm (found 2026-11-22, after the R2 runs)
+- **Regime rule.** The pre-registered rule (`feasibility_gates: classify`) uses only competitor completion (≥ 0.95) and victim
+  censoring (≤ 0.05).
+  - Victims eventually complete inside the 60 s gateway queue timeout, so every R2 point was classed "feasible".
+  - That includes R2-F s96, where the victim user-facing TTFT P95 was 25.8 s and offered-load SLO success was 0.06.
+- **Limiting-resource rule.** `scripts/v4_analysis.py` labels a point "request-bound" only when gateway saturation is ≥ 0.50.
+  - All R2-B points (saturation 0.17–0.33) were therefore labelled "unconstrained", despite gateway-queue P95 up to 3.4 s.
+- **Status.** Both rules were frozen before the runs and are kept as registered. Report victim SLO success and gateway-queue
+  time beside each classification. Any revised rule would be a new, separately pre-registered amendment.
+- **Inference.** R2 uses 3 seeds per point and is descriptive only.
