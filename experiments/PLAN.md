@@ -213,7 +213,7 @@ design doc amendments.
 - **Suite S consequence:** each `experiments/v3/*.yaml` block runs once per server start with its current salt. A
   repeat (for example after a failure) needs a new `isolation_salt`, or a server restart, which starts a new series.
 
-## Protocol v4 (`experiments/v4/`; design: docs/PROTOCOL_V4.md) — SMOKES, CALIBRATION, R1 DONE; R2–R3 NOT RUN
+## Protocol v4 (`experiments/v4/`; design: docs/PROTOCOL_V4.md) — ALL STAGES DONE (S, C, R1, R2-F, R2-B, R3)
 
 R1 feasible token-matched comparison (calibrated common load), R2 request-granularity sweeps (R2-F fixed output,
 R2-B balanced), R3 gateway vs direct-vLLM replay. 45 generated YAMLs (`scripts/build_v4.py`), frozen on the live
@@ -245,3 +245,22 @@ completion 100%, victim censoring 0, prefix hit 0, engine waiting 0, KV <= 3.8%.
 - Interpretation (pre-registered R3 rule applies): an admission effect of the 8-slot FCFS gateway (long-held decode slots), not
   demonstrated GPU interference. Local reports: reports/v4/r1/ (gitignored).
 - Next, pending owner approval: R2-F (48 arms), R2-B (36), R3 direct (38) — 122 arms ≈ 5.4 h.
+
+**Stages R2 + R3 (2026-11-22 15:00–20:10 EST, 5 h 10 min, commit 6c5615b, clean tree, same server start; owner-approved).**
+19 blocks / 122 arms, all rc=0; all validity gates + telemetry/cache-isolation/conservation checks passed; competitor realized
+tokens = authorized at every point; victim censoring 0 everywhere. R2 is 3 seeds per point: DESCRIPTIVE, not inferential.
+- R2-F (output 32, 1000 tok/s), victim user TTFT P95 (gateway queue P95) / SLO success / gateway saturation:
+  s96 25.8 s (25.6 s) / 0.06 / 0.96; s128 3.2 s (3.1 s) / 0.66 / 0.88; s192 1.15 s (1.03 s) / 0.99 / 0.46; s256 831 ms (728) / 0.99 / 0.21;
+  s512 544 (330) / 1.00 / 0.10; s1024 526 (173) / 1.00 / 0.02; s2048 599 (111) / 1.00 / 0.02; s3584 770 (28) / 1.00 / 0.02.
+  U-shape: small requests are request-bound at the gateway (frozen rule: s <= 128), large requests delay victims in the backend.
+- R2-B (in = out = s/2, 400 tok/s): s64 681 ms (575) / 1.00; s128 952 (830) / 0.99; s256 1.51 s (1.41) / 0.97; s512 2.29 s (2.20) / 0.92;
+  s1024 3.50 s (3.40) / 0.88; s2048 2.76 s (2.65) / 0.92; saturation 0.17–0.33. Longer outputs hold gateway slots longer.
+- LIMITATION (frozen classifications kept): the R2 regime rule uses only competitor completion and victim censoring, so every point
+  is "feasible" (incl. s96 at 6% victim SLO); the limiting-resource rule (saturation >= 0.5) labels all R2-B points "unconstrained"
+  despite up to 3.4 s gateway-queue P95.
+- R3 direct vLLM (same frozen traces, same server start; compares two execution paths with different admission and batching, not
+  isolated gateway software overhead): R1 decode vs short 4.36 [2.24, 6.34] supported via gateway -> **0.996 [0.958, 1.026] negative**
+  direct; R1 prefill 1.047 negative -> 1.151 [1.057, 1.254] inconclusive. R2-F attack arm victim TTFT P95 gateway -> direct: s96 25.8 s
+  -> 227 ms; s256 831 -> 235 ms; s1024 526 -> 418 ms. Backend TTFT P95 rises 8–80 ms on the direct path (engine runs up to 25
+  concurrent, never queues): a real but small GPU contribution. Main v4 finding: at this serving config, shape-dependent victim
+  harm is dominated by gateway admission queueing, not GPU interference. Local reports: reports/v4/{r2,r3}/ (gitignored).
