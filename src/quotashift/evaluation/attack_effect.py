@@ -56,6 +56,9 @@ METRIC_INFO: dict[str, MetricInfo] = {
                                    "P95 over completed victim requests of t_first_token - t_sent"),
     "user_ttft_p95": MetricInfo("user_ttft_p95", "Victim user-facing TTFT P95", "ms", "victim_latency",
                                 "P95 over completed victim requests of t_first_token - t_offered (includes gateway queue)"),
+    "user_ttft_mean": MetricInfo("user_ttft_mean", "Victim user-facing TTFT mean", "ms", "victim_latency",
+                                 "mean over completed victim requests of t_first_token - t_offered (includes gateway "
+                                 "queue); protocol v5 primary"),
     "gateway_queue_p95": MetricInfo("gateway_queue_p95", "Victim gateway queue time P95", "ms", "victim_latency",
                                     "P95 over dispatched victim requests of t_sent - t_offered"),
     "e2e_p95": MetricInfo("e2e_p95", "Victim end-to-end latency P95", "ms", "victim_latency",
@@ -407,6 +410,8 @@ def _metric_value(m: RunMetrics, metric: str) -> float:
         return _nan(m.victim_backend_ttft_p95_ms if m.victim_backend_ttft_p95_ms is not None else m.victim_ttft_p95_ms)
     if metric == "user_ttft_p95":
         return _nan(m.victim_user_ttft_p95_ms)
+    if metric == "user_ttft_mean":
+        return _nan(m.victim_user_ttft_mean_ms)
     if metric == "gateway_queue_p95":
         return _nan(m.victim_gateway_queue_p95_ms)
     if metric == "e2e_p95":

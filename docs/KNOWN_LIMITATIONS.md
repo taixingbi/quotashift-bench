@@ -188,7 +188,19 @@
     0.5% of victims over 500 ms) alongside it.
 - **A/A shares the trace.** v4 A/A arms (`identical_workload`) replay the same trace, so the A/A noise floor excludes
   variation between traces. For example, seed 44 is bursty in both arms.
-- **Engine queue time not recorded in v4.** It is unavailable per request. vLLM exposes a
-  `request_queue_time_seconds` histogram that v4 did not capture.
+- **Engine queue time: engine-global only, never per request** (corrected 2026-11-23; an earlier version of this entry
+  said v4 did not capture the histogram).
+  - **What v4 captured:** per-arm sum/count deltas of vLLM `request_queue_time_seconds`. That gives the exact
+    engine-global mean over finished requests: ≤ 0.012 ms in every R1/R3 arm (measured). It did not capture bucket
+    deltas.
+  - **What vLLM 0.17.1 measures:** time from QUEUED to the *first* SCHEDULED event in the engine core. It is observed
+    only at request finish. Aborted requests are never observed. There are no tenant labels, and buckets start at
+    0.3 s.
+  - **What that rules out:** per-request or per-victim engine queueing, and any millisecond-scale P95.
+  - Details: `docs/PROTOCOL_V5_DRAFT.md` §5.2.
+- **FCFS counterfactuals assume cap-invariant hold times** (v4 post-hoc `fcfs_cap16/32_*`, v5 H3). They are biased low,
+  and independent resampling of holds under-predicts tails: LOSO at C = 8 gives bias −2.2 ms and 90% PI coverage 0.57.
+  v4 R3 direct runs are excluded from all predictions, because their non-binding cap makes them de-facto C ≥ 16 data.
+  See `docs/PROTOCOL_V5_DRAFT.md` §3.4–§3.5.
 - **Committed raw data in a public repo.** Commit `c11decc` published local usernames, a private LAN IP and GPU device
   identifiers in run metadata. No credentials were found. See `docs/RAW_DATA_AUDIT.md`.

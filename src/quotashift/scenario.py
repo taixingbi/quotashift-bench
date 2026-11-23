@@ -78,6 +78,10 @@ CONTROL_DIMENSIONS: dict[str, dict[str, list[str]]] = {
     "lifecycle_normal": {"controlled": ["victim_traffic", "request_count", "arrival_times", "total_tokens",
                                         "io_composition", "output_limits"],
                          "varies": ["request_lifecycle (cancel/timeout/retry -> complete)", "realized_work"]},
+    # protocol v5 (docs/PROTOCOL_V5_DRAFT.md): A/A with an independently sampled competitor trace
+    "independent_replicate": {"controlled": ["victim_traffic", "request_count", "request_rate", "total_tokens",
+                                             "io_composition", "output_limits", "arrival_law"],
+                              "varies": ["competitor arrival times (independent draw of the same law)"]},
 }
 BudgetClass = Literal["total_requests", "input_tokens", "output_tokens", "wall_clock"]
 
@@ -146,6 +150,7 @@ class Comparison(_Frozen):
         "lifecycle_normal",      # v3 A8 — same requests, all complete normally (+ pre-scheduled retry twins)
         "benign_only",           # B0 — victim-only reference
         "token_matched_fixed",   # v4 R1 — competitor token budget as fixed-shape requests spread over the WHOLE window
+        "independent_replicate",  # v5 — A/A null with an independently sampled competitor arrival draw
     ]
     matched_request_budget: bool = True
     matched_token_budget: bool = True
@@ -154,7 +159,7 @@ class Comparison(_Frozen):
     # "classify" (R2 sweep) — they classify the point as feasible / overload instead (integrity gates still fail).
     feasibility_gates: Literal["enforce", "classify"] = "enforce"
     repetitions: int = Field(default=5, ge=1)
-    degradation_metric: Literal["ttft_p95", "backend_ttft_p95", "user_ttft_p95", "e2e_p95", "gpu_energy_per_1k_authorized_tokens",
+    degradation_metric: Literal["ttft_p95", "backend_ttft_p95", "user_ttft_p95", "user_ttft_mean", "e2e_p95", "gpu_energy_per_1k_authorized_tokens",
                                 "engine_service_s_per_1k_authorized_tokens"] = "ttft_p95"
     # v3: direction of the pre-registered effect. "increase" (historical): ratio >= threshold.
     # "two_sided": ratio >= threshold OR ratio <= 1/threshold.
@@ -271,7 +276,7 @@ class ScenarioConfig(_Frozen):
     # v2: per-arm salted-hash prompt nonce at the very start of every prompt (replacing filler of
     # equal length, so planned token budgets are unchanged) + counterbalanced arm order across
     # paired seeds + per-arm prefix-cache counter snapshots (see workload/isolation.py, ADR-Q13).
-    protocol_version: Literal[1, 2, 3, 4] = 1
+    protocol_version: Literal[1, 2, 3, 4, 5] = 1
     # ---- protocol v3 (A7–A9; docs/A7_A9_EXPERIMENT_DESIGN.md)
     prefix_cache: PrefixCacheSpec | None = None
     lifecycle: LifecycleSpec | None = None
@@ -351,7 +356,7 @@ class ScenarioConfig(_Frozen):
         ctrl = self.comparison.primary_control
         _in_process = ("shuffled_phase_order", "uniform_arrivals", "matched_total_short", "homogeneous_mixture",
                        "rate_matched_short", "prefix_unique", "identical_workload", "lifecycle_normal",
-                       "token_matched_fixed")
+                       "token_matched_fixed", "independent_replicate")
         dims = CONTROL_DIMENSIONS[ctrl]["controlled"]
         if ctrl != "benign_only":
             if self.comparison.matched_token_budget and "total_tokens" not in dims:
@@ -383,6 +388,11 @@ class ScenarioConfig(_Frozen):
                 raise ValueError("token_matched_fixed needs fixed-size phases (input_tokens/output_tokens/request_count)")
             budget = sum(p.request_count * (p.input_tokens + p.output_tokens) for p in self.phases)  # type: ignore[operator,misc]
             est_comp = max(est_comp, round(budget / (cs.input_tokens + cs.output_tokens)))
+        if ctrl == "independent_replicate":
+            if self.protocol_version < 5:
+                raise ValueError("independent_replicate control requires protocol_version: 5")
+            if not all(p.request_count is not None for p in self.phases):
+                raise ValueError("independent_replicate needs fixed-size phases (input_tokens/output_tokens/request_count)")
         for p in self.phases:
             if p.request_count is not None:
                 if p.input_tokens > s.max_input_tokens_per_request or p.output_tokens > s.max_output_tokens_per_request:  # type: ignore[operator]
@@ -613,6 +623,22 @@ class ScenarioConfig(_Frozen):
         out.sort(key=lambda it: (it.request.arrival_time_s, it.request.request_id))
         return out
 
+    def _independent_replicate_control(self, seed: int | None) -> list[TraceItem]:
+        """v5 A/A-ind control: victims identical; every fixed-count competitor phase re-drawn with the same shape,
+        count and arrival law but an independent RNG stream (label suffix `~ind`), so the A/A noise floor includes
+        between-trace variation (v4 A/A replayed the same trace in both arms)."""
+        seed = self.seed if seed is None else seed
+        out = [it for it in self.build_trace(seed) if it.request.workload_class != "competitor"]
+        for t in self.competing_tenants:
+            offset = 0.0
+            for ph in self.phases:
+                out.extend(self._fixed_count_items(
+                    t, in_tok=ph.input_tokens, out_tok=ph.output_tokens, n=ph.request_count,  # type: ignore[arg-type]
+                    t_offset=offset, duration=ph.duration_seconds, seed=seed, label=f"{ph.name}~ind"))
+                offset += ph.duration_seconds
+        out.sort(key=lambda it: (it.request.arrival_time_s, it.request.request_id))
+        return out
+
     def schedule_hash(self, seed: int | None = None, *, phase_order: list[str] | None = None) -> str:
         return gen.trace_hash(self.build_trace(seed, phase_order=phase_order))
 
@@ -660,6 +686,8 @@ class ScenarioConfig(_Frozen):
             return self._rate_matched_short_control(seed), "rate_matched_short"
         if ctrl == "token_matched_fixed":
             return self._token_matched_fixed_control(seed), "token_matched_fixed"
+        if ctrl == "independent_replicate":
+            return self._independent_replicate_control(seed), "independent_replicate"
         if ctrl in ("prefix_unique", "identical_workload"):
             # bodies identical; the arm difference is applied by workload.prefix_cache / isolation (paired_traces)
             return self.build_trace(seed), ctrl

@@ -73,6 +73,12 @@ def counter_deltas(before: MetricSnapshot | None, after: MetricSnapshot | None, 
             out[f"{k}_count"] = n
             out[f"{k}_sum"] = a2[0] - b2[0]
             out[f"{k}_mean"] = (a2[0] - b2[0]) / n if n > 0 else None
+            # v5: cumulative bucket-count deltas [(le, count)] over the arm window (engine-global, finish-time
+            # observations; vLLM 0.17.1 request-latency buckets start at le = 0.3 s — PROTOCOL_V5_DRAFT §5.2)
+            hb, ha = before.histograms.get(k), after.histograms.get(k)
+            if hb is not None and ha is not None:
+                bd = dict(hb)
+                out[f"{k}_buckets"] = [("+Inf" if le == float("inf") else le, c - bd.get(le, 0.0)) for le, c in ha]
     q, h = out.get("prefix_cache_queries_total"), out.get("prefix_cache_hits_total")
     out["prefix_cache_hit_ratio"] = (h / q) if isinstance(q, float) and isinstance(h, float) and q > 0 else None
     p = out.get("prompt_tokens_total")

@@ -150,3 +150,14 @@ of the time at 8/8.
 - **Fragility.** The P95 primary endpoint magnifies this into a near-binary per-seed outcome. Any confirmatory
   follow-up should use a tail-mass or mean endpoint, more victims per run, and independently sampled traces. This
   motivates Protocol v5 (`docs/PROTOCOL_V5_DRAFT.md`).
+
+## Erratum (2026-11-23; this analysis stays POST-HOC EXPLORATORY, with no numbers changed)
+
+- **Engine queue.** The "Unavailable" row is correct only *per request*. v4 did record the engine-global mean engine
+  queue: the per-arm sum/count deltas of vLLM `request_queue_time_seconds` in each run's `metrics_summary.json`.
+  - That mean is ≤ 0.012 ms in every R1/R3 arm (measured, engine-global).
+  - Bucket deltas were not recorded.
+  - Semantics: `docs/PROTOCOL_V5_DRAFT.md` §5.2.
+- **Cap 16/32 estimates.** They used gateway C = 8 runs only. The "3–11% longer direct-path holds" remark is a
+  qualitative bias direction from R3 direct runs, which are de-facto C ≥ 16 data. It was not used numerically, and
+  v5's frozen predictions exclude it (`docs/PROTOCOL_V5_DRAFT.md` §3.4).

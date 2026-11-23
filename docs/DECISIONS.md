@@ -191,4 +191,14 @@ A1–A9 results and controls are unchanged. No v4 GPU run is made before owner a
   - Execution and victim-SLO feasibility are separate criteria.
   - A/A arms use independent traces.
   - Engine queue histograms are captured.
+- **Rev 2 (2026-11-23; still PROPOSED, not approved for GPU execution).**
+  - H2 is split into H2a (cap dose-response; per-seed slope, t-test plus exact sign-flip) and H2b (equivalence at
+    C = 32 by TOST; disclosed as a replication of the R3 direct observation, not a blind prediction).
+  - Quantitative FCFS predictions are frozen in `experiments/v5/FCFS_PREDICTIONS.json`. They use v4 C = 8 gateway
+    inputs only, enforced by a leakage guard, with tolerances from LOSO at C = 8.
+  - "Victim-SLO feasibility" is renamed **baseline** victim-SLO feasibility, which uses the control arm only.
+    Attack-arm SLO degradation is an outcome.
+  - H4's engine-queue criterion is reformulated to the verified semantics of the vLLM 0.17.1 histogram: an
+    engine-global, finish-time mean, buckets of 0.3 s or more, aborted requests not observed.
+  - Offline tooling and tests are added (`build_v5`, `freeze_v5`, `v5_fcfs_predictions`, `v5_analysis`).
 - **Unchanged.** v4 and its results.
