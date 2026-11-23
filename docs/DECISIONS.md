@@ -201,4 +201,8 @@ A1–A9 results and controls are unchanged. No v4 GPU run is made before owner a
   - H4's engine-queue criterion is reformulated to the verified semantics of the vLLM 0.17.1 histogram: an
     engine-global, finish-time mean, buckets of 0.3 s or more, aborted requests not observed.
   - Offline tooling and tests are added (`build_v5`, `freeze_v5`, `v5_fcfs_predictions`, `v5_analysis`).
+  - Run-level loader added to `v5_analysis.py` (§9 item 8; 2026-11-23, before any v5 data). Its operational
+    choices are listed in `PROTOCOL_V5_DRAFT.md` §9.1 for owner review. They cover: Holm with p = 1 for
+    non-evaluable members; H4(b) operationalized as "lower at C = 32 than at C = 8, and H3 passing at C = 16 and 32";
+    H5 saturation measured at each arm's own cap; and enforced no-interim-look refusal.
 - **Unchanged.** v4 and its results.

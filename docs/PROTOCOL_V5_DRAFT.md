@@ -413,13 +413,41 @@ Estimates use v4's measured 2.6 min of wall time per 120 s arm, including settle
 | 5 | `FCFS_PREDICTIONS.json` and the leakage guard | **done** | `test_fcfs_replay_toy`, `test_leakage_guard_rejects_direct_runs`, `test_frozen_predictions_*` |
 | 6 | Decision rules (`v5_analysis.py`) | **done** | t quantiles, strata, classification, H2a/H2b separation, sign-flip, Holm, FCFS scoring |
 | 7 | Engine histogram bucket deltas | **done** | `test_queue_histogram_bucket_deltas_and_h4_rule` |
-| 8 | Run-level loader: v5 reports → per-seed tables → rules → `reports/v5/ANALYSIS.md` | to do **before the freeze** | mock-run end-to-end test (plumbing only) |
+| 8 | Run-level loader: v5 reports → per-seed tables → rules → `reports/v5/ANALYSIS_<stage>.{md,json}` (operational choices in §9.1) | **done** | `tests/integration/test_v5_mock.py`: all 12 stage-A cells on the mock (plumbing only), rule wiring, no-interim-look refusal |
 | 9 | Gates `cap_configured`, `server_identity` (stage), `occupancy_reconstruction` | to do before stage S | unit tests and a mock run |
 | 10 | Stage driver `scripts/run_v5.sh`: per-stage file list, cache reset per block, stop on any gate failure, one rerun max, timestamped progress | to do before stage S | dry run on the mock backend |
 | 11 | Raw-data export: release artifact, SHA-256 manifest, sanitization (`docs/RAW_DATA_AUDIT.md`) | to do before stage A | regex gate test |
 
-Items 8–11 must not change any frozen artifact. A test pinning the frozen files' SHA-256 values to the freeze commit
-will be added with item 8.
+### 9.1 Loader operational choices (item 8; written before any v5 data, for owner review before the freeze)
+
+The §3–§6 text left these open. `scripts/v5_analysis.py` fixes them as follows:
+
+1. **Non-evaluable hypotheses in a Holm family.** The family size stays fixed (F1 = 3, F2 = 3). A non-evaluable
+   member enters with p = 1, so it cannot be rejected and cannot make the others easier to reject. It is reported as
+   **not evaluable**.
+2. **Evaluability.**
+   - H1, H2a, H2b and H6 need their cells in stratum E∧Vb.
+   - H2a also needs identical seed lists in the three caps.
+   - H3 and H4 need their cells to be E; Vb is not required, because they are mechanism checks, not effect tests.
+3. **H3 observable.** It is the same quantity the predictions were frozen on (`v5_fcfs_predictions.holds`): the
+   mean of t_sent − t_offered over victims with both timestamps, without warm-up exclusion.
+   - The frozen cell values are used whenever the cell holds all 10 protocol seeds.
+   - Plumbing subsets recompute the cell rule over the loaded seeds and are flagged `frozen_cell_values: false`.
+4. **H4(b), operationalized.** The attack-arm victim mean gateway queue (cell mean) is lower at C = 32 than at C = 8,
+   **and** the H3 score for D vs S, L = 200, attack arm passes at both C = 16 and C = 32.
+5. **H4(c).** The verdict uses the gateway arms (C = 8, 16, 32), both arms of every seed. The direct-path arms are
+   scored and reported, but descriptively only.
+6. **H5.** "Saturation" uses each arm's **own** cap C, not the v4 reference cap of 8. That means the fraction of the
+   window with k ≥ C, and the fraction of victims arriving while k ≥ C. The computation uses the frozen slot-time
+   primitives (`occupancy_steps`, `time_weighted`, `k_at`).
+7. **Threshold validity** is evaluated against the A/A-ind cell at the same (C, L). D vs S at L = 400 on the direct
+   path has no A/A-ind reference, so it reports `null`.
+8. **No interim looks (§6), enforced.** On real data the loader refuses an incomplete stage before computing any
+   endpoint. Only an all-synthetic (mock) input may be incomplete. It also refuses to overwrite an existing analysis
+   without `--force`.
+
+Items 8–11 must not change any frozen artifact. A test pinning the frozen files' SHA-256 values is added **in freeze commit 1** itself
+(it cannot be pinned before the files are frozen).
 
 ## 10. Staged execution procedure (each step needs its own owner approval)
 
@@ -430,8 +458,9 @@ will be added with item 8.
 | **P3** | freeze commit 2 (`FROZEN_TRACES.json` + P1 record) | git, on main | tests green | — |
 | **S** | 4 smokes, seed 4900 | `scripts/run_v5.sh smoke` | every gate passes | stop; fix the harness; smokes are never analysed |
 | **A** | Stage A, 12 blocks | `scripts/run_v5.sh A` | per §5/§8 | §8 rules 2–6 |
-| **A-report** | analysis after the stage completes | `uv run python scripts/v5_analysis.py --stage A` | — | — |
+| **A-report** | analysis after the stage completes (reads `reports/v5/stage_a/`, writes `reports/v5/ANALYSIS_A.{md,json}`) | `uv run python scripts/v5_analysis.py --stage A` | — | — |
 | **B** | Stage B, 7 blocks; only if A is all valid, with separate approval | `scripts/run_v5.sh B` | per §5/§8 | §8 |
+| **B-report** | analysis after stage B (stage A + B cells) | `uv run python scripts/v5_analysis.py --stage B` | — | — |
 
 ## 11. Proposed freeze
 

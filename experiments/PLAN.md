@@ -269,4 +269,4 @@ tokens = authorized at every point; victim censoring 0 everywhere. R2 is 3 seeds
 - Post-hoc exploratory slot-time analysis and R1 decode statistical audit: `reports/v4/posthoc_slot_time/SLOT_TIME_ANALYSIS.md`
   (`scripts/v4_posthoc_slot_time.py`).
 - Raw-data audit and storage proposal: `docs/RAW_DATA_AUDIT.md`.
-- Protocol v5 DRAFT rev 2 (cap 8/16/32 × shape; not frozen, NOT approved for GPU execution, not run; ADR-Q19 proposed): `docs/PROTOCOL_V5_DRAFT.md`. Offline prep: `experiments/v5/` (23 generated YAMLs, `FROZEN_SCHEDULE.json`, frozen `FCFS_PREDICTIONS.json`).
+- Protocol v5 DRAFT rev 2 (cap 8/16/32 × shape; not frozen, NOT approved for GPU execution, not run; ADR-Q19 proposed): `docs/PROTOCOL_V5_DRAFT.md`. Offline prep: `experiments/v5/` (23 generated YAMLs, `FROZEN_SCHEDULE.json`, frozen `FCFS_PREDICTIONS.json`). Run-level loader (`scripts/v5_analysis.py --stage A|B`, §9 item 8) done and mock-tested; items 9–11 (gates, `run_v5.sh`, raw-data export) remain before stage S.
