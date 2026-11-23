@@ -1,0 +1,317 @@
+{
+  "scenario_id": "a8_lifecycle_churn",
+  "control_label": "lifecycle_normal",
+  "seeds": [
+    42,
+    43,
+    44,
+    45,
+    46
+  ],
+  "synthetic_backend": false,
+  "metric": "ttft_p95",
+  "preregistered_threshold": 1.25,
+  "budget_tolerance": 0.05,
+  "per_seed_budget": {
+    "42": {
+      "tolerance": 0.05,
+      "required_matched_dims": [
+        "requests",
+        "total_tokens"
+      ],
+      "violations": [],
+      "matched": true,
+      "dimensions": {
+        "requests": {
+          "attack": 164,
+          "control": 164,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "total_tokens": {
+          "attack": 32709,
+          "control": 32709,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "input_tokens": {
+          "attack": 9733,
+          "control": 9733,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "requested_output_tokens": {
+          "attack": 22976,
+          "control": 22976,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "realized_output_tokens": {
+          "attack": 19543,
+          "control": 19543,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        }
+      }
+    },
+    "43": {
+      "tolerance": 0.05,
+      "required_matched_dims": [
+        "requests",
+        "total_tokens"
+      ],
+      "violations": [],
+      "matched": true,
+      "dimensions": {
+        "requests": {
+          "attack": 176,
+          "control": 176,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "total_tokens": {
+          "attack": 34815,
+          "control": 34815,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "input_tokens": {
+          "attack": 10879,
+          "control": 10879,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "requested_output_tokens": {
+          "attack": 23936,
+          "control": 23936,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "realized_output_tokens": {
+          "attack": 20757,
+          "control": 20757,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        }
+      }
+    },
+    "44": {
+      "tolerance": 0.05,
+      "required_matched_dims": [
+        "requests",
+        "total_tokens"
+      ],
+      "violations": [],
+      "matched": true,
+      "dimensions": {
+        "requests": {
+          "attack": 186,
+          "control": 186,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "total_tokens": {
+          "attack": 38084,
+          "control": 38084,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "input_tokens": {
+          "attack": 11780,
+          "control": 11780,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "requested_output_tokens": {
+          "attack": 26304,
+          "control": 26304,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "realized_output_tokens": {
+          "attack": 22690,
+          "control": 22690,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        }
+      }
+    },
+    "45": {
+      "tolerance": 0.05,
+      "required_matched_dims": [
+        "requests",
+        "total_tokens"
+      ],
+      "violations": [],
+      "matched": true,
+      "dimensions": {
+        "requests": {
+          "attack": 191,
+          "control": 191,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "total_tokens": {
+          "attack": 39890,
+          "control": 39890,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "input_tokens": {
+          "attack": 11346,
+          "control": 11346,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "requested_output_tokens": {
+          "attack": 28544,
+          "control": 28544,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "realized_output_tokens": {
+          "attack": 24355,
+          "control": 24355,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        }
+      }
+    },
+    "46": {
+      "tolerance": 0.05,
+      "required_matched_dims": [
+        "requests",
+        "total_tokens"
+      ],
+      "violations": [],
+      "matched": true,
+      "dimensions": {
+        "requests": {
+          "attack": 197,
+          "control": 197,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "total_tokens": {
+          "attack": 40033,
+          "control": 40033,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "input_tokens": {
+          "attack": 11681,
+          "control": 11681,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "requested_output_tokens": {
+          "attack": 28352,
+          "control": 28352,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "realized_output_tokens": {
+          "attack": 24472,
+          "control": 24472,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        }
+      }
+    }
+  },
+  "run_dirs": {
+    "attack": {
+      "42": "/Users/h/Documents/paper/paper13-quotashift-bench/quotashift-bench/results/a8_lifecycle_churn__attack/20261121T211146Z_fcfs_42",
+      "43": "/Users/h/Documents/paper/paper13-quotashift-bench/quotashift-bench/results/a8_lifecycle_churn__attack/20261121T211806Z_fcfs_43",
+      "44": "/Users/h/Documents/paper/paper13-quotashift-bench/quotashift-bench/results/a8_lifecycle_churn__attack/20261121T212004Z_fcfs_44",
+      "45": "/Users/h/Documents/paper/paper13-quotashift-bench/quotashift-bench/results/a8_lifecycle_churn__attack/20261121T212603Z_fcfs_45",
+      "46": "/Users/h/Documents/paper/paper13-quotashift-bench/quotashift-bench/results/a8_lifecycle_churn__attack/20261121T212803Z_fcfs_46"
+    },
+    "control": {
+      "42": "/Users/h/Documents/paper/paper13-quotashift-bench/quotashift-bench/results/a8_lifecycle_churn__control/20261121T211403Z_fcfs_42",
+      "43": "/Users/h/Documents/paper/paper13-quotashift-bench/quotashift-bench/results/a8_lifecycle_churn__control/20261121T211605Z_fcfs_43",
+      "44": "/Users/h/Documents/paper/paper13-quotashift-bench/quotashift-bench/results/a8_lifecycle_churn__control/20261121T212203Z_fcfs_44",
+      "45": "/Users/h/Documents/paper/paper13-quotashift-bench/quotashift-bench/results/a8_lifecycle_churn__control/20261121T212401Z_fcfs_45",
+      "46": "/Users/h/Documents/paper/paper13-quotashift-bench/quotashift-bench/results/a8_lifecycle_churn__control/20261121T213005Z_fcfs_46"
+    }
+  },
+  "analysis": {
+    "metric": "ttft_p95",
+    "preregistered_threshold": 1.25,
+    "effect_direction": "increase",
+    "classification": "negative",
+    "n_seeds_with_metric": 5,
+    "n_seeds": 5,
+    "mean_ratio": 0.9753404065694387,
+    "median_ratio": 0.9846676580529958,
+    "ratio_ci95": [
+      0.8726719920346155,
+      1.0649756715366732
+    ],
+    "attack_success_rate": 0.0,
+    "mean_competitor_tokens": 8525.2,
+    "mean_competitor_requests": 28.6,
+    "slowdown_per_1k_competitor_tokens": -0.00289255306978855,
+    "slowdown_per_100_competitor_requests": -0.08622235465231239
+  },
+  "protocol_version": 3,
+  "path": "gateway",
+  "arm_order": {
+    "42": [
+      "attack",
+      "control"
+    ],
+    "43": [
+      "control",
+      "attack"
+    ],
+    "44": [
+      "attack",
+      "control"
+    ],
+    "45": [
+      "control",
+      "attack"
+    ],
+    "46": [
+      "attack",
+      "control"
+    ]
+  },
+  "per_arm_prefix_cache_hit_ratio": {
+    "attack": {
+      "42": 0.0,
+      "43": 0.0,
+      "44": 0.0,
+      "45": 0.0,
+      "46": 0.0
+    },
+    "control": {
+      "42": 0.0,
+      "43": 0.0,
+      "44": 0.0,
+      "45": 0.0,
+      "46": 0.0
+    }
+  },
+  "unrelated_traffic_suspected": {
+    "attack": {
+      "42": false,
+      "43": false,
+      "44": false,
+      "45": false,
+      "46": false
+    },
+    "control": {
+      "42": false,
+      "43": false,
+      "44": false,
+      "45": false,
+      "46": false
+    }
+  },
+  "commands": [
+    "uv run quotashift budget experiments/v3/a8_lifecycle_churn.yaml",
+    "uv run quotashift experiment experiments/v3/a8_lifecycle_churn.yaml --reps 5 --live --path gateway"
+  ]
+}

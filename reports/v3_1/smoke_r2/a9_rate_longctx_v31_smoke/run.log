@@ -1,0 +1,27 @@
+START 2026-11-21 21:21:57 EST
+{
+  "scenario_id": "a9_rate_longctx_v31_smoke",
+  "control": "rate_matched_short",
+  "seeds": [
+    42
+  ],
+  "metric": "gpu_energy_per_1k_authorized_tokens",
+  "mean_ratio": 0.2786143545930815,
+  "classification": "insufficient_seeds",
+  "effect_direction": "two_sided",
+  "ratio_ci95": [
+    0.2786143545930815,
+    0.2786143545930815
+  ],
+  "attack_success_rate": 1.0,
+  "synthetic_backend": false,
+  "validity_passed": true,
+  "csv": "reports/v3_1/smoke_r2/a9_rate_longctx_v31_smoke/summary.csv",
+  "md": "reports/v3_1/smoke_r2/a9_rate_longctx_v31_smoke/summary.md",
+  "manifest": "reports/v3_1/smoke_r2/a9_rate_longctx_v31_smoke/manifest.json",
+  "figures": [
+    "reports/v3_1/smoke_r2/a9_rate_longctx_v31_smoke/figure_metric_by_arm.png",
+    "reports/v3_1/smoke_r2/a9_rate_longctx_v31_smoke/figure_ratio.png"
+  ]
+}
+END 2026-11-21 21:24:32 EST rc=0

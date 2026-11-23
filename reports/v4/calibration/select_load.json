@@ -1,0 +1,117 @@
+{
+  "rule": {
+    "min_competitor_completion": 0.98,
+    "max_victim_censored": 0.0,
+    "max_gw_saturation": 0.25,
+    "integrity_gates": [
+      "backend_error_rate",
+      "http_400_rate",
+      "admission_rate",
+      "primary_metric_present",
+      "tokenized_context",
+      "planned_vs_reported_tokens",
+      "provenance",
+      "arrival_coverage",
+      "realized_output_equals_authorized"
+    ]
+  },
+  "feasible_at": {
+    "200": true,
+    "300": false,
+    "400": false
+  },
+  "selected_load": 200,
+  "probes": {
+    "v4_cal_D_L200": {
+      "shape": "D",
+      "load": 200,
+      "feasible": true,
+      "min_competitor_completion": 1.0,
+      "max_victim_censored": 0.0,
+      "max_gw_saturation": 0.0974358974358974,
+      "failed_integrity_gates": [],
+      "missing_gates": []
+    },
+    "v4_cal_D_L300": {
+      "shape": "D",
+      "load": 300,
+      "feasible": false,
+      "min_competitor_completion": 1.0,
+      "max_victim_censored": 0.0,
+      "max_gw_saturation": 0.3686868686868687,
+      "failed_integrity_gates": [],
+      "missing_gates": []
+    },
+    "v4_cal_D_L400": {
+      "shape": "D",
+      "load": 400,
+      "feasible": false,
+      "min_competitor_completion": 1.0,
+      "max_victim_censored": 0.0,
+      "max_gw_saturation": 0.828125,
+      "failed_integrity_gates": [],
+      "missing_gates": []
+    },
+    "v4_cal_P_L200": {
+      "shape": "P",
+      "load": 200,
+      "feasible": true,
+      "min_competitor_completion": 1.0,
+      "max_victim_censored": 0.0,
+      "max_gw_saturation": 0.0109289617486338,
+      "failed_integrity_gates": [],
+      "missing_gates": []
+    },
+    "v4_cal_P_L300": {
+      "shape": "P",
+      "load": 300,
+      "feasible": true,
+      "min_competitor_completion": 1.0,
+      "max_victim_censored": 0.0,
+      "max_gw_saturation": 0.0162162162162162,
+      "failed_integrity_gates": [],
+      "missing_gates": []
+    },
+    "v4_cal_P_L400": {
+      "shape": "P",
+      "load": 400,
+      "feasible": true,
+      "min_competitor_completion": 1.0,
+      "max_victim_censored": 0.0,
+      "max_gw_saturation": 0.005524861878453,
+      "failed_integrity_gates": [],
+      "missing_gates": []
+    },
+    "v4_cal_S_L200": {
+      "shape": "S",
+      "load": 200,
+      "feasible": true,
+      "min_competitor_completion": 1.0,
+      "max_victim_censored": 0.0,
+      "max_gw_saturation": 0.0374331550802139,
+      "failed_integrity_gates": [],
+      "missing_gates": []
+    },
+    "v4_cal_S_L300": {
+      "shape": "S",
+      "load": 300,
+      "feasible": true,
+      "min_competitor_completion": 1.0,
+      "max_victim_censored": 0.0,
+      "max_gw_saturation": 0.1443850267379679,
+      "failed_integrity_gates": [],
+      "missing_gates": []
+    },
+    "v4_cal_S_L400": {
+      "shape": "S",
+      "load": 400,
+      "feasible": false,
+      "min_competitor_completion": 1.0,
+      "max_victim_censored": 0.0,
+      "max_gw_saturation": 0.3555555555555555,
+      "failed_integrity_gates": [],
+      "missing_gates": []
+    }
+  },
+  "decision": "run experiments/v4/r1/*_L200.yaml"
+}

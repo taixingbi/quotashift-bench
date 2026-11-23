@@ -1,0 +1,253 @@
+{
+  "scenario_id": "a2_sweep_in512",
+  "control_label": "matched_total_short",
+  "seeds": [
+    42,
+    43,
+    44,
+    45,
+    46
+  ],
+  "synthetic_backend": false,
+  "metric": "ttft_p95",
+  "preregistered_threshold": 1.5,
+  "budget_tolerance": 0.05,
+  "per_seed_budget": {
+    "42": {
+      "tolerance": 0.05,
+      "required_matched_dims": [
+        "total_tokens"
+      ],
+      "violations": [],
+      "matched": true,
+      "dimensions": {
+        "requests": {
+          "attack": 82,
+          "control": 224,
+          "abs_delta": 142,
+          "rel_delta": 0.633929
+        },
+        "total_tokens": {
+          "attack": 28855,
+          "control": 28824,
+          "abs_delta": 31,
+          "rel_delta": 0.001074
+        },
+        "input_tokens": {
+          "attack": 25175,
+          "control": 14488,
+          "abs_delta": 10687,
+          "rel_delta": 0.424508
+        },
+        "requested_output_tokens": {
+          "attack": 3680,
+          "control": 14336,
+          "abs_delta": 10656,
+          "rel_delta": 0.743304
+        },
+        "realized_output_tokens": {
+          "attack": 2739,
+          "control": 10719,
+          "abs_delta": 7980,
+          "rel_delta": 0.744472
+        }
+      }
+    },
+    "43": {
+      "tolerance": 0.05,
+      "required_matched_dims": [
+        "total_tokens"
+      ],
+      "violations": [],
+      "matched": true,
+      "dimensions": {
+        "requests": {
+          "attack": 101,
+          "control": 285,
+          "abs_delta": 184,
+          "rel_delta": 0.645614
+        },
+        "total_tokens": {
+          "attack": 36619,
+          "control": 36625,
+          "abs_delta": 6,
+          "rel_delta": 0.000164
+        },
+        "input_tokens": {
+          "attack": 32203,
+          "control": 18385,
+          "abs_delta": 13818,
+          "rel_delta": 0.42909
+        },
+        "requested_output_tokens": {
+          "attack": 4416,
+          "control": 18240,
+          "abs_delta": 13824,
+          "rel_delta": 0.757895
+        },
+        "realized_output_tokens": {
+          "attack": 3457,
+          "control": 13785,
+          "abs_delta": 10328,
+          "rel_delta": 0.74922
+        }
+      }
+    },
+    "44": {
+      "tolerance": 0.05,
+      "required_matched_dims": [
+        "total_tokens"
+      ],
+      "violations": [],
+      "matched": true,
+      "dimensions": {
+        "requests": {
+          "attack": 99,
+          "control": 260,
+          "abs_delta": 161,
+          "rel_delta": 0.619231
+        },
+        "total_tokens": {
+          "attack": 33171,
+          "control": 33182,
+          "abs_delta": 11,
+          "rel_delta": 0.000332
+        },
+        "input_tokens": {
+          "attack": 28659,
+          "control": 16542,
+          "abs_delta": 12117,
+          "rel_delta": 0.422799
+        },
+        "requested_output_tokens": {
+          "attack": 4512,
+          "control": 16640,
+          "abs_delta": 12128,
+          "rel_delta": 0.728846
+        },
+        "realized_output_tokens": {
+          "attack": 3444,
+          "control": 12511,
+          "abs_delta": 9067,
+          "rel_delta": 0.724722
+        }
+      }
+    },
+    "45": {
+      "tolerance": 0.05,
+      "required_matched_dims": [
+        "total_tokens"
+      ],
+      "violations": [],
+      "matched": true,
+      "dimensions": {
+        "requests": {
+          "attack": 89,
+          "control": 237,
+          "abs_delta": 148,
+          "rel_delta": 0.624473
+        },
+        "total_tokens": {
+          "attack": 30299,
+          "control": 30358,
+          "abs_delta": 59,
+          "rel_delta": 0.001943
+        },
+        "input_tokens": {
+          "attack": 26299,
+          "control": 15190,
+          "abs_delta": 11109,
+          "rel_delta": 0.422411
+        },
+        "requested_output_tokens": {
+          "attack": 4000,
+          "control": 15168,
+          "abs_delta": 11168,
+          "rel_delta": 0.736287
+        },
+        "realized_output_tokens": {
+          "attack": 2984,
+          "control": 11375,
+          "abs_delta": 8391,
+          "rel_delta": 0.73767
+        }
+      }
+    },
+    "46": {
+      "tolerance": 0.05,
+      "required_matched_dims": [
+        "total_tokens"
+      ],
+      "violations": [],
+      "matched": true,
+      "dimensions": {
+        "requests": {
+          "attack": 86,
+          "control": 257,
+          "abs_delta": 171,
+          "rel_delta": 0.66537
+        },
+        "total_tokens": {
+          "attack": 33002,
+          "control": 32953,
+          "abs_delta": 49,
+          "rel_delta": 0.001485
+        },
+        "input_tokens": {
+          "attack": 29418,
+          "control": 16505,
+          "abs_delta": 12913,
+          "rel_delta": 0.438949
+        },
+        "requested_output_tokens": {
+          "attack": 3584,
+          "control": 16448,
+          "abs_delta": 12864,
+          "rel_delta": 0.782101
+        },
+        "realized_output_tokens": {
+          "attack": 2703,
+          "control": 12316,
+          "abs_delta": 9613,
+          "rel_delta": 0.780529
+        }
+      }
+    }
+  },
+  "run_dirs": {
+    "attack": {
+      "42": "/Users/h/Documents/paper/paper13-quotashift/quotashift-bench/results/a2_sweep_in512__attack/20261121T020514Z_fcfs_42",
+      "43": "/Users/h/Documents/paper/paper13-quotashift/quotashift-bench/results/a2_sweep_in512__attack/20261121T020736Z_fcfs_43",
+      "44": "/Users/h/Documents/paper/paper13-quotashift/quotashift-bench/results/a2_sweep_in512__attack/20261121T021007Z_fcfs_44",
+      "45": "/Users/h/Documents/paper/paper13-quotashift/quotashift-bench/results/a2_sweep_in512__attack/20261121T021236Z_fcfs_45",
+      "46": "/Users/h/Documents/paper/paper13-quotashift/quotashift-bench/results/a2_sweep_in512__attack/20261121T021506Z_fcfs_46"
+    },
+    "control": {
+      "42": "/Users/h/Documents/paper/paper13-quotashift/quotashift-bench/results/a2_sweep_in512__control/20261121T020615Z_fcfs_42",
+      "43": "/Users/h/Documents/paper/paper13-quotashift/quotashift-bench/results/a2_sweep_in512__control/20261121T020837Z_fcfs_43",
+      "44": "/Users/h/Documents/paper/paper13-quotashift/quotashift-bench/results/a2_sweep_in512__control/20261121T021106Z_fcfs_44",
+      "45": "/Users/h/Documents/paper/paper13-quotashift/quotashift-bench/results/a2_sweep_in512__control/20261121T021337Z_fcfs_45",
+      "46": "/Users/h/Documents/paper/paper13-quotashift/quotashift-bench/results/a2_sweep_in512__control/20261121T021607Z_fcfs_46"
+    }
+  },
+  "analysis": {
+    "metric": "ttft_p95",
+    "preregistered_threshold": 1.5,
+    "n_seeds": 5,
+    "mean_ratio": 2.138566999745848,
+    "median_ratio": 2.0348959024546396,
+    "ratio_ci95": [
+      1.6150955589879878,
+      2.6905768396384486
+    ],
+    "attack_success_rate": 0.8,
+    "mean_competitor_tokens": 27879.2,
+    "mean_competitor_requests": 56.6,
+    "slowdown_per_1k_competitor_tokens": 0.040839299540368725,
+    "slowdown_per_100_competitor_requests": 2.011602473049201
+  },
+  "commands": [
+    "uv run quotashift budget experiments/a2_sweep_in512.yaml",
+    "uv run quotashift experiment experiments/a2_sweep_in512.yaml --reps 5 --live"
+  ]
+}

@@ -1,0 +1,151 @@
+experiment_id: a2_sweep_in128__attack
+description: QuotaShift scenario a2_sweep_in128 (target selfhost)
+workload:
+  workload_id: a2_sweep_in128
+  schema_version: 1.0.0
+  duration_s: 60.0
+  max_requests: 1000
+  max_model_len: 4096
+  prompt_mode: synthetic_text
+  tenants:
+  - tenant_id: victim_a
+    workload_class: victim
+    arrival:
+      process: poisson
+      rate_rps: 0.3
+      cv: 1.0
+      burst_rate_rps: null
+      mean_on_s: null
+      mean_off_s: null
+    prompt_tokens:
+      dist: lognormal
+      value: null
+      median: 64.0
+      sigma: 0.3
+      low: null
+      high: null
+      min: 1
+      max: 128
+    max_output_tokens: 64
+    sim_output_tokens:
+      dist: lognormal
+      value: null
+      median: 48.0
+      sigma: 0.3
+      low: null
+      high: null
+      min: 1
+      max: 64
+    slo:
+      slo_type: interactive
+      ttft_deadline_ms: 2000.0
+      tpot_target_ms: null
+      e2e_deadline_ms: 30000.0
+    priority_weight: 1.0
+  - tenant_id: victim_b
+    workload_class: victim
+    arrival:
+      process: poisson
+      rate_rps: 0.3
+      cv: 1.0
+      burst_rate_rps: null
+      mean_on_s: null
+      mean_off_s: null
+    prompt_tokens:
+      dist: lognormal
+      value: null
+      median: 64.0
+      sigma: 0.3
+      low: null
+      high: null
+      min: 1
+      max: 128
+    max_output_tokens: 64
+    sim_output_tokens:
+      dist: lognormal
+      value: null
+      median: 48.0
+      sigma: 0.3
+      low: null
+      high: null
+      min: 1
+      max: 64
+    slo:
+      slo_type: interactive
+      ttft_deadline_ms: 2000.0
+      tpot_target_ms: null
+      e2e_deadline_ms: 30000.0
+    priority_weight: 1.0
+  - tenant_id: synthetic_competitor
+    workload_class: competitor
+    arrival:
+      process: poisson
+      rate_rps: 3.333
+      cv: 1.0
+      burst_rate_rps: null
+      mean_on_s: null
+      mean_off_s: null
+    prompt_tokens:
+      dist: lognormal
+      value: null
+      median: 128.0
+      sigma: 0.3
+      low: null
+      high: null
+      min: 1
+      max: 128
+    max_output_tokens: 32
+    sim_output_tokens:
+      dist: lognormal
+      value: null
+      median: 24.0
+      sigma: 0.3
+      low: null
+      high: null
+      min: 1
+      max: 32
+    slo:
+      slo_type: interactive
+      ttft_deadline_ms: 2000.0
+      tpot_target_ms: null
+      e2e_deadline_ms: 30000.0
+    priority_weight: 1.0
+backend:
+  kind: vllm
+  base_url: http://192.168.86.173:8000
+  model: Qwen/Qwen2.5-7B-Instruct
+  model_revision: null
+  engine:
+    kv_blocks_total: 4096
+    block_size: 16
+    max_num_seqs: 64
+    max_num_batched_tokens: 2048
+    max_model_len: 8192
+    scheduling_policy: fcfs
+    c0_s: 0.004
+    c_prefill_s: 4.0e-05
+    c_decode_s: 0.0002
+    c_ctx_s: 2.0e-07
+    calibration_note: UNCALIBRATED placeholder coefficients (no GPU measurement)
+  time_scale: 1.0
+  sampling:
+    temperature: 0.0
+  ignore_eos: false
+gateway:
+  max_queue_wait_s: 60.0
+  ledger:
+    quotas:
+      victim_a: 1536
+      victim_b: 1536
+      synthetic_competitor: 1536
+    allow_borrow: false
+run:
+  drain_s: 30.0
+  warmup_s: 0.0
+  metrics_interval_s: 0.5
+  request_timeout_s: 120.0
+  max_requests_cap: 1001
+  max_concurrency_cap: 4
+  max_experiment_seconds: 3600.0
+schedulers:
+  fcfs: {}

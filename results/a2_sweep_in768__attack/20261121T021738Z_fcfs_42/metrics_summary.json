@@ -1,0 +1,124 @@
+{
+  "window_s": 60.0,
+  "warmup_s": 0.0,
+  "excluded_outside_window": 0,
+  "offered": 68,
+  "status_counts": {
+    "completed": 68,
+    "rejected": 0,
+    "timed_out": 0,
+    "backend_error": 0,
+    "cancelled": 0
+  },
+  "non_terminal": 0,
+  "accounting_conserved": true,
+  "slo_met": 65,
+  "slo_goodput_rps": 1.0833333333333333,
+  "offered_rps": 1.1333333333333333,
+  "offered_success_fraction": 0.9558823529411765,
+  "completed_rps": 1.1333333333333333,
+  "output_tokens_total": 3232,
+  "output_tokens_per_s": 53.86666666666667,
+  "input_tokens_completed": 26569,
+  "ttft_ms": {
+    "p50": 375.2404794940958,
+    "p90": 721.9607461884153,
+    "p95": 1213.8178524110115,
+    "p99": 2130.9353664601804,
+    "n": 68
+  },
+  "backend_ttft_ms": {
+    "p50": 350.3858750045765,
+    "p90": 545.340879581636,
+    "p95": 639.2734046108671,
+    "p99": 722.5799499079585,
+    "n": 68
+  },
+  "gateway_queue_ms": {
+    "p50": 0.0,
+    "p90": 447.613291800372,
+    "p95": 854.4430336449293,
+    "p99": 1583.5892406178755,
+    "n": 68
+  },
+  "tpot_ms": {
+    "p50": 25.00205621421744,
+    "p90": 34.317565870867575,
+    "p95": 38.876997106220394,
+    "p99": 40.92907938224065,
+    "n": 68
+  },
+  "e2e_ms": {
+    "p50": 1583.7620629899902,
+    "p90": 2306.328504497651,
+    "p95": 2707.993908347271,
+    "p99": 3014.3602680324684,
+    "n": 68
+  },
+  "per_tenant": {
+    "synthetic_competitor": {
+      "offered": 35,
+      "slo_met": 33,
+      "slo_attainment": 0.9428571428571428,
+      "goodput_rps": 0.55,
+      "weight": 1.0,
+      "status_counts": {
+        "completed": 35,
+        "rejected": 0,
+        "timed_out": 0,
+        "backend_error": 0,
+        "cancelled": 0
+      },
+      "service_tokens": 25425,
+      "ttft_p95_ms": 1521.447546299894,
+      "tpot_p95_ms": 39.541824596780046
+    },
+    "victim_a": {
+      "offered": 13,
+      "slo_met": 13,
+      "slo_attainment": 1.0,
+      "goodput_rps": 0.21666666666666667,
+      "weight": 1.0,
+      "status_counts": {
+        "completed": 13,
+        "rejected": 0,
+        "timed_out": 0,
+        "backend_error": 0,
+        "cancelled": 0
+      },
+      "service_tokens": 1688,
+      "ttft_p95_ms": 546.7932919971643,
+      "tpot_p95_ms": 33.73433199992019
+    },
+    "victim_b": {
+      "offered": 20,
+      "slo_met": 19,
+      "slo_attainment": 0.95,
+      "goodput_rps": 0.31666666666666665,
+      "weight": 1.0,
+      "status_counts": {
+        "completed": 20,
+        "rejected": 0,
+        "timed_out": 0,
+        "backend_error": 0,
+        "cancelled": 0
+      },
+      "service_tokens": 2688,
+      "ttft_p95_ms": 779.5254399083215,
+      "tpot_p95_ms": 35.688879838262295
+    }
+  },
+  "worst_tenant_slo_attainment": 0.9428571428571428,
+  "jain_slo_attainment": 0.9993054667080951,
+  "weighted_tenant_goodput_rps": 0.3611111111111111,
+  "event_validation_errors": [],
+  "event_validation_ok": true,
+  "lifecycle_violations": [],
+  "wall_seconds": 60.41818714141846,
+  "scheduler": {
+    "name": "fcfs",
+    "deployable": true,
+    "params": {}
+  },
+  "synthetic_backend": false
+}

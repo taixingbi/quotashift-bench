@@ -1,0 +1,30 @@
+START 2026-11-21 16:11:45 EST
+{
+  "scenario_id": "a8_lifecycle_churn",
+  "control": "lifecycle_normal",
+  "seeds": [
+    42,
+    43,
+    44,
+    45,
+    46
+  ],
+  "metric": "ttft_p95",
+  "mean_ratio": 0.9753404065694387,
+  "classification": "negative",
+  "effect_direction": "increase",
+  "ratio_ci95": [
+    0.8726719920346155,
+    1.0649756715366732
+  ],
+  "attack_success_rate": 0.0,
+  "synthetic_backend": false,
+  "csv": "reports/v3/a8_lifecycle_churn/summary.csv",
+  "md": "reports/v3/a8_lifecycle_churn/summary.md",
+  "manifest": "reports/v3/a8_lifecycle_churn/manifest.json",
+  "figures": [
+    "reports/v3/a8_lifecycle_churn/figure_victim_latency.png",
+    "reports/v3/a8_lifecycle_churn/figure_degradation_ratio.png"
+  ]
+}
+END 2026-11-21 16:32:07 EST rc=0

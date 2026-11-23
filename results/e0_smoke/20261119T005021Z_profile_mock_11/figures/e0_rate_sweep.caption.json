@@ -1,0 +1,9 @@
+{
+  "backend_kind": "mock",
+  "synthetic": true,
+  "model": null,
+  "hardware": "no NVIDIA GPU detected (arm64)",
+  "run_id": "20261119T005021Z_profile_mock_11",
+  "seed": 11,
+  "caption": "E0 open-loop offered-load sweep; mean with min-max band across trials."
+}

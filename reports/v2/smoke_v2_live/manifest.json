@@ -1,0 +1,156 @@
+{
+  "scenario_id": "smoke_v2_live",
+  "control_label": "matched_total_short",
+  "seeds": [
+    42,
+    43
+  ],
+  "synthetic_backend": false,
+  "metric": "ttft_p95",
+  "preregistered_threshold": 1.5,
+  "budget_tolerance": 0.05,
+  "per_seed_budget": {
+    "42": {
+      "tolerance": 0.05,
+      "required_matched_dims": [
+        "total_tokens"
+      ],
+      "violations": [],
+      "matched": true,
+      "dimensions": {
+        "requests": {
+          "attack": 32,
+          "control": 58,
+          "abs_delta": 26,
+          "rel_delta": 0.448276
+        },
+        "total_tokens": {
+          "attack": 7571,
+          "control": 7549,
+          "abs_delta": 22,
+          "rel_delta": 0.002906
+        },
+        "input_tokens": {
+          "attack": 5811,
+          "control": 3837,
+          "abs_delta": 1974,
+          "rel_delta": 0.339701
+        },
+        "requested_output_tokens": {
+          "attack": 1760,
+          "control": 3712,
+          "abs_delta": 1952,
+          "rel_delta": 0.525862
+        },
+        "realized_output_tokens": {
+          "attack": 1299,
+          "control": 2758,
+          "abs_delta": 1459,
+          "rel_delta": 0.529007
+        }
+      }
+    },
+    "43": {
+      "tolerance": 0.05,
+      "required_matched_dims": [
+        "total_tokens"
+      ],
+      "violations": [],
+      "matched": true,
+      "dimensions": {
+        "requests": {
+          "attack": 33,
+          "control": 58,
+          "abs_delta": 25,
+          "rel_delta": 0.431034
+        },
+        "total_tokens": {
+          "attack": 7640,
+          "control": 7660,
+          "abs_delta": 20,
+          "rel_delta": 0.002611
+        },
+        "input_tokens": {
+          "attack": 5784,
+          "control": 3948,
+          "abs_delta": 1836,
+          "rel_delta": 0.317427
+        },
+        "requested_output_tokens": {
+          "attack": 1856,
+          "control": 3712,
+          "abs_delta": 1856,
+          "rel_delta": 0.5
+        },
+        "realized_output_tokens": {
+          "attack": 1438,
+          "control": 2829,
+          "abs_delta": 1391,
+          "rel_delta": 0.491693
+        }
+      }
+    }
+  },
+  "run_dirs": {
+    "attack": {
+      "42": "/Users/h/Documents/paper/paper13-quotashift-bench/quotashift-bench/results/smoke_v2_live__attack/20261121T044929Z_fcfs_42",
+      "43": "/Users/h/Documents/paper/paper13-quotashift-bench/quotashift-bench/results/smoke_v2_live__attack/20261121T045034Z_fcfs_43"
+    },
+    "control": {
+      "42": "/Users/h/Documents/paper/paper13-quotashift-bench/quotashift-bench/results/smoke_v2_live__control/20261121T044950Z_fcfs_42",
+      "43": "/Users/h/Documents/paper/paper13-quotashift-bench/quotashift-bench/results/smoke_v2_live__control/20261121T045012Z_fcfs_43"
+    }
+  },
+  "analysis": {
+    "metric": "ttft_p95",
+    "preregistered_threshold": 1.5,
+    "n_seeds": 2,
+    "mean_ratio": 1.5151898477436392,
+    "median_ratio": 1.5151898477436392,
+    "ratio_ci95": [
+      0.7219627315752508,
+      2.3084169639120278
+    ],
+    "attack_success_rate": 0.5,
+    "mean_competitor_tokens": 4353.0,
+    "mean_competitor_requests": 8.5,
+    "slowdown_per_1k_competitor_tokens": 0.11835282511914523,
+    "slowdown_per_100_competitor_requests": 6.061057032278107
+  },
+  "protocol_version": 2,
+  "path": "gateway",
+  "arm_order": {
+    "42": [
+      "attack",
+      "control"
+    ],
+    "43": [
+      "control",
+      "attack"
+    ]
+  },
+  "per_arm_prefix_cache_hit_ratio": {
+    "attack": {
+      "42": 0.0,
+      "43": 0.0
+    },
+    "control": {
+      "42": 0.0,
+      "43": 0.0
+    }
+  },
+  "unrelated_traffic_suspected": {
+    "attack": {
+      "42": false,
+      "43": false
+    },
+    "control": {
+      "42": false,
+      "43": false
+    }
+  },
+  "commands": [
+    "uv run quotashift budget experiments/v2/smoke_v2_live.yaml",
+    "uv run quotashift experiment experiments/v2/smoke_v2_live.yaml --reps 2 --live --path gateway"
+  ]
+}

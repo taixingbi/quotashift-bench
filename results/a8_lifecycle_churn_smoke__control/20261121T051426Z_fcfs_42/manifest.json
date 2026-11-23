@@ -1,0 +1,141 @@
+{
+  "schema_version": "1.0.0",
+  "experiment_id": "a8_lifecycle_churn_smoke__control",
+  "run_id": "20261121T051426Z_fcfs_42",
+  "created_wall_utc": "2026-11-21T05:14:49Z",
+  "seed": 42,
+  "scheduler": {
+    "name": "fcfs",
+    "deployable": true,
+    "params": {}
+  },
+  "backend_kind": "vllm",
+  "synthetic_backend": false,
+  "integrity_note": "real backend",
+  "clock": "monotonic",
+  "backend_info": {
+    "base_url": "http://192.168.86.173:8000",
+    "model": "Qwen/Qwen2.5-7B-Instruct",
+    "/version": {
+      "version": "0.17.1"
+    },
+    "/v1/models": {
+      "object": "list",
+      "data": [
+        {
+          "id": "Qwen/Qwen2.5-7B-Instruct",
+          "object": "model",
+          "created": 1795238066,
+          "owned_by": "vllm",
+          "root": "Qwen/Qwen2.5-7B-Instruct",
+          "parent": null,
+          "max_model_len": 4096,
+          "permission": [
+            {
+              "id": "modelperm-84f92c88315bb242",
+              "object": "model_permission",
+              "created": 1795238066,
+              "allow_create_engine": false,
+              "allow_sampling": true,
+              "allow_logprobs": true,
+              "allow_search_indices": false,
+              "allow_view": true,
+              "allow_fine_tuning": false,
+              "organization": "*",
+              "group": null,
+              "is_blocking": false
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "trace_sha256": "d8ab4b422b446788f95858538f16daf40feb70ab63f24107c1ba2dc1c96057b7",
+  "config_sha256": "a1493f1454d71c581ab92c7d165d3836ae54d54159cdcb5b94a3da88d3fcff39",
+  "git": {
+    "sha": "2a6a6b109ab29f8c60a69ac8fef0ce77c244d343",
+    "dirty": true,
+    "note": null
+  },
+  "python": "3.12.13 (main, Mar 25 2026, 03:16:06) [Clang 22.1.1 ]",
+  "platform": "macOS-26.7.3-arm64-arm-64bit",
+  "machine": "arm64",
+  "packages": {
+    "quotashift": "0.1.0",
+    "numpy": "2.4.6",
+    "pandas": "2.3.3",
+    "pyarrow": "26.0.1",
+    "pydantic": "2.14.3",
+    "httpx": "0.28.1",
+    "starlette": "1.10.0",
+    "uvicorn": "0.54.0",
+    "matplotlib": "3.11.2"
+  },
+  "gpu": {
+    "available": false,
+    "source": "nvidia-smi",
+    "reason": "no GPU telemetry source on this host",
+    "gpu_type": "NVIDIA GeForce RTX 3090 (owner_stated)"
+  },
+  "run_context": {
+    "path": "gateway",
+    "admission_policy": {
+      "name": "fcfs",
+      "deployable": true,
+      "params": {}
+    },
+    "rate_limits": null,
+    "queue_caps": {
+      "per_tenant": null,
+      "total": null,
+      "max_queue_wait_s": 60.0
+    },
+    "backend_identity": {
+      "kind": "vllm",
+      "base_url": "http://192.168.86.173:8000",
+      "model": "Qwen/Qwen2.5-7B-Instruct",
+      "model_revision": null,
+      "vllm_version": {
+        "version": "0.17.1"
+      }
+    },
+    "gpu_type": "NVIDIA GeForce RTX 3090 (owner_stated)",
+    "prefix_caching_enabled": true,
+    "cache_config_info": {
+      "block_size": "16",
+      "cache_dtype": "auto",
+      "calculate_kv_scales": "False",
+      "cpu_kvcache_space_bytes": "None",
+      "cpu_offload_gb": "0",
+      "cpu_offload_params": "set()",
+      "enable_prefix_caching": "True",
+      "engine": "0",
+      "gpu_memory_utilization": "0.85",
+      "is_attention_free": "False",
+      "kv_cache_memory_bytes": "None",
+      "kv_offloading_backend": "native",
+      "kv_offloading_size": "None",
+      "kv_sharing_fast_prefill": "False",
+      "mamba_block_size": "None",
+      "mamba_cache_dtype": "auto",
+      "mamba_cache_mode": "none",
+      "mamba_page_size_padded": "None",
+      "mamba_ssm_cache_dtype": "auto",
+      "num_cpu_blocks": "None",
+      "num_gpu_blocks": "6041",
+      "num_gpu_blocks_override": "None",
+      "prefix_caching_hash_algo": "sha256",
+      "sliding_window": "None",
+      "swap_space": "4.0"
+    },
+    "unrelated_traffic_suspected": false,
+    "actual_counts": {
+      "requests_offered": 37,
+      "requests_completed": 37,
+      "prompt_tokens_reported": 4900,
+      "output_tokens": 4480,
+      "requested_input_tokens": 2285,
+      "requested_max_output_tokens": 4480
+    }
+  }
+}

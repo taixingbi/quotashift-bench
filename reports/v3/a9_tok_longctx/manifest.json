@@ -1,0 +1,312 @@
+{
+  "scenario_id": "a9_tok_longctx",
+  "control_label": "matched_total_short",
+  "seeds": [
+    42,
+    43,
+    44,
+    45,
+    46
+  ],
+  "synthetic_backend": false,
+  "metric": "gpu_energy_per_1k_authorized_tokens",
+  "preregistered_threshold": 1.25,
+  "budget_tolerance": 0.05,
+  "per_seed_budget": {
+    "42": {
+      "tolerance": 0.05,
+      "required_matched_dims": [
+        "total_tokens"
+      ],
+      "violations": [],
+      "matched": true,
+      "dimensions": {
+        "requests": {
+          "attack": 114,
+          "control": 505,
+          "abs_delta": 391,
+          "rel_delta": 0.774257
+        },
+        "total_tokens": {
+          "attack": 64689,
+          "control": 64745,
+          "abs_delta": 56,
+          "rel_delta": 0.000865
+        },
+        "input_tokens": {
+          "attack": 54513,
+          "control": 32425,
+          "abs_delta": 22088,
+          "rel_delta": 0.405188
+        },
+        "requested_output_tokens": {
+          "attack": 10176,
+          "control": 32320,
+          "abs_delta": 22144,
+          "rel_delta": 0.685149
+        },
+        "realized_output_tokens": {
+          "attack": 8271,
+          "control": 24219,
+          "abs_delta": 15948,
+          "rel_delta": 0.658491
+        }
+      }
+    },
+    "43": {
+      "tolerance": 0.05,
+      "required_matched_dims": [
+        "total_tokens"
+      ],
+      "violations": [],
+      "matched": true,
+      "dimensions": {
+        "requests": {
+          "attack": 129,
+          "control": 604,
+          "abs_delta": 475,
+          "rel_delta": 0.786424
+        },
+        "total_tokens": {
+          "attack": 77811,
+          "control": 77831,
+          "abs_delta": 20,
+          "rel_delta": 0.000257
+        },
+        "input_tokens": {
+          "attack": 65907,
+          "control": 39175,
+          "abs_delta": 26732,
+          "rel_delta": 0.405602
+        },
+        "requested_output_tokens": {
+          "attack": 11904,
+          "control": 38656,
+          "abs_delta": 26752,
+          "rel_delta": 0.692053
+        },
+        "realized_output_tokens": {
+          "attack": 9874,
+          "control": 29032,
+          "abs_delta": 19158,
+          "rel_delta": 0.659893
+        }
+      }
+    },
+    "44": {
+      "tolerance": 0.05,
+      "required_matched_dims": [
+        "total_tokens"
+      ],
+      "violations": [],
+      "matched": true,
+      "dimensions": {
+        "requests": {
+          "attack": 133,
+          "control": 720,
+          "abs_delta": 587,
+          "rel_delta": 0.815278
+        },
+        "total_tokens": {
+          "attack": 93032,
+          "control": 93050,
+          "abs_delta": 18,
+          "rel_delta": 0.000193
+        },
+        "input_tokens": {
+          "attack": 80296,
+          "control": 46970,
+          "abs_delta": 33326,
+          "rel_delta": 0.415039
+        },
+        "requested_output_tokens": {
+          "attack": 12736,
+          "control": 46080,
+          "abs_delta": 33344,
+          "rel_delta": 0.723611
+        },
+        "realized_output_tokens": {
+          "attack": 10582,
+          "control": 34751,
+          "abs_delta": 24169,
+          "rel_delta": 0.695491
+        }
+      }
+    },
+    "45": {
+      "tolerance": 0.05,
+      "required_matched_dims": [
+        "total_tokens"
+      ],
+      "violations": [],
+      "matched": true,
+      "dimensions": {
+        "requests": {
+          "attack": 136,
+          "control": 922,
+          "abs_delta": 786,
+          "rel_delta": 0.852495
+        },
+        "total_tokens": {
+          "attack": 118240,
+          "control": 118221,
+          "abs_delta": 19,
+          "rel_delta": 0.000161
+        },
+        "input_tokens": {
+          "attack": 103776,
+          "control": 59213,
+          "abs_delta": 44563,
+          "rel_delta": 0.429415
+        },
+        "requested_output_tokens": {
+          "attack": 14464,
+          "control": 59008,
+          "abs_delta": 44544,
+          "rel_delta": 0.754881
+        },
+        "realized_output_tokens": {
+          "attack": 11835,
+          "control": 44079,
+          "abs_delta": 32244,
+          "rel_delta": 0.731505
+        }
+      }
+    },
+    "46": {
+      "tolerance": 0.05,
+      "required_matched_dims": [
+        "total_tokens"
+      ],
+      "violations": [],
+      "matched": true,
+      "dimensions": {
+        "requests": {
+          "attack": 145,
+          "control": 933,
+          "abs_delta": 788,
+          "rel_delta": 0.844587
+        },
+        "total_tokens": {
+          "attack": 119770,
+          "control": 119708,
+          "abs_delta": 62,
+          "rel_delta": 0.000518
+        },
+        "input_tokens": {
+          "attack": 104730,
+          "control": 59996,
+          "abs_delta": 44734,
+          "rel_delta": 0.427136
+        },
+        "requested_output_tokens": {
+          "attack": 15040,
+          "control": 59712,
+          "abs_delta": 44672,
+          "rel_delta": 0.748124
+        },
+        "realized_output_tokens": {
+          "attack": 12333,
+          "control": 44784,
+          "abs_delta": 32451,
+          "rel_delta": 0.724611
+        }
+      }
+    }
+  },
+  "run_dirs": {
+    "attack": {
+      "42": "/Users/h/Documents/paper/paper13-quotashift-bench/quotashift-bench/results/a9_tok_longctx__attack/20261121T224433Z_fcfs_42",
+      "43": "/Users/h/Documents/paper/paper13-quotashift-bench/quotashift-bench/results/a9_tok_longctx__attack/20261121T225209Z_fcfs_43",
+      "44": "/Users/h/Documents/paper/paper13-quotashift-bench/quotashift-bench/results/a9_tok_longctx__attack/20261121T225442Z_fcfs_44",
+      "45": "/Users/h/Documents/paper/paper13-quotashift-bench/quotashift-bench/results/a9_tok_longctx__attack/20261121T230231Z_fcfs_45",
+      "46": "/Users/h/Documents/paper/paper13-quotashift-bench/quotashift-bench/results/a9_tok_longctx__attack/20261121T230458Z_fcfs_46"
+    },
+    "control": {
+      "42": "/Users/h/Documents/paper/paper13-quotashift-bench/quotashift-bench/results/a9_tok_longctx__control/20261121T224715Z_fcfs_42",
+      "43": "/Users/h/Documents/paper/paper13-quotashift-bench/quotashift-bench/results/a9_tok_longctx__control/20261121T224941Z_fcfs_43",
+      "44": "/Users/h/Documents/paper/paper13-quotashift-bench/quotashift-bench/results/a9_tok_longctx__control/20261121T225711Z_fcfs_44",
+      "45": "/Users/h/Documents/paper/paper13-quotashift-bench/quotashift-bench/results/a9_tok_longctx__control/20261121T225952Z_fcfs_45",
+      "46": "/Users/h/Documents/paper/paper13-quotashift-bench/quotashift-bench/results/a9_tok_longctx__control/20261121T230725Z_fcfs_46"
+    }
+  },
+  "analysis": {
+    "metric": "gpu_energy_per_1k_authorized_tokens",
+    "preregistered_threshold": 1.25,
+    "effect_direction": "two_sided",
+    "classification": "inconclusive",
+    "n_seeds_with_metric": 5,
+    "n_seeds": 5,
+    "mean_ratio": 0.7836033606230088,
+    "median_ratio": 0.7712598827604857,
+    "ratio_ci95": [
+      0.7585626694439164,
+      0.8086440518021012
+    ],
+    "attack_success_rate": 0.6,
+    "mean_competitor_tokens": 1393.8,
+    "mean_competitor_requests": 0.8,
+    "slowdown_per_1k_competitor_tokens": -0.1552565930384497,
+    "slowdown_per_100_competitor_requests": -27.049579922123893
+  },
+  "protocol_version": 3,
+  "path": "gateway",
+  "arm_order": {
+    "42": [
+      "attack",
+      "control"
+    ],
+    "43": [
+      "control",
+      "attack"
+    ],
+    "44": [
+      "attack",
+      "control"
+    ],
+    "45": [
+      "control",
+      "attack"
+    ],
+    "46": [
+      "attack",
+      "control"
+    ]
+  },
+  "per_arm_prefix_cache_hit_ratio": {
+    "attack": {
+      "42": 0.0,
+      "43": 0.0,
+      "44": 0.0,
+      "45": 0.0,
+      "46": 0.0
+    },
+    "control": {
+      "42": 0.0,
+      "43": 0.0,
+      "44": 0.0,
+      "45": 0.0,
+      "46": 0.0
+    }
+  },
+  "unrelated_traffic_suspected": {
+    "attack": {
+      "42": false,
+      "43": false,
+      "44": false,
+      "45": false,
+      "46": false
+    },
+    "control": {
+      "42": false,
+      "43": false,
+      "44": false,
+      "45": false,
+      "46": false
+    }
+  },
+  "commands": [
+    "uv run quotashift budget experiments/v3/a9_tok_longctx.yaml",
+    "uv run quotashift experiment experiments/v3/a9_tok_longctx.yaml --reps 5 --live --path gateway"
+  ]
+}

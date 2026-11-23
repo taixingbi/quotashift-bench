@@ -1,0 +1,59 @@
+START r2r3 2026-11-22 15:00:16 EST commit 6c5615b0e019b7dc97332981a6f0c75c0b145cbe dirty=0
+BLOCK v4_r2f_s96 START 15:00:16 path=gateway reps=3
+reset True 96.0 -> 0.0
+BLOCK v4_r2f_s96 END 15:16:50 rc=0
+BLOCK v4_r2f_s128 START 15:16:50 path=gateway reps=3
+reset True 96.0 -> 0.0
+BLOCK v4_r2f_s128 END 15:32:03 rc=0
+BLOCK v4_r2f_s192 START 15:32:03 path=gateway reps=3
+reset True 96.0 -> 0.0
+BLOCK v4_r2f_s192 END 15:47:08 rc=0
+BLOCK v4_r2f_s256 START 15:47:08 path=gateway reps=3
+reset True 96.0 -> 0.0
+BLOCK v4_r2f_s256 END 16:02:12 rc=0
+BLOCK v4_r2f_s512 START 16:02:12 path=gateway reps=3
+reset True 96.0 -> 0.0
+BLOCK v4_r2f_s512 END 16:17:13 rc=0
+BLOCK v4_r2f_s1024 START 16:17:13 path=gateway reps=3
+reset True 96.0 -> 0.0
+BLOCK v4_r2f_s1024 END 16:32:17 rc=0
+BLOCK v4_r2f_s2048 START 16:32:17 path=gateway reps=3
+reset True 96.0 -> 0.0
+BLOCK v4_r2f_s2048 END 16:47:23 rc=0
+BLOCK v4_r2f_s3584 START 16:47:23 path=gateway reps=3
+reset True 96.0 -> 0.0
+BLOCK v4_r2f_s3584 END 17:02:28 rc=0
+BLOCK v4_r2b_s64 START 17:02:28 path=gateway reps=3
+reset True 96.0 -> 0.0
+BLOCK v4_r2b_s64 END 17:17:32 rc=0
+BLOCK v4_r2b_s128 START 17:17:32 path=gateway reps=3
+reset True 96.0 -> 0.0
+BLOCK v4_r2b_s128 END 17:32:38 rc=0
+BLOCK v4_r2b_s256 START 17:32:38 path=gateway reps=3
+reset True 96.0 -> 0.0
+BLOCK v4_r2b_s256 END 17:47:47 rc=0
+BLOCK v4_r2b_s512 START 17:47:47 path=gateway reps=3
+reset True 96.0 -> 0.0
+BLOCK v4_r2b_s512 END 18:03:02 rc=0
+BLOCK v4_r2b_s1024 START 18:03:02 path=gateway reps=3
+reset True 96.0 -> 0.0
+BLOCK v4_r2b_s1024 END 18:18:34 rc=0
+BLOCK v4_r2b_s2048 START 18:18:34 path=gateway reps=3
+reset True 96.0 -> 0.0
+BLOCK v4_r2b_s2048 END 18:34:33 rc=0
+BLOCK v4_r1_prefill_vs_short_L200_direct START 18:34:33 path=direct reps=5
+reset True 96.0 -> 0.0
+BLOCK v4_r1_prefill_vs_short_L200_direct END 18:59:32 rc=0
+BLOCK v4_r1_decode_vs_short_L200_direct START 18:59:32 path=direct reps=5
+reset True 96.0 -> 0.0
+BLOCK v4_r1_decode_vs_short_L200_direct END 19:24:50 rc=0
+BLOCK v4_r2f_s96_direct START 19:24:50 path=direct reps=3
+reset True 96.0 -> 0.0
+BLOCK v4_r2f_s96_direct END 19:40:13 rc=0
+BLOCK v4_r2f_s256_direct START 19:40:13 path=direct reps=3
+reset True 96.0 -> 0.0
+BLOCK v4_r2f_s256_direct END 19:55:20 rc=0
+BLOCK v4_r2f_s1024_direct START 19:55:20 path=direct reps=3
+reset True 96.0 -> 0.0
+BLOCK v4_r2f_s1024_direct END 20:10:30 rc=0
+END r2r3 2026-11-22 20:10:30 EST

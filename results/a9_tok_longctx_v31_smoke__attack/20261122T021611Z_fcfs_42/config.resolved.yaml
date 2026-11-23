@@ -1,0 +1,195 @@
+experiment_id: a9_tok_longctx_v31_smoke__attack
+description: QuotaShift scenario a9_tok_longctx_v31_smoke (target selfhost)
+workload:
+  workload_id: a9_tok_longctx_v31_smoke
+  schema_version: 1.0.0
+  duration_s: 40.0
+  max_requests: 1500
+  max_model_len: 4096
+  prompt_mode: synthetic_text
+  prompt_vocab: pseudo_syllable
+  tenants:
+  - tenant_id: v00
+    workload_class: victim
+    arrival:
+      process: poisson
+      rate_rps: 0.3
+      cv: 1.0
+      burst_rate_rps: null
+      mean_on_s: null
+      mean_off_s: null
+    prompt_tokens:
+      dist: lognormal
+      value: null
+      median: 64.0
+      sigma: 0.3
+      low: null
+      high: null
+      min: 32
+      max: 3584
+    max_output_tokens: 64
+    sim_output_tokens:
+      dist: lognormal
+      value: null
+      median: 48.0
+      sigma: 0.3
+      low: null
+      high: null
+      min: 1
+      max: 64
+    slo:
+      slo_type: interactive
+      ttft_deadline_ms: 2000.0
+      tpot_target_ms: null
+      e2e_deadline_ms: 30000.0
+    priority_weight: 1.0
+  - tenant_id: v01
+    workload_class: victim
+    arrival:
+      process: poisson
+      rate_rps: 0.3
+      cv: 1.0
+      burst_rate_rps: null
+      mean_on_s: null
+      mean_off_s: null
+    prompt_tokens:
+      dist: lognormal
+      value: null
+      median: 64.0
+      sigma: 0.3
+      low: null
+      high: null
+      min: 32
+      max: 3584
+    max_output_tokens: 64
+    sim_output_tokens:
+      dist: lognormal
+      value: null
+      median: 48.0
+      sigma: 0.3
+      low: null
+      high: null
+      min: 1
+      max: 64
+    slo:
+      slo_type: interactive
+      ttft_deadline_ms: 2000.0
+      tpot_target_ms: null
+      e2e_deadline_ms: 30000.0
+    priority_weight: 1.0
+  - tenant_id: v02
+    workload_class: victim
+    arrival:
+      process: poisson
+      rate_rps: 0.3
+      cv: 1.0
+      burst_rate_rps: null
+      mean_on_s: null
+      mean_off_s: null
+    prompt_tokens:
+      dist: lognormal
+      value: null
+      median: 64.0
+      sigma: 0.3
+      low: null
+      high: null
+      min: 32
+      max: 3584
+    max_output_tokens: 64
+    sim_output_tokens:
+      dist: lognormal
+      value: null
+      median: 48.0
+      sigma: 0.3
+      low: null
+      high: null
+      min: 1
+      max: 64
+    slo:
+      slo_type: interactive
+      ttft_deadline_ms: 2000.0
+      tpot_target_ms: null
+      e2e_deadline_ms: 30000.0
+    priority_weight: 1.0
+  - tenant_id: comp
+    workload_class: competitor
+    arrival:
+      process: poisson
+      rate_rps: 0.2
+      cv: 1.0
+      burst_rate_rps: null
+      mean_on_s: null
+      mean_off_s: null
+    prompt_tokens:
+      dist: lognormal
+      value: null
+      median: 3584.0
+      sigma: 0.3
+      low: null
+      high: null
+      min: 32
+      max: 3584
+    max_output_tokens: 256
+    sim_output_tokens:
+      dist: lognormal
+      value: null
+      median: 256.0
+      sigma: 0.3
+      low: null
+      high: null
+      min: 1
+      max: 256
+    slo:
+      slo_type: interactive
+      ttft_deadline_ms: 2000.0
+      tpot_target_ms: null
+      e2e_deadline_ms: 30000.0
+    priority_weight: 1.0
+backend:
+  kind: vllm
+  base_url: http://192.168.86.173:8000
+  model: Qwen/Qwen2.5-7B-Instruct
+  model_revision: null
+  engine:
+    kv_blocks_total: 4096
+    block_size: 16
+    max_num_seqs: 64
+    max_num_batched_tokens: 2048
+    max_model_len: 8192
+    scheduling_policy: fcfs
+    c0_s: 0.004
+    c_prefill_s: 4.0e-05
+    c_decode_s: 0.0002
+    c_ctx_s: 2.0e-07
+    calibration_note: UNCALIBRATED placeholder coefficients (no GPU measurement)
+  time_scale: 1.0
+  sampling:
+    temperature: 0.0
+  ignore_eos: false
+  gpu_source: exporter
+  gpu_exporter_url: http://192.168.86.173:9835/metrics
+  gpu_smi_prefix: []
+  gpu_type: NVIDIA GeForce RTX 3090 (measured)
+gateway:
+  max_queue_wait_s: 60.0
+  ledger:
+    quotas:
+      v00: 30720
+      v01: 30720
+      v02: 30720
+      comp: 30720
+    allow_borrow: false
+  rate_limits: null
+  max_queue_per_tenant: null
+  max_queue_total: null
+run:
+  drain_s: 30.0
+  warmup_s: 0.0
+  metrics_interval_s: 0.5
+  request_timeout_s: 120.0
+  max_requests_cap: 1501
+  max_concurrency_cap: 8
+  max_experiment_seconds: 3600.0
+schedulers:
+  fcfs: {}
+path: gateway

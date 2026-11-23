@@ -1,0 +1,1452 @@
+{
+  "scenario_id": "a1_burst_arrivals",
+  "control_label": "uniform_arrivals",
+  "seeds": [
+    42,
+    43,
+    44,
+    45,
+    46,
+    47,
+    48,
+    49,
+    50,
+    51,
+    52,
+    53,
+    54,
+    55,
+    56,
+    57,
+    58,
+    59,
+    60,
+    61
+  ],
+  "synthetic_backend": false,
+  "metric": "ttft_p95",
+  "metric_label": "Victim backend TTFT P95 (historical `ttft_p95`)",
+  "metric_unit": "ms",
+  "preregistered_threshold": 1.5,
+  "budget_tolerance": null,
+  "per_seed_budget": {
+    "42": {
+      "tolerance": 0.05,
+      "required_matched_dims": [
+        "requests",
+        "total_tokens"
+      ],
+      "violations": [],
+      "matched": true,
+      "dimensions": {
+        "requests": {
+          "attack": 124,
+          "control": 124,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "total_tokens": {
+          "attack": 16472,
+          "control": 16472,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "input_tokens": {
+          "attack": 8536,
+          "control": 8536,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "requested_output_tokens": {
+          "attack": 7936,
+          "control": 7936,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "realized_output_tokens": {
+          "attack": 5915,
+          "control": 5915,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        }
+      }
+    },
+    "43": {
+      "tolerance": 0.05,
+      "required_matched_dims": [
+        "requests",
+        "total_tokens"
+      ],
+      "violations": [],
+      "matched": true,
+      "dimensions": {
+        "requests": {
+          "attack": 145,
+          "control": 145,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "total_tokens": {
+          "attack": 18962,
+          "control": 18962,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "input_tokens": {
+          "attack": 9682,
+          "control": 9682,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "requested_output_tokens": {
+          "attack": 9280,
+          "control": 9280,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "realized_output_tokens": {
+          "attack": 7210,
+          "control": 7210,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        }
+      }
+    },
+    "44": {
+      "tolerance": 0.05,
+      "required_matched_dims": [
+        "requests",
+        "total_tokens"
+      ],
+      "violations": [],
+      "matched": true,
+      "dimensions": {
+        "requests": {
+          "attack": 131,
+          "control": 131,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "total_tokens": {
+          "attack": 16912,
+          "control": 16912,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "input_tokens": {
+          "attack": 8528,
+          "control": 8528,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "requested_output_tokens": {
+          "attack": 8384,
+          "control": 8384,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "realized_output_tokens": {
+          "attack": 6372,
+          "control": 6372,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        }
+      }
+    },
+    "45": {
+      "tolerance": 0.05,
+      "required_matched_dims": [
+        "requests",
+        "total_tokens"
+      ],
+      "violations": [],
+      "matched": true,
+      "dimensions": {
+        "requests": {
+          "attack": 119,
+          "control": 119,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "total_tokens": {
+          "attack": 15523,
+          "control": 15523,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "input_tokens": {
+          "attack": 7907,
+          "control": 7907,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "requested_output_tokens": {
+          "attack": 7616,
+          "control": 7616,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "realized_output_tokens": {
+          "attack": 5634,
+          "control": 5634,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        }
+      }
+    },
+    "46": {
+      "tolerance": 0.05,
+      "required_matched_dims": [
+        "requests",
+        "total_tokens"
+      ],
+      "violations": [],
+      "matched": true,
+      "dimensions": {
+        "requests": {
+          "attack": 163,
+          "control": 163,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "total_tokens": {
+          "attack": 21290,
+          "control": 21290,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "input_tokens": {
+          "attack": 10858,
+          "control": 10858,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "requested_output_tokens": {
+          "attack": 10432,
+          "control": 10432,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "realized_output_tokens": {
+          "attack": 7938,
+          "control": 7938,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        }
+      }
+    },
+    "47": {
+      "tolerance": 0.05,
+      "required_matched_dims": [
+        "requests",
+        "total_tokens"
+      ],
+      "violations": [],
+      "matched": true,
+      "dimensions": {
+        "requests": {
+          "attack": 170,
+          "control": 170,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "total_tokens": {
+          "attack": 22484,
+          "control": 22484,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "input_tokens": {
+          "attack": 11604,
+          "control": 11604,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "requested_output_tokens": {
+          "attack": 10880,
+          "control": 10880,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "realized_output_tokens": {
+          "attack": 8311,
+          "control": 8311,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        }
+      }
+    },
+    "48": {
+      "tolerance": 0.05,
+      "required_matched_dims": [
+        "requests",
+        "total_tokens"
+      ],
+      "violations": [],
+      "matched": true,
+      "dimensions": {
+        "requests": {
+          "attack": 147,
+          "control": 147,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "total_tokens": {
+          "attack": 18941,
+          "control": 18941,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "input_tokens": {
+          "attack": 9533,
+          "control": 9533,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "requested_output_tokens": {
+          "attack": 9408,
+          "control": 9408,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "realized_output_tokens": {
+          "attack": 7136,
+          "control": 7136,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        }
+      }
+    },
+    "49": {
+      "tolerance": 0.05,
+      "required_matched_dims": [
+        "requests",
+        "total_tokens"
+      ],
+      "violations": [],
+      "matched": true,
+      "dimensions": {
+        "requests": {
+          "attack": 144,
+          "control": 144,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "total_tokens": {
+          "attack": 18624,
+          "control": 18624,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "input_tokens": {
+          "attack": 9408,
+          "control": 9408,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "requested_output_tokens": {
+          "attack": 9216,
+          "control": 9216,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "realized_output_tokens": {
+          "attack": 6940,
+          "control": 6940,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        }
+      }
+    },
+    "50": {
+      "tolerance": 0.05,
+      "required_matched_dims": [
+        "requests",
+        "total_tokens"
+      ],
+      "violations": [],
+      "matched": true,
+      "dimensions": {
+        "requests": {
+          "attack": 134,
+          "control": 134,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "total_tokens": {
+          "attack": 17732,
+          "control": 17732,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "input_tokens": {
+          "attack": 9156,
+          "control": 9156,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "requested_output_tokens": {
+          "attack": 8576,
+          "control": 8576,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "realized_output_tokens": {
+          "attack": 6283,
+          "control": 6283,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        }
+      }
+    },
+    "51": {
+      "tolerance": 0.05,
+      "required_matched_dims": [
+        "requests",
+        "total_tokens"
+      ],
+      "violations": [],
+      "matched": true,
+      "dimensions": {
+        "requests": {
+          "attack": 182,
+          "control": 182,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "total_tokens": {
+          "attack": 23578,
+          "control": 23578,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "input_tokens": {
+          "attack": 11930,
+          "control": 11930,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "requested_output_tokens": {
+          "attack": 11648,
+          "control": 11648,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "realized_output_tokens": {
+          "attack": 8769,
+          "control": 8769,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        }
+      }
+    },
+    "52": {
+      "tolerance": 0.05,
+      "required_matched_dims": [
+        "requests",
+        "total_tokens"
+      ],
+      "violations": [],
+      "matched": true,
+      "dimensions": {
+        "requests": {
+          "attack": 207,
+          "control": 207,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "total_tokens": {
+          "attack": 26739,
+          "control": 26739,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "input_tokens": {
+          "attack": 13491,
+          "control": 13491,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "requested_output_tokens": {
+          "attack": 13248,
+          "control": 13248,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "realized_output_tokens": {
+          "attack": 10005,
+          "control": 10005,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        }
+      }
+    },
+    "53": {
+      "tolerance": 0.05,
+      "required_matched_dims": [
+        "requests",
+        "total_tokens"
+      ],
+      "violations": [],
+      "matched": true,
+      "dimensions": {
+        "requests": {
+          "attack": 159,
+          "control": 159,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "total_tokens": {
+          "attack": 21088,
+          "control": 21088,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "input_tokens": {
+          "attack": 10912,
+          "control": 10912,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "requested_output_tokens": {
+          "attack": 10176,
+          "control": 10176,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "realized_output_tokens": {
+          "attack": 7625,
+          "control": 7625,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        }
+      }
+    },
+    "54": {
+      "tolerance": 0.05,
+      "required_matched_dims": [
+        "requests",
+        "total_tokens"
+      ],
+      "violations": [],
+      "matched": true,
+      "dimensions": {
+        "requests": {
+          "attack": 130,
+          "control": 130,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "total_tokens": {
+          "attack": 16863,
+          "control": 16863,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "input_tokens": {
+          "attack": 8543,
+          "control": 8543,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "requested_output_tokens": {
+          "attack": 8320,
+          "control": 8320,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "realized_output_tokens": {
+          "attack": 6496,
+          "control": 6496,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        }
+      }
+    },
+    "55": {
+      "tolerance": 0.05,
+      "required_matched_dims": [
+        "requests",
+        "total_tokens"
+      ],
+      "violations": [],
+      "matched": true,
+      "dimensions": {
+        "requests": {
+          "attack": 134,
+          "control": 134,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "total_tokens": {
+          "attack": 18155,
+          "control": 18155,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "input_tokens": {
+          "attack": 9579,
+          "control": 9579,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "requested_output_tokens": {
+          "attack": 8576,
+          "control": 8576,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "realized_output_tokens": {
+          "attack": 6467,
+          "control": 6467,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        }
+      }
+    },
+    "56": {
+      "tolerance": 0.05,
+      "required_matched_dims": [
+        "requests",
+        "total_tokens"
+      ],
+      "violations": [],
+      "matched": true,
+      "dimensions": {
+        "requests": {
+          "attack": 121,
+          "control": 121,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "total_tokens": {
+          "attack": 15994,
+          "control": 15994,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "input_tokens": {
+          "attack": 8250,
+          "control": 8250,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "requested_output_tokens": {
+          "attack": 7744,
+          "control": 7744,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "realized_output_tokens": {
+          "attack": 5835,
+          "control": 5835,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        }
+      }
+    },
+    "57": {
+      "tolerance": 0.05,
+      "required_matched_dims": [
+        "requests",
+        "total_tokens"
+      ],
+      "violations": [],
+      "matched": true,
+      "dimensions": {
+        "requests": {
+          "attack": 99,
+          "control": 99,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "total_tokens": {
+          "attack": 12974,
+          "control": 12974,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "input_tokens": {
+          "attack": 6638,
+          "control": 6638,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "requested_output_tokens": {
+          "attack": 6336,
+          "control": 6336,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "realized_output_tokens": {
+          "attack": 4690,
+          "control": 4690,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        }
+      }
+    },
+    "58": {
+      "tolerance": 0.05,
+      "required_matched_dims": [
+        "requests",
+        "total_tokens"
+      ],
+      "violations": [],
+      "matched": true,
+      "dimensions": {
+        "requests": {
+          "attack": 175,
+          "control": 175,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "total_tokens": {
+          "attack": 22894,
+          "control": 22894,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "input_tokens": {
+          "attack": 11694,
+          "control": 11694,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "requested_output_tokens": {
+          "attack": 11200,
+          "control": 11200,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "realized_output_tokens": {
+          "attack": 8705,
+          "control": 8705,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        }
+      }
+    },
+    "59": {
+      "tolerance": 0.05,
+      "required_matched_dims": [
+        "requests",
+        "total_tokens"
+      ],
+      "violations": [],
+      "matched": true,
+      "dimensions": {
+        "requests": {
+          "attack": 115,
+          "control": 115,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "total_tokens": {
+          "attack": 15337,
+          "control": 15337,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "input_tokens": {
+          "attack": 7977,
+          "control": 7977,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "requested_output_tokens": {
+          "attack": 7360,
+          "control": 7360,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "realized_output_tokens": {
+          "attack": 5552,
+          "control": 5552,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        }
+      }
+    },
+    "60": {
+      "tolerance": 0.05,
+      "required_matched_dims": [
+        "requests",
+        "total_tokens"
+      ],
+      "violations": [],
+      "matched": true,
+      "dimensions": {
+        "requests": {
+          "attack": 139,
+          "control": 139,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "total_tokens": {
+          "attack": 18413,
+          "control": 18413,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "input_tokens": {
+          "attack": 9517,
+          "control": 9517,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "requested_output_tokens": {
+          "attack": 8896,
+          "control": 8896,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "realized_output_tokens": {
+          "attack": 6659,
+          "control": 6659,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        }
+      }
+    },
+    "61": {
+      "tolerance": 0.05,
+      "required_matched_dims": [
+        "requests",
+        "total_tokens"
+      ],
+      "violations": [],
+      "matched": true,
+      "dimensions": {
+        "requests": {
+          "attack": 126,
+          "control": 126,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "total_tokens": {
+          "attack": 16389,
+          "control": 16389,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "input_tokens": {
+          "attack": 8325,
+          "control": 8325,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "requested_output_tokens": {
+          "attack": 8064,
+          "control": 8064,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "realized_output_tokens": {
+          "attack": 6279,
+          "control": 6279,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        }
+      }
+    }
+  },
+  "run_dirs": {
+    "attack": {
+      "42": "/Users/h/Documents/paper/paper13-quotashift-bench/quotashift-bench/results/a1_burst_arrivals__attack/20261120T233520Z_fcfs_42",
+      "43": "/Users/h/Documents/paper/paper13-quotashift-bench/quotashift-bench/results/a1_burst_arrivals__attack/20261120T233722Z_fcfs_43",
+      "44": "/Users/h/Documents/paper/paper13-quotashift-bench/quotashift-bench/results/a1_burst_arrivals__attack/20261120T233925Z_fcfs_44",
+      "45": "/Users/h/Documents/paper/paper13-quotashift-bench/quotashift-bench/results/a1_burst_arrivals__attack/20261120T234125Z_fcfs_45",
+      "46": "/Users/h/Documents/paper/paper13-quotashift-bench/quotashift-bench/results/a1_burst_arrivals__attack/20261120T234327Z_fcfs_46",
+      "47": "/Users/h/Documents/paper/paper13-quotashift-bench/quotashift-bench/results/a1_burst_arrivals__attack/20261120T234534Z_fcfs_47",
+      "48": "/Users/h/Documents/paper/paper13-quotashift-bench/quotashift-bench/results/a1_burst_arrivals__attack/20261120T234737Z_fcfs_48",
+      "49": "/Users/h/Documents/paper/paper13-quotashift-bench/quotashift-bench/results/a1_burst_arrivals__attack/20261120T234943Z_fcfs_49",
+      "50": "/Users/h/Documents/paper/paper13-quotashift-bench/quotashift-bench/results/a1_burst_arrivals__attack/20261120T235148Z_fcfs_50",
+      "51": "/Users/h/Documents/paper/paper13-quotashift-bench/quotashift-bench/results/a1_burst_arrivals__attack/20261120T235350Z_fcfs_51",
+      "52": "/Users/h/Documents/paper/paper13-quotashift-bench/quotashift-bench/results/a1_burst_arrivals__attack/20261120T235600Z_fcfs_52",
+      "53": "/Users/h/Documents/paper/paper13-quotashift-bench/quotashift-bench/results/a1_burst_arrivals__attack/20261120T235828Z_fcfs_53",
+      "54": "/Users/h/Documents/paper/paper13-quotashift-bench/quotashift-bench/results/a1_burst_arrivals__attack/20261121T000035Z_fcfs_54",
+      "55": "/Users/h/Documents/paper/paper13-quotashift-bench/quotashift-bench/results/a1_burst_arrivals__attack/20261121T000242Z_fcfs_55",
+      "56": "/Users/h/Documents/paper/paper13-quotashift-bench/quotashift-bench/results/a1_burst_arrivals__attack/20261121T000442Z_fcfs_56",
+      "57": "/Users/h/Documents/paper/paper13-quotashift-bench/quotashift-bench/results/a1_burst_arrivals__attack/20261121T000645Z_fcfs_57",
+      "58": "/Users/h/Documents/paper/paper13-quotashift-bench/quotashift-bench/results/a1_burst_arrivals__attack/20261121T000846Z_fcfs_58",
+      "59": "/Users/h/Documents/paper/paper13-quotashift-bench/quotashift-bench/results/a1_burst_arrivals__attack/20261121T001059Z_fcfs_59",
+      "60": "/Users/h/Documents/paper/paper13-quotashift-bench/quotashift-bench/results/a1_burst_arrivals__attack/20261121T001301Z_fcfs_60",
+      "61": "/Users/h/Documents/paper/paper13-quotashift-bench/quotashift-bench/results/a1_burst_arrivals__attack/20261121T001503Z_fcfs_61"
+    },
+    "control": {
+      "42": "/Users/h/Documents/paper/paper13-quotashift-bench/quotashift-bench/results/a1_burst_arrivals__control/20261120T233620Z_fcfs_42",
+      "43": "/Users/h/Documents/paper/paper13-quotashift-bench/quotashift-bench/results/a1_burst_arrivals__control/20261120T233823Z_fcfs_43",
+      "44": "/Users/h/Documents/paper/paper13-quotashift-bench/quotashift-bench/results/a1_burst_arrivals__control/20261120T234024Z_fcfs_44",
+      "45": "/Users/h/Documents/paper/paper13-quotashift-bench/quotashift-bench/results/a1_burst_arrivals__control/20261120T234226Z_fcfs_45",
+      "46": "/Users/h/Documents/paper/paper13-quotashift-bench/quotashift-bench/results/a1_burst_arrivals__control/20261120T234432Z_fcfs_46",
+      "47": "/Users/h/Documents/paper/paper13-quotashift-bench/quotashift-bench/results/a1_burst_arrivals__control/20261120T234636Z_fcfs_47",
+      "48": "/Users/h/Documents/paper/paper13-quotashift-bench/quotashift-bench/results/a1_burst_arrivals__control/20261120T234841Z_fcfs_48",
+      "49": "/Users/h/Documents/paper/paper13-quotashift-bench/quotashift-bench/results/a1_burst_arrivals__control/20261120T235047Z_fcfs_49",
+      "50": "/Users/h/Documents/paper/paper13-quotashift-bench/quotashift-bench/results/a1_burst_arrivals__control/20261120T235249Z_fcfs_50",
+      "51": "/Users/h/Documents/paper/paper13-quotashift-bench/quotashift-bench/results/a1_burst_arrivals__control/20261120T235456Z_fcfs_51",
+      "52": "/Users/h/Documents/paper/paper13-quotashift-bench/quotashift-bench/results/a1_burst_arrivals__control/20261120T235717Z_fcfs_52",
+      "53": "/Users/h/Documents/paper/paper13-quotashift-bench/quotashift-bench/results/a1_burst_arrivals__control/20261120T235934Z_fcfs_53",
+      "54": "/Users/h/Documents/paper/paper13-quotashift-bench/quotashift-bench/results/a1_burst_arrivals__control/20261121T000140Z_fcfs_54",
+      "55": "/Users/h/Documents/paper/paper13-quotashift-bench/quotashift-bench/results/a1_burst_arrivals__control/20261121T000341Z_fcfs_55",
+      "56": "/Users/h/Documents/paper/paper13-quotashift-bench/quotashift-bench/results/a1_burst_arrivals__control/20261121T000544Z_fcfs_56",
+      "57": "/Users/h/Documents/paper/paper13-quotashift-bench/quotashift-bench/results/a1_burst_arrivals__control/20261121T000745Z_fcfs_57",
+      "58": "/Users/h/Documents/paper/paper13-quotashift-bench/quotashift-bench/results/a1_burst_arrivals__control/20261121T000957Z_fcfs_58",
+      "59": "/Users/h/Documents/paper/paper13-quotashift-bench/quotashift-bench/results/a1_burst_arrivals__control/20261121T001200Z_fcfs_59",
+      "60": "/Users/h/Documents/paper/paper13-quotashift-bench/quotashift-bench/results/a1_burst_arrivals__control/20261121T001402Z_fcfs_60",
+      "61": "/Users/h/Documents/paper/paper13-quotashift-bench/quotashift-bench/results/a1_burst_arrivals__control/20261121T001605Z_fcfs_61"
+    }
+  },
+  "analysis": {
+    "metric": "ttft_p95",
+    "metric_label": "Victim backend TTFT P95 (historical `ttft_p95`)",
+    "metric_unit": "ms",
+    "metric_kind": "victim_latency",
+    "metric_definition": "P95 over completed victim requests of t_first_token - t_sent (backend dispatch); excludes gateway queue time (ADR-Q16)",
+    "preregistered_threshold": 1.5,
+    "effect_direction": "increase",
+    "classification": "n/a (protocol v1: majority-of-seeds verdict)",
+    "n_seeds_with_metric": 20,
+    "n_seeds": 20,
+    "mean_ratio": 1.5898711648143498,
+    "median_ratio": 1.5840310470126568,
+    "ratio_ci95": [
+      1.5315044515694838,
+      1.6547268230976468
+    ],
+    "attack_success_rate": 0.7,
+    "mean_competitor_tokens": 14147.15,
+    "mean_competitor_requests": 107.85,
+    "slowdown_per_1k_competitor_tokens": 0.0416954061287503,
+    "slowdown_per_100_competitor_requests": 0.5469366386781175
+  },
+  "per_seed": [
+    {
+      "seed": 42,
+      "attack_value": 136.4474419970065,
+      "control_value": 83.83509219856931,
+      "ratio": 1.6275695346504915,
+      "crosses_threshold": true,
+      "attack_victim_timed_out": 0,
+      "control_victim_timed_out": 0,
+      "competitor_tokens": 12096,
+      "competitor_requests": 91
+    },
+    {
+      "seed": 43,
+      "attack_value": 139.32629140908827,
+      "control_value": 85.362808406353,
+      "ratio": 1.6321662092682405,
+      "crosses_threshold": true,
+      "attack_victim_timed_out": 0,
+      "control_victim_timed_out": 0,
+      "competitor_tokens": 14081,
+      "competitor_requests": 108
+    },
+    {
+      "seed": 44,
+      "attack_value": 124.67614230554318,
+      "control_value": 82.99243539368035,
+      "ratio": 1.5022591121001967,
+      "crosses_threshold": true,
+      "attack_victim_timed_out": 0,
+      "control_victim_timed_out": 0,
+      "competitor_tokens": 11634,
+      "competitor_requests": 89
+    },
+    {
+      "seed": 45,
+      "attack_value": 123.70454148185672,
+      "control_value": 85.61531249870313,
+      "ratio": 1.4448880448077621,
+      "crosses_threshold": false,
+      "attack_victim_timed_out": 0,
+      "control_victim_timed_out": 0,
+      "competitor_tokens": 10893,
+      "competitor_requests": 83
+    },
+    {
+      "seed": 46,
+      "attack_value": 124.9772189912619,
+      "control_value": 87.2164897446055,
+      "ratio": 1.4329540131370855,
+      "crosses_threshold": false,
+      "attack_victim_timed_out": 0,
+      "control_victim_timed_out": 0,
+      "competitor_tokens": 17905,
+      "competitor_requests": 137
+    },
+    {
+      "seed": 47,
+      "attack_value": 124.56375625479268,
+      "control_value": 87.12088395259342,
+      "ratio": 1.4297806748904625,
+      "crosses_threshold": false,
+      "attack_victim_timed_out": 0,
+      "control_victim_timed_out": 0,
+      "competitor_tokens": 16948,
+      "competitor_requests": 128
+    },
+    {
+      "seed": 48,
+      "attack_value": 132.0934516363195,
+      "control_value": 90.19794562336756,
+      "ratio": 1.4644840381164743,
+      "crosses_threshold": false,
+      "attack_victim_timed_out": 0,
+      "control_victim_timed_out": 0,
+      "competitor_tokens": 14361,
+      "competitor_requests": 113
+    },
+    {
+      "seed": 49,
+      "attack_value": 141.60902936127968,
+      "control_value": 84.02082324610092,
+      "ratio": 1.6854039735661743,
+      "crosses_threshold": true,
+      "attack_victim_timed_out": 0,
+      "control_victim_timed_out": 0,
+      "competitor_tokens": 14767,
+      "competitor_requests": 112
+    },
+    {
+      "seed": 50,
+      "attack_value": 139.39158472931007,
+      "control_value": 84.19156859599752,
+      "ratio": 1.655647792930381,
+      "crosses_threshold": true,
+      "attack_victim_timed_out": 0,
+      "control_victim_timed_out": 0,
+      "competitor_tokens": 13856,
+      "competitor_requests": 104
+    },
+    {
+      "seed": 51,
+      "attack_value": 123.96679220255464,
+      "control_value": 82.94045860529877,
+      "ratio": 1.4946480196413436,
+      "crosses_threshold": false,
+      "attack_victim_timed_out": 0,
+      "control_victim_timed_out": 0,
+      "competitor_tokens": 17650,
+      "competitor_requests": 137
+    },
+    {
+      "seed": 52,
+      "attack_value": 152.50853690959048,
+      "control_value": 81.25326610170305,
+      "ratio": 1.876952696506977,
+      "crosses_threshold": true,
+      "attack_victim_timed_out": 0,
+      "control_victim_timed_out": 0,
+      "competitor_tokens": 21161,
+      "competitor_requests": 164
+    },
+    {
+      "seed": 53,
+      "attack_value": 129.27136021316983,
+      "control_value": 84.20355215348536,
+      "ratio": 1.535224547030217,
+      "crosses_threshold": true,
+      "attack_victim_timed_out": 0,
+      "control_victim_timed_out": 0,
+      "competitor_tokens": 16938,
+      "competitor_requests": 127
+    },
+    {
+      "seed": 54,
+      "attack_value": 127.98973300377838,
+      "control_value": 83.96149199688807,
+      "ratio": 1.5243861198717403,
+      "crosses_threshold": true,
+      "attack_victim_timed_out": 0,
+      "control_victim_timed_out": 0,
+      "competitor_tokens": 12409,
+      "competitor_requests": 97
+    },
+    {
+      "seed": 55,
+      "attack_value": 130.64305606239938,
+      "control_value": 83.16259375715161,
+      "ratio": 1.5709353227233207,
+      "crosses_threshold": true,
+      "attack_victim_timed_out": 0,
+      "control_victim_timed_out": 0,
+      "competitor_tokens": 13611,
+      "competitor_requests": 100
+    },
+    {
+      "seed": 56,
+      "attack_value": 122.3886795938597,
+      "control_value": 89.02553575462662,
+      "ratio": 1.374759259311722,
+      "crosses_threshold": false,
+      "attack_victim_timed_out": 0,
+      "control_victim_timed_out": 0,
+      "competitor_tokens": 11621,
+      "competitor_requests": 87
+    },
+    {
+      "seed": 57,
+      "attack_value": 162.302312994143,
+      "control_value": 84.23866648809053,
+      "ratio": 1.9266961332666506,
+      "crosses_threshold": true,
+      "attack_victim_timed_out": 0,
+      "control_victim_timed_out": 0,
+      "competitor_tokens": 8949,
+      "competitor_requests": 68
+    },
+    {
+      "seed": 58,
+      "attack_value": 138.96060621191282,
+      "control_value": 86.58544104837347,
+      "ratio": 1.6048957484004551,
+      "crosses_threshold": true,
+      "attack_victim_timed_out": 0,
+      "control_victim_timed_out": 0,
+      "competitor_tokens": 17698,
+      "competitor_requests": 137
+    },
+    {
+      "seed": 59,
+      "attack_value": 155.90387499833014,
+      "control_value": 89.71808300702833,
+      "ratio": 1.7377084950211983,
+      "crosses_threshold": true,
+      "attack_victim_timed_out": 0,
+      "control_victim_timed_out": 0,
+      "competitor_tokens": 11231,
+      "competitor_requests": 84
+    },
+    {
+      "seed": 60,
+      "attack_value": 137.87171251315152,
+      "control_value": 86.32483969995518,
+      "ratio": 1.597126771301993,
+      "crosses_threshold": true,
+      "attack_victim_timed_out": 0,
+      "control_victim_timed_out": 0,
+      "competitor_tokens": 13875,
+      "competitor_requests": 105
+    },
+    {
+      "seed": 61,
+      "attack_value": 136.3005401843111,
+      "control_value": 81.18265143566532,
+      "ratio": 1.6789367897441114,
+      "crosses_threshold": true,
+      "attack_victim_timed_out": 0,
+      "control_victim_timed_out": 0,
+      "competitor_tokens": 11259,
+      "competitor_requests": 86
+    }
+  ],
+  "secondary": {
+    "backend_ttft_p95": {
+      "metric": "backend_ttft_p95",
+      "metric_label": "Victim backend TTFT P95",
+      "metric_unit": "ms",
+      "metric_kind": "victim_latency",
+      "metric_definition": "P95 over completed victim requests of t_first_token - t_sent",
+      "preregistered_threshold": 1.5,
+      "effect_direction": "increase",
+      "classification": "supported",
+      "n_seeds_with_metric": 20,
+      "n_seeds": 20,
+      "mean_ratio": 1.5898711648143498,
+      "median_ratio": 1.5840310470126568,
+      "ratio_ci95": [
+        1.5315044515694838,
+        1.6547268230976468
+      ],
+      "attack_success_rate": 0.7,
+      "mean_competitor_tokens": 14147.15,
+      "mean_competitor_requests": 107.85,
+      "slowdown_per_1k_competitor_tokens": 0.0416954061287503,
+      "slowdown_per_100_competitor_requests": 0.5469366386781175
+    },
+    "user_ttft_p95": {
+      "metric": "user_ttft_p95",
+      "metric_label": "Victim user-facing TTFT P95",
+      "metric_unit": "ms",
+      "metric_kind": "victim_latency",
+      "metric_definition": "P95 over completed victim requests of t_first_token - t_offered (includes gateway queue)",
+      "preregistered_threshold": 1.5,
+      "effect_direction": "increase",
+      "classification": "supported",
+      "n_seeds_with_metric": 20,
+      "n_seeds": 20,
+      "mean_ratio": 5.786285592427701,
+      "median_ratio": 5.276415441222959,
+      "ratio_ci95": [
+        4.515058606056518,
+        7.140989665393647
+      ],
+      "attack_success_rate": 1.0,
+      "mean_competitor_tokens": 14147.15,
+      "mean_competitor_requests": 107.85,
+      "slowdown_per_1k_competitor_tokens": 0.33832154125938446,
+      "slowdown_per_100_competitor_requests": 4.437909682362263
+    },
+    "gateway_queue_p95": {
+      "metric": "gateway_queue_p95",
+      "metric_label": "Victim gateway queue time P95",
+      "metric_unit": "ms",
+      "metric_kind": "victim_latency",
+      "metric_definition": "P95 over dispatched victim requests of t_sent - t_offered",
+      "preregistered_threshold": 1.5,
+      "effect_direction": "increase",
+      "classification": "supported",
+      "n_seeds_with_metric": 20,
+      "n_seeds": 20,
+      "mean_ratio": 13.79868821178859,
+      "median_ratio": 6.014907102091536,
+      "ratio_ci95": [
+        5.10222996018349,
+        29.799946065557393
+      ],
+      "attack_success_rate": 1.0,
+      "mean_competitor_tokens": 14147.15,
+      "mean_competitor_requests": 107.85,
+      "slowdown_per_1k_competitor_tokens": 0.9046831490292102,
+      "slowdown_per_100_competitor_requests": 11.867119343336663
+    },
+    "e2e_p95": {
+      "metric": "e2e_p95",
+      "metric_label": "Victim end-to-end latency P95",
+      "metric_unit": "ms",
+      "metric_kind": "victim_latency",
+      "metric_definition": "P95 over completed victim requests of t_terminal - t_offered",
+      "preregistered_threshold": 1.5,
+      "effect_direction": "increase",
+      "classification": "supported",
+      "n_seeds_with_metric": 20,
+      "n_seeds": 20,
+      "mean_ratio": 2.3699553170496803,
+      "median_ratio": 2.2732912217920873,
+      "ratio_ci95": [
+        2.0561485177319776,
+        2.714601614644284
+      ],
+      "attack_success_rate": 0.95,
+      "mean_competitor_tokens": 14147.15,
+      "mean_competitor_requests": 107.85,
+      "slowdown_per_1k_competitor_tokens": 0.09683613427790617,
+      "slowdown_per_100_competitor_requests": 1.2702413695407329
+    },
+    "victim_slo_success_offered": {
+      "metric": "victim_slo_success_offered",
+      "metric_label": "Victim offered-load SLO success",
+      "metric_unit": "fraction of offered",
+      "metric_kind": "victim_success",
+      "metric_definition": "#victim requests that completed within their user-facing TTFT/TPOT/E2E SLO / #victim requests offered (timeouts, rejections and errors count as failures)",
+      "preregistered_threshold": 1.5,
+      "effect_direction": "increase",
+      "classification": "negative",
+      "n_seeds_with_metric": 20,
+      "n_seeds": 20,
+      "mean_ratio": 0.7930961030219181,
+      "median_ratio": 0.8474264705882353,
+      "ratio_ci95": [
+        0.6836586456767713,
+        0.8968055634732088
+      ],
+      "attack_success_rate": 0.0,
+      "mean_competitor_tokens": 14147.15,
+      "mean_competitor_requests": 107.85,
+      "slowdown_per_1k_competitor_tokens": NaN,
+      "slowdown_per_100_competitor_requests": NaN
+    }
+  },
+  "validity": {
+    "passed": false,
+    "checks": [
+      {
+        "name": "backend_error_rate",
+        "passed": true,
+        "available": true,
+        "detail": "worst arm 0.0000 (max 0.01)",
+        "severity": "fail"
+      },
+      {
+        "name": "http_400_rate",
+        "passed": true,
+        "available": true,
+        "detail": "worst arm 0.0000 (max 0.01)",
+        "severity": "fail"
+      },
+      {
+        "name": "admission_rate",
+        "passed": true,
+        "available": true,
+        "detail": "lowest class admission 1.000 (min 0.95)",
+        "severity": "fail"
+      },
+      {
+        "name": "competitor_completion",
+        "passed": true,
+        "available": true,
+        "detail": "lowest arm 1.000 (min 0.95)",
+        "severity": "fail"
+      },
+      {
+        "name": "primary_metric_present",
+        "passed": true,
+        "available": true,
+        "detail": "20/20 seeds have a finite Victim backend TTFT P95 (historical `ttft_p95`)",
+        "severity": "fail"
+      },
+      {
+        "name": "tokenized_context",
+        "passed": false,
+        "available": false,
+        "detail": "no pre-run tokenization check recorded",
+        "severity": "fail"
+      },
+      {
+        "name": "provenance",
+        "passed": false,
+        "available": true,
+        "detail": "server start ['None']; vllm version; model revision status not recorded",
+        "severity": "fail"
+      },
+      {
+        "name": "victim_latency_censoring",
+        "passed": true,
+        "available": true,
+        "detail": "worst arm censored fraction 0.000 (max 0.05); primary",
+        "severity": "fail"
+      }
+    ],
+    "flags": [],
+    "thresholds": {
+      "max_backend_error_fraction": 0.01,
+      "max_http_400_fraction": 0.01,
+      "min_admission_fraction": 0.95,
+      "min_competitor_completion": 0.95,
+      "max_victim_censored_fraction": 0.05
+    }
+  },
+  "protocol_version": 1,
+  "path": "gateway",
+  "arm_order": {},
+  "per_arm_prefix_cache_hit_ratio": {
+    "attack": {
+      "42": null,
+      "43": null,
+      "44": null,
+      "45": null,
+      "46": null,
+      "47": null,
+      "48": null,
+      "49": null,
+      "50": null,
+      "51": null,
+      "52": null,
+      "53": null,
+      "54": null,
+      "55": null,
+      "56": null,
+      "57": null,
+      "58": null,
+      "59": null,
+      "60": null,
+      "61": null
+    },
+    "control": {
+      "42": null,
+      "43": null,
+      "44": null,
+      "45": null,
+      "46": null,
+      "47": null,
+      "48": null,
+      "49": null,
+      "50": null,
+      "51": null,
+      "52": null,
+      "53": null,
+      "54": null,
+      "55": null,
+      "56": null,
+      "57": null,
+      "58": null,
+      "59": null,
+      "60": null,
+      "61": null
+    }
+  },
+  "unrelated_traffic_suspected": {
+    "attack": {
+      "42": null,
+      "43": null,
+      "44": null,
+      "45": null,
+      "46": null,
+      "47": null,
+      "48": null,
+      "49": null,
+      "50": null,
+      "51": null,
+      "52": null,
+      "53": null,
+      "54": null,
+      "55": null,
+      "56": null,
+      "57": null,
+      "58": null,
+      "59": null,
+      "60": null,
+      "61": null
+    },
+    "control": {
+      "42": null,
+      "43": null,
+      "44": null,
+      "45": null,
+      "46": null,
+      "47": null,
+      "48": null,
+      "49": null,
+      "50": null,
+      "51": null,
+      "52": null,
+      "53": null,
+      "54": null,
+      "55": null,
+      "56": null,
+      "57": null,
+      "58": null,
+      "59": null,
+      "60": null,
+      "61": null
+    }
+  },
+  "tokenization": null,
+  "provenance": {
+    "git_sha": [
+      "fc1d1559b77dbb8a7f4fd1be06f2ef4b669e88d7"
+    ],
+    "git_dirty": [
+      "False"
+    ],
+    "server_start": [
+      "None"
+    ],
+    "vllm_version": [
+      "null"
+    ],
+    "model": [
+      "None"
+    ],
+    "model_revision_in_run_manifest": [
+      "None"
+    ],
+    "missing": [],
+    "model_revision_status": null
+  },
+  "commands": [
+    "uv run python scripts/reanalyze_suite.py --out reports/corrected/2026-11-21_adr_q16"
+  ]
+}

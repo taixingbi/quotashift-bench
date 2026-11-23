@@ -1,0 +1,38 @@
+SUITE START 2026-11-21 15:18:24 EST commit dbd7f17 dirty=1
+BLOCK a7_prefix_cache START 15:18:24
+reset True 96.0 -> 0.0
+BLOCK a7_prefix_cache END 15:43:36 rc=0
+BLOCK a7_prefix_cache_reset START 15:43:36
+reset True 96.0 -> 0.0
+BLOCK a7_prefix_cache_reset END 16:11:44 rc=0
+BLOCK a8_lifecycle_churn START 16:11:44
+reset True 96.0 -> 0.0
+BLOCK a8_lifecycle_churn END 16:32:07 rc=0
+BLOCK a8_retry_churn START 16:32:07
+reset True 96.0 -> 0.0
+BLOCK a8_retry_churn END 16:53:39 rc=0
+BLOCK a9_tok_prefill START 16:53:39
+reset True 96.0 -> 0.0
+BLOCK a9_tok_prefill END 17:19:10 rc=0
+BLOCK a9_tok_decode START 17:19:10
+reset True 96.0 -> 0.0
+BLOCK a9_tok_decode END 17:44:31 rc=0
+BLOCK a9_tok_longctx START 17:44:31
+reset True 96.0 -> 0.0
+BLOCK a9_tok_longctx END 18:10:03 rc=0
+BLOCK a9_tok_prefix_reuse START 18:10:03
+reset True 96.0 -> 0.0
+BLOCK a9_tok_prefix_reuse END 18:35:30 rc=0
+BLOCK a9_rate_prefill START 18:35:30
+reset True 96.0 -> 0.0
+BLOCK a9_rate_prefill END 19:00:28 rc=0
+BLOCK a9_rate_decode START 19:00:28
+reset True 96.0 -> 0.0
+BLOCK a9_rate_decode END 19:25:49 rc=0
+BLOCK a9_rate_longctx START 19:25:49
+reset True 96.0 -> 0.0
+BLOCK a9_rate_longctx END 19:50:45 rc=0
+BLOCK a9_rate_prefix_reuse START 19:50:45
+reset True 96.0 -> 0.0
+BLOCK a9_rate_prefix_reuse END 20:15:43 rc=0
+SUITE END 2026-11-21 20:15:43 EST

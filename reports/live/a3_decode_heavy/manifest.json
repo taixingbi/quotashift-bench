@@ -1,0 +1,253 @@
+{
+  "scenario_id": "a3_decode_heavy",
+  "control_label": "matched_total_short",
+  "seeds": [
+    42,
+    43,
+    44,
+    45,
+    46
+  ],
+  "synthetic_backend": false,
+  "metric": "ttft_p95",
+  "preregistered_threshold": 1.5,
+  "budget_tolerance": 0.05,
+  "per_seed_budget": {
+    "42": {
+      "tolerance": 0.05,
+      "required_matched_dims": [
+        "total_tokens"
+      ],
+      "violations": [],
+      "matched": true,
+      "dimensions": {
+        "requests": {
+          "attack": 67,
+          "control": 114,
+          "abs_delta": 47,
+          "rel_delta": 0.412281
+        },
+        "total_tokens": {
+          "attack": 14788,
+          "control": 14744,
+          "abs_delta": 44,
+          "rel_delta": 0.002975
+        },
+        "input_tokens": {
+          "attack": 3972,
+          "control": 7448,
+          "abs_delta": 3476,
+          "rel_delta": 0.466702
+        },
+        "requested_output_tokens": {
+          "attack": 10816,
+          "control": 7296,
+          "abs_delta": 3520,
+          "rel_delta": 0.325444
+        },
+        "realized_output_tokens": {
+          "attack": 9271,
+          "control": 5439,
+          "abs_delta": 3832,
+          "rel_delta": 0.413332
+        }
+      }
+    },
+    "43": {
+      "tolerance": 0.05,
+      "required_matched_dims": [
+        "total_tokens"
+      ],
+      "violations": [],
+      "matched": true,
+      "dimensions": {
+        "requests": {
+          "attack": 73,
+          "control": 123,
+          "abs_delta": 50,
+          "rel_delta": 0.406504
+        },
+        "total_tokens": {
+          "attack": 15921,
+          "control": 15889,
+          "abs_delta": 32,
+          "rel_delta": 0.00201
+        },
+        "input_tokens": {
+          "attack": 4337,
+          "control": 8017,
+          "abs_delta": 3680,
+          "rel_delta": 0.459025
+        },
+        "requested_output_tokens": {
+          "attack": 11584,
+          "control": 7872,
+          "abs_delta": 3712,
+          "rel_delta": 0.320442
+        },
+        "realized_output_tokens": {
+          "attack": 10194,
+          "control": 6009,
+          "abs_delta": 4185,
+          "rel_delta": 0.410536
+        }
+      }
+    },
+    "44": {
+      "tolerance": 0.05,
+      "required_matched_dims": [
+        "total_tokens"
+      ],
+      "violations": [],
+      "matched": true,
+      "dimensions": {
+        "requests": {
+          "attack": 82,
+          "control": 138,
+          "abs_delta": 56,
+          "rel_delta": 0.405797
+        },
+        "total_tokens": {
+          "attack": 17507,
+          "control": 17566,
+          "abs_delta": 59,
+          "rel_delta": 0.003359
+        },
+        "input_tokens": {
+          "attack": 4579,
+          "control": 8734,
+          "abs_delta": 4155,
+          "rel_delta": 0.475727
+        },
+        "requested_output_tokens": {
+          "attack": 12928,
+          "control": 8832,
+          "abs_delta": 4096,
+          "rel_delta": 0.316832
+        },
+        "realized_output_tokens": {
+          "attack": 11500,
+          "control": 6655,
+          "abs_delta": 4845,
+          "rel_delta": 0.421304
+        }
+      }
+    },
+    "45": {
+      "tolerance": 0.05,
+      "required_matched_dims": [
+        "total_tokens"
+      ],
+      "violations": [],
+      "matched": true,
+      "dimensions": {
+        "requests": {
+          "attack": 68,
+          "control": 113,
+          "abs_delta": 45,
+          "rel_delta": 0.39823
+        },
+        "total_tokens": {
+          "attack": 14431,
+          "control": 14486,
+          "abs_delta": 55,
+          "rel_delta": 0.003797
+        },
+        "input_tokens": {
+          "attack": 3935,
+          "control": 7254,
+          "abs_delta": 3319,
+          "rel_delta": 0.457541
+        },
+        "requested_output_tokens": {
+          "attack": 10496,
+          "control": 7232,
+          "abs_delta": 3264,
+          "rel_delta": 0.310976
+        },
+        "realized_output_tokens": {
+          "attack": 8852,
+          "control": 5423,
+          "abs_delta": 3429,
+          "rel_delta": 0.38737
+        }
+      }
+    },
+    "46": {
+      "tolerance": 0.05,
+      "required_matched_dims": [
+        "total_tokens"
+      ],
+      "violations": [],
+      "matched": true,
+      "dimensions": {
+        "requests": {
+          "attack": 61,
+          "control": 110,
+          "abs_delta": 49,
+          "rel_delta": 0.445455
+        },
+        "total_tokens": {
+          "attack": 14161,
+          "control": 14137,
+          "abs_delta": 24,
+          "rel_delta": 0.001695
+        },
+        "input_tokens": {
+          "attack": 3537,
+          "control": 7097,
+          "abs_delta": 3560,
+          "rel_delta": 0.50162
+        },
+        "requested_output_tokens": {
+          "attack": 10624,
+          "control": 7040,
+          "abs_delta": 3584,
+          "rel_delta": 0.337349
+        },
+        "realized_output_tokens": {
+          "attack": 9220,
+          "control": 5260,
+          "abs_delta": 3960,
+          "rel_delta": 0.429501
+        }
+      }
+    }
+  },
+  "run_dirs": {
+    "attack": {
+      "42": "/Users/h/Documents/paper/paper13-quotashift/quotashift-bench/results/a3_decode_heavy__attack/20261120T124544Z_fcfs_42",
+      "43": "/Users/h/Documents/paper/paper13-quotashift/quotashift-bench/results/a3_decode_heavy__attack/20261120T124751Z_fcfs_43",
+      "44": "/Users/h/Documents/paper/paper13-quotashift/quotashift-bench/results/a3_decode_heavy__attack/20261120T124957Z_fcfs_44",
+      "45": "/Users/h/Documents/paper/paper13-quotashift/quotashift-bench/results/a3_decode_heavy__attack/20261120T125203Z_fcfs_45",
+      "46": "/Users/h/Documents/paper/paper13-quotashift/quotashift-bench/results/a3_decode_heavy__attack/20261120T125409Z_fcfs_46"
+    },
+    "control": {
+      "42": "/Users/h/Documents/paper/paper13-quotashift/quotashift-bench/results/a3_decode_heavy__control/20261120T124651Z_fcfs_42",
+      "43": "/Users/h/Documents/paper/paper13-quotashift/quotashift-bench/results/a3_decode_heavy__control/20261120T124856Z_fcfs_43",
+      "44": "/Users/h/Documents/paper/paper13-quotashift/quotashift-bench/results/a3_decode_heavy__control/20261120T125104Z_fcfs_44",
+      "45": "/Users/h/Documents/paper/paper13-quotashift/quotashift-bench/results/a3_decode_heavy__control/20261120T125308Z_fcfs_45",
+      "46": "/Users/h/Documents/paper/paper13-quotashift/quotashift-bench/results/a3_decode_heavy__control/20261120T125513Z_fcfs_46"
+    }
+  },
+  "analysis": {
+    "metric": "ttft_p95",
+    "preregistered_threshold": 1.5,
+    "n_seeds": 5,
+    "mean_ratio": 1.061553844291589,
+    "median_ratio": 1.111664808085541,
+    "ratio_ci95": [
+      0.8732102177547598,
+      1.2581016714998796
+    ],
+    "attack_success_rate": 0.0,
+    "mean_competitor_tokens": 9997.8,
+    "mean_competitor_requests": 35.4,
+    "slowdown_per_1k_competitor_tokens": 0.006156738911719484,
+    "slowdown_per_100_competitor_requests": 0.17388091607793518
+  },
+  "commands": [
+    "uv run quotashift budget experiments/a3_decode_heavy.yaml",
+    "uv run quotashift experiment experiments/a3_decode_heavy.yaml --reps 5 --live"
+  ]
+}

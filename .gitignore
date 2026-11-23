@@ -3,7 +3,6 @@ __pycache__/
 *.pyc
 .pytest_cache/
 .ruff_cache/
-results/*
 !results/.gitkeep
 # terraform
 infra/terraform/.terraform/
@@ -19,7 +18,6 @@ infra/terraform/backend_override.tf
 infra/terraform/local-state/
 
 # Phase 5 generated reports (summary.csv/md, figures, manifest)
-reports/*
 !reports/.gitkeep
 
 # Suite S original-data archive: tarball stays local; checksums/file lists are tracked

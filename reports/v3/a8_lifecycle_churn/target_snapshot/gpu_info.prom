@@ -1,0 +1,1 @@
+nvidia_smi_gpu_info{compute_cap="8.6",cuda_version="13.2",driver_model_current="[N/A]",driver_model_pending="[N/A]",driver_version="595.71.05",index="0",name="NVIDIA GeForce RTX 3090",pci_bus_id="00000000:01:00.0",pci_sub_device_id="0x38811462",serial="[N/A]",uuid="a837190a-d9c2-ed45-994b-55319c6e258e",vbios_version="94.02.42.00.2F"} 1

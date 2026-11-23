@@ -1,0 +1,159 @@
+{
+  "scenario_id": "a9_tok_prefill_smoke",
+  "control_label": "matched_total_short",
+  "seeds": [
+    42,
+    43
+  ],
+  "synthetic_backend": false,
+  "metric": "gpu_energy_per_1k_authorized_tokens",
+  "preregistered_threshold": 1.25,
+  "budget_tolerance": 0.05,
+  "per_seed_budget": {
+    "42": {
+      "tolerance": 0.05,
+      "required_matched_dims": [
+        "total_tokens"
+      ],
+      "violations": [],
+      "matched": true,
+      "dimensions": {
+        "requests": {
+          "attack": 26,
+          "control": 77,
+          "abs_delta": 51,
+          "rel_delta": 0.662338
+        },
+        "total_tokens": {
+          "attack": 10004,
+          "control": 9952,
+          "abs_delta": 52,
+          "rel_delta": 0.005198
+        },
+        "input_tokens": {
+          "attack": 8596,
+          "control": 5024,
+          "abs_delta": 3572,
+          "rel_delta": 0.415542
+        },
+        "requested_output_tokens": {
+          "attack": 1408,
+          "control": 4928,
+          "abs_delta": 3520,
+          "rel_delta": 0.714286
+        },
+        "realized_output_tokens": {
+          "attack": 964,
+          "control": 3593,
+          "abs_delta": 2629,
+          "rel_delta": 0.731701
+        }
+      }
+    },
+    "43": {
+      "tolerance": 0.05,
+      "required_matched_dims": [
+        "total_tokens"
+      ],
+      "violations": [],
+      "matched": true,
+      "dimensions": {
+        "requests": {
+          "attack": 29,
+          "control": 110,
+          "abs_delta": 81,
+          "rel_delta": 0.736364
+        },
+        "total_tokens": {
+          "attack": 13947,
+          "control": 14004,
+          "abs_delta": 57,
+          "rel_delta": 0.00407
+        },
+        "input_tokens": {
+          "attack": 12475,
+          "control": 6964,
+          "abs_delta": 5511,
+          "rel_delta": 0.441764
+        },
+        "requested_output_tokens": {
+          "attack": 1472,
+          "control": 7040,
+          "abs_delta": 5568,
+          "rel_delta": 0.790909
+        },
+        "realized_output_tokens": {
+          "attack": 1161,
+          "control": 5296,
+          "abs_delta": 4135,
+          "rel_delta": 0.780778
+        }
+      }
+    }
+  },
+  "run_dirs": {
+    "attack": {
+      "42": "/Users/h/Documents/paper/paper13-quotashift-bench/quotashift-bench/results/a9_tok_prefill_smoke__attack/20261121T114759Z_fcfs_42",
+      "43": "/Users/h/Documents/paper/paper13-quotashift-bench/quotashift-bench/results/a9_tok_prefill_smoke__attack/20261121T115019Z_fcfs_43"
+    },
+    "control": {
+      "42": "/Users/h/Documents/paper/paper13-quotashift-bench/quotashift-bench/results/a9_tok_prefill_smoke__control/20261121T114845Z_fcfs_42",
+      "43": "/Users/h/Documents/paper/paper13-quotashift-bench/quotashift-bench/results/a9_tok_prefill_smoke__control/20261121T114931Z_fcfs_43"
+    }
+  },
+  "analysis": {
+    "metric": "gpu_energy_per_1k_authorized_tokens",
+    "preregistered_threshold": 1.25,
+    "effect_direction": "two_sided",
+    "classification": "insufficient_seeds",
+    "n_seeds_with_metric": 2,
+    "n_seeds": 2,
+    "mean_ratio": 0.8306736925964058,
+    "median_ratio": 0.8306736925964058,
+    "ratio_ci95": [
+      0.7799291477290653,
+      0.8814182374637461
+    ],
+    "attack_success_rate": 0.5,
+    "mean_competitor_tokens": 9725.5,
+    "mean_competitor_requests": 10.0,
+    "slowdown_per_1k_competitor_tokens": -0.017410550347395425,
+    "slowdown_per_100_competitor_requests": -1.6932630740359422
+  },
+  "protocol_version": 3,
+  "path": "gateway",
+  "arm_order": {
+    "42": [
+      "attack",
+      "control"
+    ],
+    "43": [
+      "control",
+      "attack"
+    ]
+  },
+  "per_arm_prefix_cache_hit_ratio": {
+    "attack": {
+      "42": 0.9893351486271841,
+      "43": 0.0
+    },
+    "control": {
+      "42": 0.9458497283117856,
+      "43": 0.0
+    }
+  },
+  "unrelated_traffic_suspected": {
+    "attack": {
+      "42": false,
+      "43": false
+    },
+    "control": {
+      "42": false,
+      "43": false
+    }
+  },
+  "commands": [
+    "uv run quotashift budget experiments/v3/smoke/a9_tok_prefill_smoke.yaml",
+    "uv run quotashift experiment experiments/v3/smoke/a9_tok_prefill_smoke.yaml --reps 2 --live --path gateway"
+  ]
+}

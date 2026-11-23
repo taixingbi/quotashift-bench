@@ -1,0 +1,9 @@
+{
+  "backend_kind": "mock",
+  "synthetic": true,
+  "model": null,
+  "hardware": "no NVIDIA GPU detected (arm64)",
+  "run_id": "20261119T005021Z_profile_mock_11",
+  "seed": 11,
+  "caption": "E0 output tokens/s vs concurrency; line=mean, band=min-max across 2+ trials (descriptive range, not a CI). Skipped/failed cells omitted from lines and listed in cells.csv."
+}

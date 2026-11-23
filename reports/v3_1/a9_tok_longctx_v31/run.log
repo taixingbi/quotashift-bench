@@ -1,0 +1,32 @@
+START 2026-11-21 21:24:47 EST
+INVALID: validity gates failed: ['competitor_completion'] (classification set to 'invalid'; report written)
+{
+  "scenario_id": "a9_tok_longctx_v31",
+  "control": "matched_total_short",
+  "seeds": [
+    42,
+    43,
+    44,
+    45,
+    46
+  ],
+  "metric": "gpu_energy_per_1k_authorized_tokens",
+  "mean_ratio": 0.9428861247749711,
+  "classification": "invalid",
+  "effect_direction": "two_sided",
+  "ratio_ci95": [
+    0.9169841397976934,
+    0.972712781663227
+  ],
+  "attack_success_rate": 0.0,
+  "synthetic_backend": false,
+  "validity_passed": false,
+  "csv": "reports/v3_1/a9_tok_longctx_v31/summary.csv",
+  "md": "reports/v3_1/a9_tok_longctx_v31/summary.md",
+  "manifest": "reports/v3_1/a9_tok_longctx_v31/manifest.json",
+  "figures": [
+    "reports/v3_1/a9_tok_longctx_v31/figure_metric_by_arm.png",
+    "reports/v3_1/a9_tok_longctx_v31/figure_ratio.png"
+  ]
+}
+END 2026-11-21 21:50:30 EST rc=5

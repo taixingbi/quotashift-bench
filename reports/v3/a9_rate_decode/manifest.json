@@ -1,0 +1,312 @@
+{
+  "scenario_id": "a9_rate_decode",
+  "control_label": "rate_matched_short",
+  "seeds": [
+    42,
+    43,
+    44,
+    45,
+    46
+  ],
+  "synthetic_backend": false,
+  "metric": "gpu_energy_per_1k_authorized_tokens",
+  "preregistered_threshold": 1.25,
+  "budget_tolerance": 0.05,
+  "per_seed_budget": {
+    "42": {
+      "tolerance": 0.05,
+      "required_matched_dims": [
+        "requests"
+      ],
+      "violations": [],
+      "matched": true,
+      "dimensions": {
+        "requests": {
+          "attack": 207,
+          "control": 207,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "total_tokens": {
+          "attack": 45978,
+          "control": 26601,
+          "abs_delta": 19377,
+          "rel_delta": 0.421441
+        },
+        "input_tokens": {
+          "attack": 11994,
+          "control": 13353,
+          "abs_delta": 1359,
+          "rel_delta": 0.101775
+        },
+        "requested_output_tokens": {
+          "attack": 33984,
+          "control": 13248,
+          "abs_delta": 20736,
+          "rel_delta": 0.610169
+        },
+        "realized_output_tokens": {
+          "attack": 28868,
+          "control": 9915,
+          "abs_delta": 18953,
+          "rel_delta": 0.65654
+        }
+      }
+    },
+    "43": {
+      "tolerance": 0.05,
+      "required_matched_dims": [
+        "requests"
+      ],
+      "violations": [],
+      "matched": true,
+      "dimensions": {
+        "requests": {
+          "attack": 232,
+          "control": 232,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "total_tokens": {
+          "attack": 51993,
+          "control": 30215,
+          "abs_delta": 21778,
+          "rel_delta": 0.418864
+        },
+        "input_tokens": {
+          "attack": 13721,
+          "control": 15367,
+          "abs_delta": 1646,
+          "rel_delta": 0.107113
+        },
+        "requested_output_tokens": {
+          "attack": 38272,
+          "control": 14848,
+          "abs_delta": 23424,
+          "rel_delta": 0.61204
+        },
+        "realized_output_tokens": {
+          "attack": 33893,
+          "control": 11176,
+          "abs_delta": 22717,
+          "rel_delta": 0.670256
+        }
+      }
+    },
+    "44": {
+      "tolerance": 0.05,
+      "required_matched_dims": [
+        "requests"
+      ],
+      "violations": [],
+      "matched": true,
+      "dimensions": {
+        "requests": {
+          "attack": 226,
+          "control": 226,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "total_tokens": {
+          "attack": 50391,
+          "control": 29818,
+          "abs_delta": 20573,
+          "rel_delta": 0.408267
+        },
+        "input_tokens": {
+          "attack": 13847,
+          "control": 15354,
+          "abs_delta": 1507,
+          "rel_delta": 0.09815
+        },
+        "requested_output_tokens": {
+          "attack": 36544,
+          "control": 14464,
+          "abs_delta": 22080,
+          "rel_delta": 0.604203
+        },
+        "realized_output_tokens": {
+          "attack": 31798,
+          "control": 11039,
+          "abs_delta": 20759,
+          "rel_delta": 0.65284
+        }
+      }
+    },
+    "45": {
+      "tolerance": 0.05,
+      "required_matched_dims": [
+        "requests"
+      ],
+      "violations": [],
+      "matched": true,
+      "dimensions": {
+        "requests": {
+          "attack": 240,
+          "control": 240,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "total_tokens": {
+          "attack": 54987,
+          "control": 30925,
+          "abs_delta": 24062,
+          "rel_delta": 0.437594
+        },
+        "input_tokens": {
+          "attack": 13899,
+          "control": 15565,
+          "abs_delta": 1666,
+          "rel_delta": 0.107035
+        },
+        "requested_output_tokens": {
+          "attack": 41088,
+          "control": 15360,
+          "abs_delta": 25728,
+          "rel_delta": 0.626168
+        },
+        "realized_output_tokens": {
+          "attack": 35389,
+          "control": 11343,
+          "abs_delta": 24046,
+          "rel_delta": 0.679477
+        }
+      }
+    },
+    "46": {
+      "tolerance": 0.05,
+      "required_matched_dims": [
+        "requests"
+      ],
+      "violations": [],
+      "matched": true,
+      "dimensions": {
+        "requests": {
+          "attack": 250,
+          "control": 250,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "total_tokens": {
+          "attack": 56119,
+          "control": 32284,
+          "abs_delta": 23835,
+          "rel_delta": 0.424722
+        },
+        "input_tokens": {
+          "attack": 14199,
+          "control": 16284,
+          "abs_delta": 2085,
+          "rel_delta": 0.12804
+        },
+        "requested_output_tokens": {
+          "attack": 41920,
+          "control": 16000,
+          "abs_delta": 25920,
+          "rel_delta": 0.618321
+        },
+        "realized_output_tokens": {
+          "attack": 36938,
+          "control": 12000,
+          "abs_delta": 24938,
+          "rel_delta": 0.675131
+        }
+      }
+    }
+  },
+  "run_dirs": {
+    "attack": {
+      "42": "/Users/h/Documents/paper/paper13-quotashift-bench/quotashift-bench/results/a9_rate_decode__attack/20261122T000030Z_fcfs_42",
+      "43": "/Users/h/Documents/paper/paper13-quotashift-bench/quotashift-bench/results/a9_rate_decode__attack/20261122T000813Z_fcfs_43",
+      "44": "/Users/h/Documents/paper/paper13-quotashift-bench/quotashift-bench/results/a9_rate_decode__attack/20261122T001048Z_fcfs_44",
+      "45": "/Users/h/Documents/paper/paper13-quotashift-bench/quotashift-bench/results/a9_rate_decode__attack/20261122T001815Z_fcfs_45",
+      "46": "/Users/h/Documents/paper/paper13-quotashift-bench/quotashift-bench/results/a9_rate_decode__attack/20261122T002048Z_fcfs_46"
+    },
+    "control": {
+      "42": "/Users/h/Documents/paper/paper13-quotashift-bench/quotashift-bench/results/a9_rate_decode__control/20261122T000318Z_fcfs_42",
+      "43": "/Users/h/Documents/paper/paper13-quotashift-bench/quotashift-bench/results/a9_rate_decode__control/20261122T000545Z_fcfs_43",
+      "44": "/Users/h/Documents/paper/paper13-quotashift-bench/quotashift-bench/results/a9_rate_decode__control/20261122T001319Z_fcfs_44",
+      "45": "/Users/h/Documents/paper/paper13-quotashift-bench/quotashift-bench/results/a9_rate_decode__control/20261122T001547Z_fcfs_45",
+      "46": "/Users/h/Documents/paper/paper13-quotashift-bench/quotashift-bench/results/a9_rate_decode__control/20261122T002321Z_fcfs_46"
+    }
+  },
+  "analysis": {
+    "metric": "gpu_energy_per_1k_authorized_tokens",
+    "preregistered_threshold": 1.25,
+    "effect_direction": "two_sided",
+    "classification": "supported",
+    "n_seeds_with_metric": 5,
+    "n_seeds": 5,
+    "mean_ratio": 0.6238627294820585,
+    "median_ratio": 0.6291843688286634,
+    "ratio_ci95": [
+      0.6106904818461223,
+      0.6370349771179947
+    ],
+    "attack_success_rate": 1.0,
+    "mean_competitor_tokens": 36555.0,
+    "mean_competitor_requests": 122.8,
+    "slowdown_per_1k_competitor_tokens": -0.010289625783557422,
+    "slowdown_per_100_competitor_requests": -0.3063007088908319
+  },
+  "protocol_version": 3,
+  "path": "gateway",
+  "arm_order": {
+    "42": [
+      "attack",
+      "control"
+    ],
+    "43": [
+      "control",
+      "attack"
+    ],
+    "44": [
+      "attack",
+      "control"
+    ],
+    "45": [
+      "control",
+      "attack"
+    ],
+    "46": [
+      "attack",
+      "control"
+    ]
+  },
+  "per_arm_prefix_cache_hit_ratio": {
+    "attack": {
+      "42": 0.0,
+      "43": 0.0,
+      "44": 0.0,
+      "45": 0.0,
+      "46": 0.0
+    },
+    "control": {
+      "42": 0.0,
+      "43": 0.0,
+      "44": 0.0,
+      "45": 0.0,
+      "46": 0.0
+    }
+  },
+  "unrelated_traffic_suspected": {
+    "attack": {
+      "42": false,
+      "43": false,
+      "44": false,
+      "45": false,
+      "46": false
+    },
+    "control": {
+      "42": false,
+      "43": false,
+      "44": false,
+      "45": false,
+      "46": false
+    }
+  },
+  "commands": [
+    "uv run quotashift budget experiments/v3/a9_rate_decode.yaml",
+    "uv run quotashift experiment experiments/v3/a9_rate_decode.yaml --reps 5 --live --path gateway"
+  ]
+}

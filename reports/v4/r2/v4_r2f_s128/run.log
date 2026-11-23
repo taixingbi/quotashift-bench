@@ -1,0 +1,30 @@
+START 2026-11-22 15:16:50 EST
+{
+  "scenario_id": "v4_r2f_s128",
+  "control": "benign_only(self victims)",
+  "seeds": [
+    42,
+    43,
+    44
+  ],
+  "metric": "user_ttft_p95",
+  "mean_ratio": 17.165357834245714,
+  "classification": "insufficient_seeds",
+  "effect_direction": "two_sided",
+  "ratio_ci95": [
+    10.22656809432444,
+    26.482461969736296
+  ],
+  "attack_success_rate": 1.0,
+  "synthetic_backend": false,
+  "validity_passed": true,
+  "regime": "feasible",
+  "csv": "reports/v4/r2/v4_r2f_s128/summary.csv",
+  "md": "reports/v4/r2/v4_r2f_s128/summary.md",
+  "manifest": "reports/v4/r2/v4_r2f_s128/manifest.json",
+  "figures": [
+    "reports/v4/r2/v4_r2f_s128/figure_victim_latency.png",
+    "reports/v4/r2/v4_r2f_s128/figure_degradation_ratio.png"
+  ]
+}
+END 2026-11-22 15:32:03 EST rc=0

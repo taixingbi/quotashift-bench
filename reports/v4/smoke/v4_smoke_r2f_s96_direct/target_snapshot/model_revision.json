@@ -1,0 +1,6 @@
+{
+  "model_revision_server_reported": null,
+  "tokenizer_revision_server_reported": null,
+  "model_revision_documented": null,
+  "model_revision_status": "server reports revision=None (resolved from the hub default at load time); documented revision none is not server-verified"
+}

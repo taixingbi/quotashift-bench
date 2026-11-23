@@ -1,0 +1,161 @@
+{
+  "scenario_id": "a8_retry_churn_smoke",
+  "control_label": "lifecycle_normal",
+  "seeds": [
+    42,
+    43
+  ],
+  "synthetic_backend": false,
+  "metric": "ttft_p95",
+  "preregistered_threshold": 1.25,
+  "budget_tolerance": 0.05,
+  "per_seed_budget": {
+    "42": {
+      "tolerance": 0.05,
+      "required_matched_dims": [
+        "requests",
+        "total_tokens"
+      ],
+      "violations": [],
+      "matched": true,
+      "dimensions": {
+        "requests": {
+          "attack": 43,
+          "control": 43,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "total_tokens": {
+          "attack": 8611,
+          "control": 8611,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "input_tokens": {
+          "attack": 2595,
+          "control": 2595,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "requested_output_tokens": {
+          "attack": 6016,
+          "control": 6016,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "realized_output_tokens": {
+          "attack": 5079,
+          "control": 5079,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        }
+      }
+    },
+    "43": {
+      "tolerance": 0.05,
+      "required_matched_dims": [
+        "requests",
+        "total_tokens"
+      ],
+      "violations": [],
+      "matched": true,
+      "dimensions": {
+        "requests": {
+          "attack": 47,
+          "control": 47,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "total_tokens": {
+          "attack": 9735,
+          "control": 9735,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "input_tokens": {
+          "attack": 2695,
+          "control": 2695,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "requested_output_tokens": {
+          "attack": 7040,
+          "control": 7040,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "realized_output_tokens": {
+          "attack": 6308,
+          "control": 6308,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        }
+      }
+    }
+  },
+  "run_dirs": {
+    "attack": {
+      "42": "/Users/h/Documents/paper/paper13-quotashift-bench/quotashift-bench/results/a8_retry_churn_smoke__attack/20261121T052340Z_fcfs_42",
+      "43": "/Users/h/Documents/paper/paper13-quotashift-bench/quotashift-bench/results/a8_retry_churn_smoke__attack/20261121T052454Z_fcfs_43"
+    },
+    "control": {
+      "42": "/Users/h/Documents/paper/paper13-quotashift-bench/quotashift-bench/results/a8_retry_churn_smoke__control/20261121T052404Z_fcfs_42",
+      "43": "/Users/h/Documents/paper/paper13-quotashift-bench/quotashift-bench/results/a8_retry_churn_smoke__control/20261121T052429Z_fcfs_43"
+    }
+  },
+  "analysis": {
+    "metric": "ttft_p95",
+    "preregistered_threshold": 1.25,
+    "effect_direction": "increase",
+    "classification": "negative",
+    "n_seeds_with_metric": 2,
+    "n_seeds": 2,
+    "mean_ratio": 1.05296613233786,
+    "median_ratio": 1.05296613233786,
+    "ratio_ci95": [
+      1.0144356019795808,
+      1.0914966626961393
+    ],
+    "attack_success_rate": 0.0,
+    "mean_competitor_tokens": 3912.0,
+    "mean_competitor_requests": 13.0,
+    "slowdown_per_1k_competitor_tokens": 0.013539399881866072,
+    "slowdown_per_100_competitor_requests": 0.4074317872143082
+  },
+  "protocol_version": 3,
+  "path": "gateway",
+  "arm_order": {
+    "42": [
+      "attack",
+      "control"
+    ],
+    "43": [
+      "control",
+      "attack"
+    ]
+  },
+  "per_arm_prefix_cache_hit_ratio": {
+    "attack": {
+      "42": 0.11216969261190006,
+      "43": 0.09663503019844694
+    },
+    "control": {
+      "42": 0.11216969261190006,
+      "43": 0.09663503019844694
+    }
+  },
+  "unrelated_traffic_suspected": {
+    "attack": {
+      "42": false,
+      "43": false
+    },
+    "control": {
+      "42": false,
+      "43": false
+    }
+  },
+  "commands": [
+    "uv run quotashift budget experiments/v3/smoke/a8_retry_churn_smoke.yaml",
+    "uv run quotashift experiment experiments/v3/smoke/a8_retry_churn_smoke.yaml --reps 2 --live --path gateway"
+  ]
+}

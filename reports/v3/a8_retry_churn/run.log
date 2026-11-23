@@ -1,0 +1,30 @@
+START 2026-11-21 16:32:08 EST
+{
+  "scenario_id": "a8_retry_churn",
+  "control": "lifecycle_normal",
+  "seeds": [
+    42,
+    43,
+    44,
+    45,
+    46
+  ],
+  "metric": "ttft_p95",
+  "mean_ratio": 1.1156032947006185,
+  "classification": "negative",
+  "effect_direction": "increase",
+  "ratio_ci95": [
+    0.9800690503581049,
+    1.2307486828290222
+  ],
+  "attack_success_rate": 0.2,
+  "synthetic_backend": false,
+  "csv": "reports/v3/a8_retry_churn/summary.csv",
+  "md": "reports/v3/a8_retry_churn/summary.md",
+  "manifest": "reports/v3/a8_retry_churn/manifest.json",
+  "figures": [
+    "reports/v3/a8_retry_churn/figure_victim_latency.png",
+    "reports/v3/a8_retry_churn/figure_degradation_ratio.png"
+  ]
+}
+END 2026-11-21 16:53:39 EST rc=0

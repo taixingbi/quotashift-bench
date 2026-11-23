@@ -1,0 +1,28 @@
+START 2026-11-21 21:16:08 EST
+INVALID: validity gates failed: ['provenance'] (classification set to 'invalid'; report written)
+{
+  "scenario_id": "a9_tok_longctx_v31_smoke",
+  "control": "matched_total_short",
+  "seeds": [
+    42
+  ],
+  "metric": "gpu_energy_per_1k_authorized_tokens",
+  "mean_ratio": 1.0097670913852919,
+  "classification": "invalid",
+  "effect_direction": "two_sided",
+  "ratio_ci95": [
+    1.0097670913852919,
+    1.0097670913852919
+  ],
+  "attack_success_rate": 0.0,
+  "synthetic_backend": false,
+  "validity_passed": false,
+  "csv": "reports/v3_1/smoke/a9_tok_longctx_v31_smoke/summary.csv",
+  "md": "reports/v3_1/smoke/a9_tok_longctx_v31_smoke/summary.md",
+  "manifest": "reports/v3_1/smoke/a9_tok_longctx_v31_smoke/manifest.json",
+  "figures": [
+    "reports/v3_1/smoke/a9_tok_longctx_v31_smoke/figure_metric_by_arm.png",
+    "reports/v3_1/smoke/a9_tok_longctx_v31_smoke/figure_ratio.png"
+  ]
+}
+END 2026-11-21 21:18:43 EST rc=5

@@ -1,0 +1,982 @@
+{
+  "scenario_id": "v4_r1_prefill_vs_short_L200_direct",
+  "control_label": "token_matched_fixed",
+  "seeds": [
+    42,
+    43,
+    44,
+    45,
+    46
+  ],
+  "synthetic_backend": false,
+  "metric": "user_ttft_p95",
+  "metric_label": "Victim user-facing TTFT P95",
+  "metric_unit": "ms",
+  "preregistered_threshold": 1.25,
+  "budget_tolerance": 0.05,
+  "per_seed_budget": {
+    "42": {
+      "tolerance": 0.05,
+      "required_matched_dims": [
+        "total_tokens"
+      ],
+      "violations": [],
+      "matched": true,
+      "dimensions": {
+        "requests": {
+          "attack": 122,
+          "control": 289,
+          "abs_delta": 167,
+          "rel_delta": 0.577855
+        },
+        "total_tokens": {
+          "attack": 37067,
+          "control": 37099,
+          "abs_delta": 32,
+          "rel_delta": 0.000863
+        },
+        "input_tokens": {
+          "attack": 29995,
+          "control": 18603,
+          "abs_delta": 11392,
+          "rel_delta": 0.379797
+        },
+        "requested_output_tokens": {
+          "attack": 7072,
+          "control": 18496,
+          "abs_delta": 11424,
+          "rel_delta": 0.617647
+        },
+        "realized_output_tokens": {
+          "attack": 5467,
+          "control": 16891,
+          "abs_delta": 11424,
+          "rel_delta": 0.676337
+        }
+      }
+    },
+    "43": {
+      "tolerance": 0.05,
+      "required_matched_dims": [
+        "total_tokens"
+      ],
+      "violations": [],
+      "matched": true,
+      "dimensions": {
+        "requests": {
+          "attack": 133,
+          "control": 300,
+          "abs_delta": 167,
+          "rel_delta": 0.556667
+        },
+        "total_tokens": {
+          "attack": 38887,
+          "control": 38919,
+          "abs_delta": 32,
+          "rel_delta": 0.000822
+        },
+        "input_tokens": {
+          "attack": 31111,
+          "control": 19719,
+          "abs_delta": 11392,
+          "rel_delta": 0.366173
+        },
+        "requested_output_tokens": {
+          "attack": 7776,
+          "control": 19200,
+          "abs_delta": 11424,
+          "rel_delta": 0.595
+        },
+        "realized_output_tokens": {
+          "attack": 6056,
+          "control": 17480,
+          "abs_delta": 11424,
+          "rel_delta": 0.653547
+        }
+      }
+    },
+    "44": {
+      "tolerance": 0.05,
+      "required_matched_dims": [
+        "total_tokens"
+      ],
+      "violations": [],
+      "matched": true,
+      "dimensions": {
+        "requests": {
+          "attack": 134,
+          "control": 301,
+          "abs_delta": 167,
+          "rel_delta": 0.554817
+        },
+        "total_tokens": {
+          "attack": 39390,
+          "control": 39422,
+          "abs_delta": 32,
+          "rel_delta": 0.000812
+        },
+        "input_tokens": {
+          "attack": 31550,
+          "control": 20158,
+          "abs_delta": 11392,
+          "rel_delta": 0.361078
+        },
+        "requested_output_tokens": {
+          "attack": 7840,
+          "control": 19264,
+          "abs_delta": 11424,
+          "rel_delta": 0.593023
+        },
+        "realized_output_tokens": {
+          "attack": 6255,
+          "control": 17679,
+          "abs_delta": 11424,
+          "rel_delta": 0.64619
+        }
+      }
+    },
+    "45": {
+      "tolerance": 0.05,
+      "required_matched_dims": [
+        "total_tokens"
+      ],
+      "violations": [],
+      "matched": true,
+      "dimensions": {
+        "requests": {
+          "attack": 129,
+          "control": 296,
+          "abs_delta": 167,
+          "rel_delta": 0.564189
+        },
+        "total_tokens": {
+          "attack": 38061,
+          "control": 38093,
+          "abs_delta": 32,
+          "rel_delta": 0.00084
+        },
+        "input_tokens": {
+          "attack": 30541,
+          "control": 19149,
+          "abs_delta": 11392,
+          "rel_delta": 0.373007
+        },
+        "requested_output_tokens": {
+          "attack": 7520,
+          "control": 18944,
+          "abs_delta": 11424,
+          "rel_delta": 0.603041
+        },
+        "realized_output_tokens": {
+          "attack": 5647,
+          "control": 17071,
+          "abs_delta": 11424,
+          "rel_delta": 0.669205
+        }
+      }
+    },
+    "46": {
+      "tolerance": 0.05,
+      "required_matched_dims": [
+        "total_tokens"
+      ],
+      "violations": [],
+      "matched": true,
+      "dimensions": {
+        "requests": {
+          "attack": 138,
+          "control": 305,
+          "abs_delta": 167,
+          "rel_delta": 0.547541
+        },
+        "total_tokens": {
+          "attack": 39292,
+          "control": 39324,
+          "abs_delta": 32,
+          "rel_delta": 0.000814
+        },
+        "input_tokens": {
+          "attack": 31196,
+          "control": 19804,
+          "abs_delta": 11392,
+          "rel_delta": 0.365175
+        },
+        "requested_output_tokens": {
+          "attack": 8096,
+          "control": 19520,
+          "abs_delta": 11424,
+          "rel_delta": 0.585246
+        },
+        "realized_output_tokens": {
+          "attack": 6256,
+          "control": 17680,
+          "abs_delta": 11424,
+          "rel_delta": 0.646154
+        }
+      }
+    }
+  },
+  "run_dirs": {
+    "attack": {
+      "42": "/Users/h/Documents/paper/paper13-quotashift-bench/quotashift-bench/results/v4_r1_prefill_vs_short_L200_direct__attack/20261122T233447Z_fcfs_42",
+      "43": "/Users/h/Documents/paper/paper13-quotashift-bench/quotashift-bench/results/v4_r1_prefill_vs_short_L200_direct__attack/20261122T234216Z_fcfs_43",
+      "44": "/Users/h/Documents/paper/paper13-quotashift-bench/quotashift-bench/results/v4_r1_prefill_vs_short_L200_direct__attack/20261122T234443Z_fcfs_44",
+      "45": "/Users/h/Documents/paper/paper13-quotashift-bench/quotashift-bench/results/v4_r1_prefill_vs_short_L200_direct__attack/20261122T235209Z_fcfs_45",
+      "46": "/Users/h/Documents/paper/paper13-quotashift-bench/quotashift-bench/results/v4_r1_prefill_vs_short_L200_direct__attack/20261122T235436Z_fcfs_46"
+    },
+    "control": {
+      "42": "/Users/h/Documents/paper/paper13-quotashift-bench/quotashift-bench/results/v4_r1_prefill_vs_short_L200_direct__control/20261122T233719Z_fcfs_42",
+      "43": "/Users/h/Documents/paper/paper13-quotashift-bench/quotashift-bench/results/v4_r1_prefill_vs_short_L200_direct__control/20261122T233947Z_fcfs_43",
+      "44": "/Users/h/Documents/paper/paper13-quotashift-bench/quotashift-bench/results/v4_r1_prefill_vs_short_L200_direct__control/20261122T234711Z_fcfs_44",
+      "45": "/Users/h/Documents/paper/paper13-quotashift-bench/quotashift-bench/results/v4_r1_prefill_vs_short_L200_direct__control/20261122T234939Z_fcfs_45",
+      "46": "/Users/h/Documents/paper/paper13-quotashift-bench/quotashift-bench/results/v4_r1_prefill_vs_short_L200_direct__control/20261122T235704Z_fcfs_46"
+    }
+  },
+  "analysis": {
+    "metric": "user_ttft_p95",
+    "metric_label": "Victim user-facing TTFT P95",
+    "metric_unit": "ms",
+    "metric_kind": "victim_latency",
+    "metric_definition": "P95 over completed victim requests of t_first_token - t_offered (includes gateway queue)",
+    "preregistered_threshold": 1.25,
+    "effect_direction": "two_sided",
+    "classification": "inconclusive",
+    "n_seeds_with_metric": 5,
+    "n_seeds": 5,
+    "mean_ratio": 1.1505147525499626,
+    "median_ratio": 1.156813337099024,
+    "ratio_ci95": [
+      1.057189513268384,
+      1.2538969961285245
+    ],
+    "attack_success_rate": 0.2,
+    "mean_competitor_tokens": 24288.0,
+    "mean_competitor_requests": 23.0,
+    "slowdown_per_1k_competitor_tokens": 0.006197083026595957,
+    "slowdown_per_100_competitor_requests": 0.654411967608533
+  },
+  "per_seed": [
+    {
+      "seed": 42,
+      "attack_value": 189.97949641779994,
+      "control_value": 186.481091636233,
+      "ratio": 1.0187601045814942,
+      "crosses_threshold": false,
+      "attack_victim_timed_out": 0,
+      "control_victim_timed_out": 0,
+      "competitor_tokens": 24288,
+      "competitor_requests": 23
+    },
+    {
+      "seed": 43,
+      "attack_value": 191.28181021369528,
+      "control_value": 182.90354566124734,
+      "ratio": 1.045807010039954,
+      "crosses_threshold": false,
+      "attack_victim_timed_out": 0,
+      "control_victim_timed_out": 0,
+      "competitor_tokens": 24288,
+      "competitor_requests": 23
+    },
+    {
+      "seed": 44,
+      "attack_value": 203.78970802994445,
+      "control_value": 176.16472899680957,
+      "ratio": 1.156813337099024,
+      "crosses_threshold": false,
+      "attack_victim_timed_out": 0,
+      "control_victim_timed_out": 0,
+      "competitor_tokens": 24288,
+      "competitor_requests": 23
+    },
+    {
+      "seed": 45,
+      "attack_value": 229.69970852136612,
+      "control_value": 170.62285402789712,
+      "ratio": 1.3462423297866641,
+      "crosses_threshold": true,
+      "attack_victim_timed_out": 0,
+      "control_victim_timed_out": 0,
+      "competitor_tokens": 24288,
+      "competitor_requests": 23
+    },
+    {
+      "seed": 46,
+      "attack_value": 204.464808065677,
+      "control_value": 172.55127959069796,
+      "ratio": 1.1849509812426768,
+      "crosses_threshold": false,
+      "attack_victim_timed_out": 0,
+      "control_victim_timed_out": 0,
+      "competitor_tokens": 24288,
+      "competitor_requests": 23
+    }
+  ],
+  "secondary": {
+    "backend_ttft_p95": {
+      "metric": "backend_ttft_p95",
+      "metric_label": "Victim backend TTFT P95",
+      "metric_unit": "ms",
+      "metric_kind": "victim_latency",
+      "metric_definition": "P95 over completed victim requests of t_first_token - t_sent",
+      "preregistered_threshold": 1.25,
+      "effect_direction": "two_sided",
+      "classification": "inconclusive",
+      "n_seeds_with_metric": 5,
+      "n_seeds": 5,
+      "mean_ratio": 1.1505147525499626,
+      "median_ratio": 1.156813337099024,
+      "ratio_ci95": [
+        1.057189513268384,
+        1.2538969961285245
+      ],
+      "attack_success_rate": 0.2,
+      "mean_competitor_tokens": 24288.0,
+      "mean_competitor_requests": 23.0,
+      "slowdown_per_1k_competitor_tokens": 0.006197083026595957,
+      "slowdown_per_100_competitor_requests": 0.654411967608533
+    },
+    "user_ttft_p95": {
+      "metric": "user_ttft_p95",
+      "metric_label": "Victim user-facing TTFT P95",
+      "metric_unit": "ms",
+      "metric_kind": "victim_latency",
+      "metric_definition": "P95 over completed victim requests of t_first_token - t_offered (includes gateway queue)",
+      "preregistered_threshold": 1.25,
+      "effect_direction": "two_sided",
+      "classification": "inconclusive",
+      "n_seeds_with_metric": 5,
+      "n_seeds": 5,
+      "mean_ratio": 1.1505147525499626,
+      "median_ratio": 1.156813337099024,
+      "ratio_ci95": [
+        1.057189513268384,
+        1.2538969961285245
+      ],
+      "attack_success_rate": 0.2,
+      "mean_competitor_tokens": 24288.0,
+      "mean_competitor_requests": 23.0,
+      "slowdown_per_1k_competitor_tokens": 0.006197083026595957,
+      "slowdown_per_100_competitor_requests": 0.654411967608533
+    },
+    "e2e_p95": {
+      "metric": "e2e_p95",
+      "metric_label": "Victim end-to-end latency P95",
+      "metric_unit": "ms",
+      "metric_kind": "victim_latency",
+      "metric_definition": "P95 over completed victim requests of t_terminal - t_offered",
+      "preregistered_threshold": 1.25,
+      "effect_direction": "two_sided",
+      "classification": "negative",
+      "n_seeds_with_metric": 5,
+      "n_seeds": 5,
+      "mean_ratio": 1.1047585305150753,
+      "median_ratio": 1.1056387947242305,
+      "ratio_ci95": [
+        1.081522698182792,
+        1.1257770076883529
+      ],
+      "attack_success_rate": 0.0,
+      "mean_competitor_tokens": 24288.0,
+      "mean_competitor_requests": 23.0,
+      "slowdown_per_1k_competitor_tokens": 0.004313180604210941,
+      "slowdown_per_100_competitor_requests": 0.45547187180467535
+    },
+    "victim_slo_success_offered": {
+      "metric": "victim_slo_success_offered",
+      "metric_label": "Victim offered-load SLO success",
+      "metric_unit": "fraction of offered",
+      "metric_kind": "victim_success",
+      "metric_definition": "#victim requests that completed within their user-facing TTFT/TPOT/E2E SLO / #victim requests offered (timeouts, rejections and errors count as failures)",
+      "preregistered_threshold": 1.25,
+      "effect_direction": "two_sided",
+      "classification": "negative",
+      "n_seeds_with_metric": 5,
+      "n_seeds": 5,
+      "mean_ratio": 1.0,
+      "median_ratio": 1.0,
+      "ratio_ci95": [
+        1.0,
+        1.0
+      ],
+      "attack_success_rate": 0.0,
+      "mean_competitor_tokens": 24288.0,
+      "mean_competitor_requests": 23.0,
+      "slowdown_per_1k_competitor_tokens": NaN,
+      "slowdown_per_100_competitor_requests": NaN
+    },
+    "gpu_dynamic_energy_abs": {
+      "metric": "gpu_dynamic_energy_abs",
+      "metric_label": "Absolute GPU Dynamic Energy per Arm",
+      "metric_unit": "J per arm",
+      "metric_kind": "cost",
+      "metric_definition": "arm-window GPU dynamic energy (board power minus pre-arm idle), not normalized",
+      "preregistered_threshold": 1.25,
+      "effect_direction": "two_sided",
+      "classification": "negative",
+      "n_seeds_with_metric": 5,
+      "n_seeds": 5,
+      "mean_ratio": 0.8749651061377811,
+      "median_ratio": 0.8778191974884507,
+      "ratio_ci95": [
+        0.8611496908710358,
+        0.8887805214045267
+      ],
+      "attack_success_rate": 0.0,
+      "mean_competitor_tokens": 24288.0,
+      "mean_competitor_requests": 23.0,
+      "slowdown_per_1k_competitor_tokens": NaN,
+      "slowdown_per_100_competitor_requests": NaN
+    },
+    "gpu_energy_per_1k_authorized_tokens": {
+      "metric": "gpu_energy_per_1k_authorized_tokens",
+      "metric_label": "GPU Dynamic Energy per 1,000 Authorized Tokens",
+      "metric_unit": "J per 1,000 authorized tokens",
+      "metric_kind": "cost",
+      "metric_definition": "arm-window GPU dynamic energy (board power minus pre-arm idle) / (planned input + requested output tokens of all requests in the arm / 1000)",
+      "preregistered_threshold": 1.25,
+      "effect_direction": "two_sided",
+      "classification": "negative",
+      "n_seeds_with_metric": 5,
+      "n_seeds": 5,
+      "mean_ratio": 0.875691720541627,
+      "median_ratio": 0.8785415523710496,
+      "ratio_ci95": [
+        0.8618783139659119,
+        0.8895051271173424
+      ],
+      "attack_success_rate": 0.0,
+      "mean_competitor_tokens": 24288.0,
+      "mean_competitor_requests": 23.0,
+      "slowdown_per_1k_competitor_tokens": NaN,
+      "slowdown_per_100_competitor_requests": NaN
+    },
+    "gpu_energy_per_1k_realized_tokens": {
+      "metric": "gpu_energy_per_1k_realized_tokens",
+      "metric_label": "GPU Dynamic Energy per 1,000 Realized Tokens",
+      "metric_unit": "J per 1,000 realized tokens",
+      "metric_kind": "cost",
+      "metric_definition": "arm-window GPU dynamic energy / (engine-reported prompt + output tokens of completed requests / 1000)",
+      "preregistered_threshold": 1.25,
+      "effect_direction": "two_sided",
+      "classification": "negative",
+      "n_seeds_with_metric": 5,
+      "n_seeds": 5,
+      "mean_ratio": 0.875691720541627,
+      "median_ratio": 0.8785415523710496,
+      "ratio_ci95": [
+        0.8618783139659119,
+        0.8895051271173424
+      ],
+      "attack_success_rate": 0.0,
+      "mean_competitor_tokens": 24288.0,
+      "mean_competitor_requests": 23.0,
+      "slowdown_per_1k_competitor_tokens": NaN,
+      "slowdown_per_100_competitor_requests": NaN
+    },
+    "gpu_energy_with_tail_per_1k_authorized_tokens": {
+      "metric": "gpu_energy_with_tail_per_1k_authorized_tokens",
+      "metric_label": "GPU Dynamic Energy incl. Post-arm Tail per 1,000 Authorized Tokens",
+      "metric_unit": "J per 1,000 authorized tokens",
+      "metric_kind": "cost",
+      "metric_definition": "(arm-window + post-arm tail dynamic energy) / (authorized tokens / 1000)",
+      "preregistered_threshold": 1.25,
+      "effect_direction": "two_sided",
+      "classification": "negative",
+      "n_seeds_with_metric": 5,
+      "n_seeds": 5,
+      "mean_ratio": 0.8805953478278706,
+      "median_ratio": 0.882457342476414,
+      "ratio_ci95": [
+        0.8684954520987361,
+        0.8926952435570051
+      ],
+      "attack_success_rate": 0.0,
+      "mean_competitor_tokens": 24288.0,
+      "mean_competitor_requests": 23.0,
+      "slowdown_per_1k_competitor_tokens": NaN,
+      "slowdown_per_100_competitor_requests": NaN
+    },
+    "engine_service_s_per_1k_authorized_tokens": {
+      "metric": "engine_service_s_per_1k_authorized_tokens",
+      "metric_label": "Engine Service Time per 1,000 Authorized Tokens",
+      "metric_unit": "s per 1,000 authorized tokens",
+      "metric_kind": "cost",
+      "metric_definition": "(engine prefill-time + decode-time sums) / (authorized tokens / 1000)",
+      "preregistered_threshold": 1.25,
+      "effect_direction": "two_sided",
+      "classification": "supported",
+      "n_seeds_with_metric": 5,
+      "n_seeds": 5,
+      "mean_ratio": 0.4174383085925853,
+      "median_ratio": 0.41889935247650717,
+      "ratio_ci95": [
+        0.4062532839652973,
+        0.42691444677981255
+      ],
+      "attack_success_rate": 1.0,
+      "mean_competitor_tokens": 24288.0,
+      "mean_competitor_requests": 23.0,
+      "slowdown_per_1k_competitor_tokens": NaN,
+      "slowdown_per_100_competitor_requests": NaN
+    }
+  },
+  "validity": {
+    "passed": true,
+    "checks": [
+      {
+        "name": "backend_error_rate",
+        "passed": true,
+        "available": true,
+        "detail": "worst arm 0.0000 (max 0.01)",
+        "severity": "fail"
+      },
+      {
+        "name": "http_400_rate",
+        "passed": true,
+        "available": true,
+        "detail": "worst arm 0.0000 (max 0.01)",
+        "severity": "fail"
+      },
+      {
+        "name": "admission_rate",
+        "passed": true,
+        "available": true,
+        "detail": "lowest class admission 1.000 (min 0.95)",
+        "severity": "fail"
+      },
+      {
+        "name": "competitor_completion",
+        "passed": true,
+        "available": true,
+        "detail": "lowest arm 1.000 (min 0.95)",
+        "severity": "fail"
+      },
+      {
+        "name": "primary_metric_present",
+        "passed": true,
+        "available": true,
+        "detail": "5/5 seeds have a finite Victim user-facing TTFT P95",
+        "severity": "fail"
+      },
+      {
+        "name": "tokenized_context",
+        "passed": true,
+        "available": true,
+        "detail": "max completed prompt+max_output 1056.0 <= 4096; pre-run check ok",
+        "severity": "fail"
+      },
+      {
+        "name": "planned_vs_reported_tokens",
+        "passed": true,
+        "available": true,
+        "detail": "0 mismatch(es) among 2147/2147 completed requests reporting usage.prompt_tokens (planned input_token_count must equal it)",
+        "severity": "fail"
+      },
+      {
+        "name": "provenance",
+        "passed": true,
+        "available": true,
+        "detail": "sha 6c5615b0e019, clean, server start 1795268683.89",
+        "severity": "fail"
+      },
+      {
+        "name": "victim_latency_censoring",
+        "passed": true,
+        "available": true,
+        "detail": "worst arm censored fraction 0.000 (max 0.05); primary",
+        "severity": "fail"
+      },
+      {
+        "name": "arrival_coverage",
+        "passed": true,
+        "available": true,
+        "detail": "latest first arrival 0.191 (max 0.25), earliest last arrival 0.947 (min 0.75) of the window",
+        "severity": "fail"
+      },
+      {
+        "name": "realized_output_equals_authorized",
+        "passed": true,
+        "available": true,
+        "detail": "0 completed request(s) with output_tokens != max_output_tokens",
+        "severity": "fail"
+      }
+    ],
+    "flags": [],
+    "regime": null,
+    "thresholds": {
+      "max_backend_error_fraction": 0.01,
+      "max_http_400_fraction": 0.01,
+      "min_admission_fraction": 0.95,
+      "min_competitor_completion": 0.95,
+      "max_victim_censored_fraction": 0.05,
+      "max_first_arrival_fraction": 0.25,
+      "min_last_arrival_fraction": 0.75
+    }
+  },
+  "protocol_version": 4,
+  "path": "direct",
+  "arm_order": {
+    "42": [
+      "attack",
+      "control"
+    ],
+    "43": [
+      "control",
+      "attack"
+    ],
+    "44": [
+      "attack",
+      "control"
+    ],
+    "45": [
+      "control",
+      "attack"
+    ],
+    "46": [
+      "attack",
+      "control"
+    ]
+  },
+  "per_arm_prefix_cache_hit_ratio": {
+    "attack": {
+      "42": 0.0,
+      "43": 0.0,
+      "44": 0.0,
+      "45": 0.0,
+      "46": 0.0
+    },
+    "control": {
+      "42": 0.0,
+      "43": 0.0,
+      "44": 0.0,
+      "45": 0.0,
+      "46": 0.0
+    }
+  },
+  "unrelated_traffic_suspected": {
+    "attack": {
+      "42": false,
+      "43": false,
+      "44": false,
+      "45": false,
+      "46": false
+    },
+    "control": {
+      "42": false,
+      "43": false,
+      "44": false,
+      "45": false,
+      "46": false
+    }
+  },
+  "tokenization": {
+    "tokenizer": {
+      "kind": "vllm /tokenize",
+      "base_url": "http://192.168.86.173:8000",
+      "model": "Qwen/Qwen2.5-7B-Instruct"
+    },
+    "prompt_token_unit": "tokenizer",
+    "per_seed": {
+      "42": {
+        "attack": {
+          "label": "attack seed 42",
+          "requests": 122,
+          "max_model_len": 4096,
+          "max_context_tokens": 1056,
+          "over_context": 0,
+          "planned_vs_tokenized_mismatch": 0,
+          "exact_required": true,
+          "by_class": {
+            "victim": {
+              "requests": 99,
+              "planned_input": 6443,
+              "tokenized_input": 6443,
+              "max_output": 6336,
+              "max_context": 192
+            },
+            "competitor": {
+              "requests": 23,
+              "planned_input": 23552,
+              "tokenized_input": 23552,
+              "max_output": 736,
+              "max_context": 1056
+            }
+          },
+          "ok": true
+        },
+        "control": {
+          "label": "control seed 42",
+          "requests": 289,
+          "max_model_len": 4096,
+          "max_context_tokens": 192,
+          "over_context": 0,
+          "planned_vs_tokenized_mismatch": 0,
+          "exact_required": true,
+          "by_class": {
+            "competitor": {
+              "requests": 190,
+              "planned_input": 12160,
+              "tokenized_input": 12160,
+              "max_output": 12160,
+              "max_context": 128
+            },
+            "victim": {
+              "requests": 99,
+              "planned_input": 6443,
+              "tokenized_input": 6443,
+              "max_output": 6336,
+              "max_context": 192
+            }
+          },
+          "ok": true
+        }
+      },
+      "43": {
+        "attack": {
+          "label": "attack seed 43",
+          "requests": 133,
+          "max_model_len": 4096,
+          "max_context_tokens": 1056,
+          "over_context": 0,
+          "planned_vs_tokenized_mismatch": 0,
+          "exact_required": true,
+          "by_class": {
+            "victim": {
+              "requests": 110,
+              "planned_input": 7559,
+              "tokenized_input": 7559,
+              "max_output": 7040,
+              "max_context": 210
+            },
+            "competitor": {
+              "requests": 23,
+              "planned_input": 23552,
+              "tokenized_input": 23552,
+              "max_output": 736,
+              "max_context": 1056
+            }
+          },
+          "ok": true
+        },
+        "control": {
+          "label": "control seed 43",
+          "requests": 300,
+          "max_model_len": 4096,
+          "max_context_tokens": 210,
+          "over_context": 0,
+          "planned_vs_tokenized_mismatch": 0,
+          "exact_required": true,
+          "by_class": {
+            "competitor": {
+              "requests": 190,
+              "planned_input": 12160,
+              "tokenized_input": 12160,
+              "max_output": 12160,
+              "max_context": 128
+            },
+            "victim": {
+              "requests": 110,
+              "planned_input": 7559,
+              "tokenized_input": 7559,
+              "max_output": 7040,
+              "max_context": 210
+            }
+          },
+          "ok": true
+        }
+      },
+      "44": {
+        "attack": {
+          "label": "attack seed 44",
+          "requests": 134,
+          "max_model_len": 4096,
+          "max_context_tokens": 1056,
+          "over_context": 0,
+          "planned_vs_tokenized_mismatch": 0,
+          "exact_required": true,
+          "by_class": {
+            "competitor": {
+              "requests": 23,
+              "planned_input": 23552,
+              "tokenized_input": 23552,
+              "max_output": 736,
+              "max_context": 1056
+            },
+            "victim": {
+              "requests": 111,
+              "planned_input": 7998,
+              "tokenized_input": 7998,
+              "max_output": 7104,
+              "max_context": 224
+            }
+          },
+          "ok": true
+        },
+        "control": {
+          "label": "control seed 44",
+          "requests": 301,
+          "max_model_len": 4096,
+          "max_context_tokens": 224,
+          "over_context": 0,
+          "planned_vs_tokenized_mismatch": 0,
+          "exact_required": true,
+          "by_class": {
+            "competitor": {
+              "requests": 190,
+              "planned_input": 12160,
+              "tokenized_input": 12160,
+              "max_output": 12160,
+              "max_context": 128
+            },
+            "victim": {
+              "requests": 111,
+              "planned_input": 7998,
+              "tokenized_input": 7998,
+              "max_output": 7104,
+              "max_context": 224
+            }
+          },
+          "ok": true
+        }
+      },
+      "45": {
+        "attack": {
+          "label": "attack seed 45",
+          "requests": 129,
+          "max_model_len": 4096,
+          "max_context_tokens": 1056,
+          "over_context": 0,
+          "planned_vs_tokenized_mismatch": 0,
+          "exact_required": true,
+          "by_class": {
+            "victim": {
+              "requests": 106,
+              "planned_input": 6989,
+              "tokenized_input": 6989,
+              "max_output": 6784,
+              "max_context": 178
+            },
+            "competitor": {
+              "requests": 23,
+              "planned_input": 23552,
+              "tokenized_input": 23552,
+              "max_output": 736,
+              "max_context": 1056
+            }
+          },
+          "ok": true
+        },
+        "control": {
+          "label": "control seed 45",
+          "requests": 296,
+          "max_model_len": 4096,
+          "max_context_tokens": 178,
+          "over_context": 0,
+          "planned_vs_tokenized_mismatch": 0,
+          "exact_required": true,
+          "by_class": {
+            "victim": {
+              "requests": 106,
+              "planned_input": 6989,
+              "tokenized_input": 6989,
+              "max_output": 6784,
+              "max_context": 178
+            },
+            "competitor": {
+              "requests": 190,
+              "planned_input": 12160,
+              "tokenized_input": 12160,
+              "max_output": 12160,
+              "max_context": 128
+            }
+          },
+          "ok": true
+        }
+      },
+      "46": {
+        "attack": {
+          "label": "attack seed 46",
+          "requests": 138,
+          "max_model_len": 4096,
+          "max_context_tokens": 1056,
+          "over_context": 0,
+          "planned_vs_tokenized_mismatch": 0,
+          "exact_required": true,
+          "by_class": {
+            "victim": {
+              "requests": 115,
+              "planned_input": 7644,
+              "tokenized_input": 7644,
+              "max_output": 7360,
+              "max_context": 178
+            },
+            "competitor": {
+              "requests": 23,
+              "planned_input": 23552,
+              "tokenized_input": 23552,
+              "max_output": 736,
+              "max_context": 1056
+            }
+          },
+          "ok": true
+        },
+        "control": {
+          "label": "control seed 46",
+          "requests": 305,
+          "max_model_len": 4096,
+          "max_context_tokens": 178,
+          "over_context": 0,
+          "planned_vs_tokenized_mismatch": 0,
+          "exact_required": true,
+          "by_class": {
+            "competitor": {
+              "requests": 190,
+              "planned_input": 12160,
+              "tokenized_input": 12160,
+              "max_output": 12160,
+              "max_context": 128
+            },
+            "victim": {
+              "requests": 115,
+              "planned_input": 7644,
+              "tokenized_input": 7644,
+              "max_output": 7360,
+              "max_context": 178
+            }
+          },
+          "ok": true
+        }
+      }
+    }
+  },
+  "provenance": {
+    "git_sha": [
+      "6c5615b0e019b7dc97332981a6f0c75c0b145cbe"
+    ],
+    "git_dirty": [
+      "False"
+    ],
+    "server_start": [
+      "1795268683.89"
+    ],
+    "vllm_version": [
+      "{\"version\": \"0.17.1\"}"
+    ],
+    "model": [
+      "Qwen/Qwen2.5-7B-Instruct"
+    ],
+    "model_revision_in_run_manifest": [
+      "None"
+    ],
+    "missing": [],
+    "model_revision_server_reported": null,
+    "tokenizer_revision_server_reported": null,
+    "model_revision_documented": null,
+    "model_revision_status": "server reports revision=None (resolved from the hub default at load time); documented revision none is not server-verified"
+  },
+  "commands": [
+    "uv run quotashift budget experiments/v4/r3/v4_r1_prefill_vs_short_L200_direct.yaml",
+    "uv run quotashift experiment experiments/v4/r3/v4_r1_prefill_vs_short_L200_direct.yaml --reps 5 --live --path direct"
+  ]
+}

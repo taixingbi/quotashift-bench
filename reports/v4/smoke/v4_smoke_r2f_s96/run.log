@@ -1,0 +1,28 @@
+START 2026-11-22 08:11:48 EST
+{
+  "scenario_id": "v4_smoke_r2f_s96",
+  "control": "benign_only(self victims)",
+  "seeds": [
+    900
+  ],
+  "metric": "user_ttft_p95",
+  "mean_ratio": 49.483812380642135,
+  "classification": "insufficient_seeds",
+  "effect_direction": "two_sided",
+  "ratio_ci95": [
+    49.483812380642135,
+    49.483812380642135
+  ],
+  "attack_success_rate": 1.0,
+  "synthetic_backend": false,
+  "validity_passed": true,
+  "regime": "feasible",
+  "csv": "reports/v4/smoke/v4_smoke_r2f_s96/summary.csv",
+  "md": "reports/v4/smoke/v4_smoke_r2f_s96/summary.md",
+  "manifest": "reports/v4/smoke/v4_smoke_r2f_s96/manifest.json",
+  "figures": [
+    "reports/v4/smoke/v4_smoke_r2f_s96/figure_victim_latency.png",
+    "reports/v4/smoke/v4_smoke_r2f_s96/figure_degradation_ratio.png"
+  ]
+}
+END 2026-11-22 08:14:28 EST rc=0

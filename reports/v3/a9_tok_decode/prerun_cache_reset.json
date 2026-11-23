@@ -1,0 +1,9 @@
+{
+  "endpoint": "/reset_prefix_cache",
+  "verified": true,
+  "reset_http_status": 200,
+  "probe_hits_before_reset": 96.0,
+  "probe_hits_after_reset": 0.0,
+  "captured_utc": "2026-11-21T22:19:12.675306+00:00",
+  "note": "pre-block hygiene reset (not per-arm; scenario cache_reset unchanged)"
+}

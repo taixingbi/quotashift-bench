@@ -1,0 +1,9 @@
+{
+  "backend_kind": "mock",
+  "synthetic": true,
+  "model": null,
+  "hardware": "no NVIDIA GPU detected (arm64)",
+  "run_id": "20261119T004935Z_static_quota_11",
+  "seed": 11,
+  "caption": "Per-tenant SLO attainment and terminal-status accounting; single run (seed 11), no interval."
+}

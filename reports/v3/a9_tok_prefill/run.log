@@ -1,0 +1,30 @@
+START 2026-11-21 16:53:40 EST
+{
+  "scenario_id": "a9_tok_prefill",
+  "control": "matched_total_short",
+  "seeds": [
+    42,
+    43,
+    44,
+    45,
+    46
+  ],
+  "metric": "gpu_energy_per_1k_authorized_tokens",
+  "mean_ratio": 0.9035738269291171,
+  "classification": "negative",
+  "effect_direction": "two_sided",
+  "ratio_ci95": [
+    0.89088987990927,
+    0.9156014216102868
+  ],
+  "attack_success_rate": 0.0,
+  "synthetic_backend": false,
+  "csv": "reports/v3/a9_tok_prefill/summary.csv",
+  "md": "reports/v3/a9_tok_prefill/summary.md",
+  "manifest": "reports/v3/a9_tok_prefill/manifest.json",
+  "figures": [
+    "reports/v3/a9_tok_prefill/figure_victim_latency.png",
+    "reports/v3/a9_tok_prefill/figure_degradation_ratio.png"
+  ]
+}
+END 2026-11-21 17:19:10 EST rc=0

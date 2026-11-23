@@ -1,0 +1,5 @@
+START smoke 2026-11-21 21:16:08 EST commit 53d0ed38ec5516ed5855361f1f2c8009887fc560 dirty=0
+BLOCK a9_tok_longctx_v31_smoke START 21:16:08
+reset True 96.0 -> 0.0
+BLOCK a9_tok_longctx_v31_smoke END 21:18:43 rc=5
+STOPPED at a9_tok_longctx_v31_smoke rc=5

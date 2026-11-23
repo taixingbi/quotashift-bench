@@ -1,0 +1,34 @@
+{
+  "captured_utc": "2026-11-22T21:32:20.666600+00:00",
+  "target": "selfhost",
+  "check": {
+    "reachable": true,
+    "url": "http://192.168.86.173:8000/v1/models",
+    "served_models": [
+      "Qwen/Qwen2.5-7B-Instruct"
+    ],
+    "ok": true,
+    "problems": [],
+    "capabilities": {
+      "reset_prefix_cache_listed": true,
+      "prefix_caching": true,
+      "gpu_memory_utilization": 0.8,
+      "num_gpu_blocks": 4662,
+      "process_start_time_seconds": 1795268683.89,
+      "engine_idle": true,
+      "gpu_exporter": {
+        "power_w_ok": true,
+        "power_w": 140.358,
+        "sm_clock_mhz": 1725.0,
+        "gpu_util_perc": 0.0
+      }
+    }
+  },
+  "files": {
+    "version.json": true,
+    "models.json": true,
+    "metrics_vllm.prom": true,
+    "gpu_info.prom": true,
+    "model_revision.json": true
+  }
+}

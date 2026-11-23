@@ -1,0 +1,150 @@
+{
+  "schema_version": "1.0.0",
+  "experiment_id": "a8_retry_churn__attack",
+  "run_id": "20261121T213839Z_fcfs_43",
+  "created_wall_utc": "2026-11-21T21:40:42Z",
+  "seed": 43,
+  "scheduler": {
+    "name": "fcfs",
+    "deployable": true,
+    "params": {}
+  },
+  "backend_kind": "vllm",
+  "synthetic_backend": false,
+  "integrity_note": "real backend",
+  "clock": "monotonic",
+  "backend_info": {
+    "base_url": "http://192.168.86.173:8000",
+    "model": "Qwen/Qwen2.5-7B-Instruct",
+    "/version": {
+      "version": "0.17.1"
+    },
+    "/v1/models": {
+      "object": "list",
+      "data": [
+        {
+          "id": "Qwen/Qwen2.5-7B-Instruct",
+          "object": "model",
+          "created": 1795297119,
+          "owned_by": "vllm",
+          "root": "Qwen/Qwen2.5-7B-Instruct",
+          "parent": null,
+          "max_model_len": 4096,
+          "permission": [
+            {
+              "id": "modelperm-80c9c1f9b9262cdd",
+              "object": "model_permission",
+              "created": 1795297119,
+              "allow_create_engine": false,
+              "allow_sampling": true,
+              "allow_logprobs": true,
+              "allow_search_indices": false,
+              "allow_view": true,
+              "allow_fine_tuning": false,
+              "organization": "*",
+              "group": null,
+              "is_blocking": false
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "trace_sha256": "7ff7d1ee2a67b94040da01c4b0a5da63d5df84375820fed9810fb5f7f1c971a7",
+  "config_sha256": "f52143f024151f3d348aaeddccb7bded0364d6ccf6a755672f8b4c196d9d580f",
+  "git": {
+    "sha": "dbd7f178c6ec3da2842e712c9ef1258767425f7e",
+    "dirty": true,
+    "note": null
+  },
+  "python": "3.12.13 (main, Mar 25 2026, 03:16:06) [Clang 22.1.1 ]",
+  "platform": "macOS-26.7.3-arm64-arm-64bit",
+  "machine": "arm64",
+  "packages": {
+    "quotashift": "0.1.0",
+    "numpy": "2.4.6",
+    "pandas": "2.3.3",
+    "pyarrow": "26.0.1",
+    "pydantic": "2.14.3",
+    "httpx": "0.28.1",
+    "starlette": "1.10.0",
+    "uvicorn": "0.54.0",
+    "matplotlib": "3.11.2"
+  },
+  "gpu": {
+    "available": true,
+    "source": "exporter",
+    "exporter_url": "http://192.168.86.173:9835/metrics",
+    "gpu": {
+      "name": "NVIDIA GeForce RTX 3090",
+      "uuid": "a837190a-d9c2-ed45-994b-55319c6e258e",
+      "driver_version": "595.71.05",
+      "cuda_version": "13.2",
+      "vbios_version": "94.02.42.00.2F",
+      "pci_bus_id": "00000000:01:00.0",
+      "compute_cap": "8.6"
+    },
+    "gpu_type": "NVIDIA GeForce RTX 3090 (measured)"
+  },
+  "run_context": {
+    "path": "gateway",
+    "admission_policy": {
+      "name": "fcfs",
+      "deployable": true,
+      "params": {}
+    },
+    "rate_limits": null,
+    "queue_caps": {
+      "per_tenant": null,
+      "total": null,
+      "max_queue_wait_s": 60.0
+    },
+    "backend_identity": {
+      "kind": "vllm",
+      "base_url": "http://192.168.86.173:8000",
+      "model": "Qwen/Qwen2.5-7B-Instruct",
+      "model_revision": null,
+      "vllm_version": {
+        "version": "0.17.1"
+      }
+    },
+    "gpu_type": "NVIDIA GeForce RTX 3090 (measured)",
+    "prefix_caching_enabled": true,
+    "cache_config_info": {
+      "block_size": "16",
+      "cache_dtype": "auto",
+      "calculate_kv_scales": "False",
+      "cpu_kvcache_space_bytes": "None",
+      "cpu_offload_gb": "0",
+      "cpu_offload_params": "set()",
+      "enable_prefix_caching": "True",
+      "engine": "0",
+      "gpu_memory_utilization": "0.8",
+      "is_attention_free": "False",
+      "kv_cache_memory_bytes": "None",
+      "kv_offloading_backend": "native",
+      "kv_offloading_size": "None",
+      "kv_sharing_fast_prefill": "False",
+      "mamba_block_size": "None",
+      "mamba_cache_dtype": "auto",
+      "mamba_cache_mode": "none",
+      "mamba_page_size_padded": "None",
+      "mamba_ssm_cache_dtype": "auto",
+      "num_cpu_blocks": "None",
+      "num_gpu_blocks": "4662",
+      "num_gpu_blocks_override": "None",
+      "prefix_caching_hash_algo": "sha256",
+      "sliding_window": "None",
+      "swap_space": "4.0"
+    },
+    "unrelated_traffic_suspected": false,
+    "actual_counts": {
+      "requests_offered": 208,
+      "requests_completed": 176,
+      "prompt_tokens_reported": 23282,
+      "output_tokens": 23511,
+      "requested_input_tokens": 12502,
+      "requested_max_output_tokens": 32128
+    }
+  }
+}

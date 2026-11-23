@@ -1,0 +1,518 @@
+{
+  "scenario_id": "v4_smoke_r1_prefill_vs_short",
+  "control_label": "token_matched_fixed",
+  "seeds": [
+    900
+  ],
+  "synthetic_backend": false,
+  "metric": "user_ttft_p95",
+  "metric_label": "Victim user-facing TTFT P95",
+  "metric_unit": "ms",
+  "preregistered_threshold": 1.25,
+  "budget_tolerance": 0.05,
+  "per_seed_budget": {
+    "900": {
+      "tolerance": 0.05,
+      "required_matched_dims": [
+        "total_tokens"
+      ],
+      "violations": [],
+      "matched": true,
+      "dimensions": {
+        "requests": {
+          "attack": 42,
+          "control": 100,
+          "abs_delta": 58,
+          "rel_delta": 0.58
+        },
+        "total_tokens": {
+          "attack": 13070,
+          "control": 13070,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "input_tokens": {
+          "attack": 10638,
+          "control": 6670,
+          "abs_delta": 3968,
+          "rel_delta": 0.373002
+        },
+        "requested_output_tokens": {
+          "attack": 2432,
+          "control": 6400,
+          "abs_delta": 3968,
+          "rel_delta": 0.62
+        },
+        "realized_output_tokens": {
+          "attack": 1930,
+          "control": 5898,
+          "abs_delta": 3968,
+          "rel_delta": 0.67277
+        }
+      }
+    }
+  },
+  "run_dirs": {
+    "attack": {
+      "900": "/Users/h/Documents/paper/paper13-quotashift-bench/quotashift-bench/results/v4_smoke_r1_prefill_vs_short__attack/20261122T130915Z_fcfs_900"
+    },
+    "control": {
+      "900": "/Users/h/Documents/paper/paper13-quotashift-bench/quotashift-bench/results/v4_smoke_r1_prefill_vs_short__control/20261122T131038Z_fcfs_900"
+    }
+  },
+  "analysis": {
+    "metric": "user_ttft_p95",
+    "metric_label": "Victim user-facing TTFT P95",
+    "metric_unit": "ms",
+    "metric_kind": "victim_latency",
+    "metric_definition": "P95 over completed victim requests of t_first_token - t_offered (includes gateway queue)",
+    "preregistered_threshold": 1.25,
+    "effect_direction": "two_sided",
+    "classification": "insufficient_seeds",
+    "n_seeds_with_metric": 1,
+    "n_seeds": 1,
+    "mean_ratio": 1.5014762123660483,
+    "median_ratio": 1.5014762123660483,
+    "ratio_ci95": [
+      1.5014762123660483,
+      1.5014762123660483
+    ],
+    "attack_success_rate": 1.0,
+    "mean_competitor_tokens": 8448.0,
+    "mean_competitor_requests": 8.0,
+    "slowdown_per_1k_competitor_tokens": 0.05936034710772352,
+    "slowdown_per_100_competitor_requests": 6.268452654575604
+  },
+  "per_seed": [
+    {
+      "seed": 900,
+      "attack_value": 182.33914836600874,
+      "control_value": 121.43991817138149,
+      "ratio": 1.5014762123660483,
+      "crosses_threshold": true,
+      "attack_victim_timed_out": 0,
+      "control_victim_timed_out": 0,
+      "competitor_tokens": 8448,
+      "competitor_requests": 8
+    }
+  ],
+  "secondary": {
+    "backend_ttft_p95": {
+      "metric": "backend_ttft_p95",
+      "metric_label": "Victim backend TTFT P95",
+      "metric_unit": "ms",
+      "metric_kind": "victim_latency",
+      "metric_definition": "P95 over completed victim requests of t_first_token - t_sent",
+      "preregistered_threshold": 1.25,
+      "effect_direction": "two_sided",
+      "classification": "insufficient_seeds",
+      "n_seeds_with_metric": 1,
+      "n_seeds": 1,
+      "mean_ratio": 1.5014762123660483,
+      "median_ratio": 1.5014762123660483,
+      "ratio_ci95": [
+        1.5014762123660483,
+        1.5014762123660483
+      ],
+      "attack_success_rate": 1.0,
+      "mean_competitor_tokens": 8448.0,
+      "mean_competitor_requests": 8.0,
+      "slowdown_per_1k_competitor_tokens": 0.05936034710772352,
+      "slowdown_per_100_competitor_requests": 6.268452654575604
+    },
+    "user_ttft_p95": {
+      "metric": "user_ttft_p95",
+      "metric_label": "Victim user-facing TTFT P95",
+      "metric_unit": "ms",
+      "metric_kind": "victim_latency",
+      "metric_definition": "P95 over completed victim requests of t_first_token - t_offered (includes gateway queue)",
+      "preregistered_threshold": 1.25,
+      "effect_direction": "two_sided",
+      "classification": "insufficient_seeds",
+      "n_seeds_with_metric": 1,
+      "n_seeds": 1,
+      "mean_ratio": 1.5014762123660483,
+      "median_ratio": 1.5014762123660483,
+      "ratio_ci95": [
+        1.5014762123660483,
+        1.5014762123660483
+      ],
+      "attack_success_rate": 1.0,
+      "mean_competitor_tokens": 8448.0,
+      "mean_competitor_requests": 8.0,
+      "slowdown_per_1k_competitor_tokens": 0.05936034710772352,
+      "slowdown_per_100_competitor_requests": 6.268452654575604
+    },
+    "e2e_p95": {
+      "metric": "e2e_p95",
+      "metric_label": "Victim end-to-end latency P95",
+      "metric_unit": "ms",
+      "metric_kind": "victim_latency",
+      "metric_definition": "P95 over completed victim requests of t_terminal - t_offered",
+      "preregistered_threshold": 1.25,
+      "effect_direction": "two_sided",
+      "classification": "insufficient_seeds",
+      "n_seeds_with_metric": 1,
+      "n_seeds": 1,
+      "mean_ratio": 1.1116775798724816,
+      "median_ratio": 1.1116775798724816,
+      "ratio_ci95": [
+        1.1116775798724816,
+        1.1116775798724816
+      ],
+      "attack_success_rate": 0.0,
+      "mean_competitor_tokens": 8448.0,
+      "mean_competitor_requests": 8.0,
+      "slowdown_per_1k_competitor_tokens": 0.013219410496269129,
+      "slowdown_per_100_competitor_requests": 1.39596974840602
+    },
+    "victim_slo_success_offered": {
+      "metric": "victim_slo_success_offered",
+      "metric_label": "Victim offered-load SLO success",
+      "metric_unit": "fraction of offered",
+      "metric_kind": "victim_success",
+      "metric_definition": "#victim requests that completed within their user-facing TTFT/TPOT/E2E SLO / #victim requests offered (timeouts, rejections and errors count as failures)",
+      "preregistered_threshold": 1.25,
+      "effect_direction": "two_sided",
+      "classification": "insufficient_seeds",
+      "n_seeds_with_metric": 1,
+      "n_seeds": 1,
+      "mean_ratio": 1.0,
+      "median_ratio": 1.0,
+      "ratio_ci95": [
+        1.0,
+        1.0
+      ],
+      "attack_success_rate": 0.0,
+      "mean_competitor_tokens": 8448.0,
+      "mean_competitor_requests": 8.0,
+      "slowdown_per_1k_competitor_tokens": NaN,
+      "slowdown_per_100_competitor_requests": NaN
+    },
+    "gpu_dynamic_energy_abs": {
+      "metric": "gpu_dynamic_energy_abs",
+      "metric_label": "Absolute GPU Dynamic Energy per Arm",
+      "metric_unit": "J per arm",
+      "metric_kind": "cost",
+      "metric_definition": "arm-window GPU dynamic energy (board power minus pre-arm idle), not normalized",
+      "preregistered_threshold": 1.25,
+      "effect_direction": "two_sided",
+      "classification": "insufficient_seeds",
+      "n_seeds_with_metric": 1,
+      "n_seeds": 1,
+      "mean_ratio": 0.8819000109979839,
+      "median_ratio": 0.8819000109979839,
+      "ratio_ci95": [
+        0.8819000109979839,
+        0.8819000109979839
+      ],
+      "attack_success_rate": 0.0,
+      "mean_competitor_tokens": 8448.0,
+      "mean_competitor_requests": 8.0,
+      "slowdown_per_1k_competitor_tokens": NaN,
+      "slowdown_per_100_competitor_requests": NaN
+    },
+    "gpu_energy_per_1k_authorized_tokens": {
+      "metric": "gpu_energy_per_1k_authorized_tokens",
+      "metric_label": "GPU Dynamic Energy per 1,000 Authorized Tokens",
+      "metric_unit": "J per 1,000 authorized tokens",
+      "metric_kind": "cost",
+      "metric_definition": "arm-window GPU dynamic energy (board power minus pre-arm idle) / (planned input + requested output tokens of all requests in the arm / 1000)",
+      "preregistered_threshold": 1.25,
+      "effect_direction": "two_sided",
+      "classification": "insufficient_seeds",
+      "n_seeds_with_metric": 1,
+      "n_seeds": 1,
+      "mean_ratio": 0.8819000109979839,
+      "median_ratio": 0.8819000109979839,
+      "ratio_ci95": [
+        0.8819000109979839,
+        0.8819000109979839
+      ],
+      "attack_success_rate": 0.0,
+      "mean_competitor_tokens": 8448.0,
+      "mean_competitor_requests": 8.0,
+      "slowdown_per_1k_competitor_tokens": NaN,
+      "slowdown_per_100_competitor_requests": NaN
+    },
+    "gpu_energy_per_1k_realized_tokens": {
+      "metric": "gpu_energy_per_1k_realized_tokens",
+      "metric_label": "GPU Dynamic Energy per 1,000 Realized Tokens",
+      "metric_unit": "J per 1,000 realized tokens",
+      "metric_kind": "cost",
+      "metric_definition": "arm-window GPU dynamic energy / (engine-reported prompt + output tokens of completed requests / 1000)",
+      "preregistered_threshold": 1.25,
+      "effect_direction": "two_sided",
+      "classification": "insufficient_seeds",
+      "n_seeds_with_metric": 1,
+      "n_seeds": 1,
+      "mean_ratio": 0.8819000109979839,
+      "median_ratio": 0.8819000109979839,
+      "ratio_ci95": [
+        0.8819000109979839,
+        0.8819000109979839
+      ],
+      "attack_success_rate": 0.0,
+      "mean_competitor_tokens": 8448.0,
+      "mean_competitor_requests": 8.0,
+      "slowdown_per_1k_competitor_tokens": NaN,
+      "slowdown_per_100_competitor_requests": NaN
+    },
+    "gpu_energy_with_tail_per_1k_authorized_tokens": {
+      "metric": "gpu_energy_with_tail_per_1k_authorized_tokens",
+      "metric_label": "GPU Dynamic Energy incl. Post-arm Tail per 1,000 Authorized Tokens",
+      "metric_unit": "J per 1,000 authorized tokens",
+      "metric_kind": "cost",
+      "metric_definition": "(arm-window + post-arm tail dynamic energy) / (authorized tokens / 1000)",
+      "preregistered_threshold": 1.25,
+      "effect_direction": "two_sided",
+      "classification": "insufficient_seeds",
+      "n_seeds_with_metric": 1,
+      "n_seeds": 1,
+      "mean_ratio": 0.8944419873391964,
+      "median_ratio": 0.8944419873391964,
+      "ratio_ci95": [
+        0.8944419873391964,
+        0.8944419873391964
+      ],
+      "attack_success_rate": 0.0,
+      "mean_competitor_tokens": 8448.0,
+      "mean_competitor_requests": 8.0,
+      "slowdown_per_1k_competitor_tokens": NaN,
+      "slowdown_per_100_competitor_requests": NaN
+    },
+    "engine_service_s_per_1k_authorized_tokens": {
+      "metric": "engine_service_s_per_1k_authorized_tokens",
+      "metric_label": "Engine Service Time per 1,000 Authorized Tokens",
+      "metric_unit": "s per 1,000 authorized tokens",
+      "metric_kind": "cost",
+      "metric_definition": "(engine prefill-time + decode-time sums) / (authorized tokens / 1000)",
+      "preregistered_threshold": 1.25,
+      "effect_direction": "two_sided",
+      "classification": "insufficient_seeds",
+      "n_seeds_with_metric": 1,
+      "n_seeds": 1,
+      "mean_ratio": 0.39266201301036685,
+      "median_ratio": 0.39266201301036685,
+      "ratio_ci95": [
+        0.39266201301036685,
+        0.39266201301036685
+      ],
+      "attack_success_rate": 1.0,
+      "mean_competitor_tokens": 8448.0,
+      "mean_competitor_requests": 8.0,
+      "slowdown_per_1k_competitor_tokens": NaN,
+      "slowdown_per_100_competitor_requests": NaN
+    }
+  },
+  "validity": {
+    "passed": true,
+    "checks": [
+      {
+        "name": "backend_error_rate",
+        "passed": true,
+        "available": true,
+        "detail": "worst arm 0.0000 (max 0.01)",
+        "severity": "fail"
+      },
+      {
+        "name": "http_400_rate",
+        "passed": true,
+        "available": true,
+        "detail": "worst arm 0.0000 (max 0.01)",
+        "severity": "fail"
+      },
+      {
+        "name": "admission_rate",
+        "passed": true,
+        "available": true,
+        "detail": "lowest class admission 1.000 (min 0.95)",
+        "severity": "fail"
+      },
+      {
+        "name": "competitor_completion",
+        "passed": true,
+        "available": true,
+        "detail": "lowest arm 1.000 (min 0.95)",
+        "severity": "fail"
+      },
+      {
+        "name": "primary_metric_present",
+        "passed": true,
+        "available": true,
+        "detail": "1/1 seeds have a finite Victim user-facing TTFT P95",
+        "severity": "fail"
+      },
+      {
+        "name": "tokenized_context",
+        "passed": true,
+        "available": true,
+        "detail": "max completed prompt+max_output 1056.0 <= 4096; pre-run check ok",
+        "severity": "fail"
+      },
+      {
+        "name": "planned_vs_reported_tokens",
+        "passed": true,
+        "available": true,
+        "detail": "0 mismatch(es) among 142/142 completed requests reporting usage.prompt_tokens (planned input_token_count must equal it)",
+        "severity": "fail"
+      },
+      {
+        "name": "provenance",
+        "passed": true,
+        "available": true,
+        "detail": "sha 46e37f686c25, clean, server start 1795268683.89",
+        "severity": "fail"
+      },
+      {
+        "name": "victim_latency_censoring",
+        "passed": true,
+        "available": true,
+        "detail": "worst arm censored fraction 0.000 (max 0.05); primary",
+        "severity": "fail"
+      },
+      {
+        "name": "arrival_coverage",
+        "passed": true,
+        "available": true,
+        "detail": "latest first arrival 0.204 (max 0.25), earliest last arrival 0.988 (min 0.75) of the window",
+        "severity": "fail"
+      },
+      {
+        "name": "realized_output_equals_authorized",
+        "passed": true,
+        "available": true,
+        "detail": "0 completed request(s) with output_tokens != max_output_tokens",
+        "severity": "fail"
+      }
+    ],
+    "flags": [],
+    "regime": null,
+    "thresholds": {
+      "max_backend_error_fraction": 0.01,
+      "max_http_400_fraction": 0.01,
+      "min_admission_fraction": 0.95,
+      "min_competitor_completion": 0.95,
+      "max_victim_censored_fraction": 0.05,
+      "max_first_arrival_fraction": 0.25,
+      "min_last_arrival_fraction": 0.75
+    }
+  },
+  "protocol_version": 4,
+  "path": "gateway",
+  "arm_order": {
+    "900": [
+      "attack",
+      "control"
+    ]
+  },
+  "per_arm_prefix_cache_hit_ratio": {
+    "attack": {
+      "900": 0.0
+    },
+    "control": {
+      "900": 0.0
+    }
+  },
+  "unrelated_traffic_suspected": {
+    "attack": {
+      "900": false
+    },
+    "control": {
+      "900": false
+    }
+  },
+  "tokenization": {
+    "tokenizer": {
+      "kind": "vllm /tokenize",
+      "base_url": "http://192.168.86.173:8000",
+      "model": "Qwen/Qwen2.5-7B-Instruct"
+    },
+    "prompt_token_unit": "tokenizer",
+    "per_seed": {
+      "900": {
+        "attack": {
+          "label": "attack seed 900",
+          "requests": 42,
+          "max_model_len": 4096,
+          "max_context_tokens": 1056,
+          "over_context": 0,
+          "planned_vs_tokenized_mismatch": 0,
+          "exact_required": true,
+          "by_class": {
+            "victim": {
+              "requests": 34,
+              "planned_input": 2446,
+              "tokenized_input": 2446,
+              "max_output": 2176,
+              "max_context": 184
+            },
+            "competitor": {
+              "requests": 8,
+              "planned_input": 8192,
+              "tokenized_input": 8192,
+              "max_output": 256,
+              "max_context": 1056
+            }
+          },
+          "ok": true
+        },
+        "control": {
+          "label": "control seed 900",
+          "requests": 100,
+          "max_model_len": 4096,
+          "max_context_tokens": 184,
+          "over_context": 0,
+          "planned_vs_tokenized_mismatch": 0,
+          "exact_required": true,
+          "by_class": {
+            "victim": {
+              "requests": 34,
+              "planned_input": 2446,
+              "tokenized_input": 2446,
+              "max_output": 2176,
+              "max_context": 184
+            },
+            "competitor": {
+              "requests": 66,
+              "planned_input": 4224,
+              "tokenized_input": 4224,
+              "max_output": 4224,
+              "max_context": 128
+            }
+          },
+          "ok": true
+        }
+      }
+    }
+  },
+  "provenance": {
+    "git_sha": [
+      "46e37f686c2591a2d12effe5b6fe21370396ccdb"
+    ],
+    "git_dirty": [
+      "False"
+    ],
+    "server_start": [
+      "1795268683.89"
+    ],
+    "vllm_version": [
+      "{\"version\": \"0.17.1\"}"
+    ],
+    "model": [
+      "Qwen/Qwen2.5-7B-Instruct"
+    ],
+    "model_revision_in_run_manifest": [
+      "None"
+    ],
+    "missing": [],
+    "model_revision_server_reported": null,
+    "tokenizer_revision_server_reported": null,
+    "model_revision_documented": null,
+    "model_revision_status": "server reports revision=None (resolved from the hub default at load time); documented revision none is not server-verified"
+  },
+  "commands": [
+    "uv run quotashift budget experiments/v4/smoke/v4_smoke_r1_prefill_vs_short.yaml",
+    "uv run quotashift experiment experiments/v4/smoke/v4_smoke_r1_prefill_vs_short.yaml --reps 1 --live --path gateway"
+  ]
+}

@@ -1,0 +1,258 @@
+{
+  "scenario_id": "a4_mixed_shapes",
+  "control_label": "homogeneous_mixture",
+  "seeds": [
+    42,
+    43,
+    44,
+    45,
+    46
+  ],
+  "synthetic_backend": false,
+  "metric": "ttft_p95",
+  "preregistered_threshold": 1.5,
+  "budget_tolerance": 0.05,
+  "per_seed_budget": {
+    "42": {
+      "tolerance": 0.05,
+      "required_matched_dims": [
+        "requests",
+        "total_tokens"
+      ],
+      "violations": [],
+      "matched": true,
+      "dimensions": {
+        "requests": {
+          "attack": 67,
+          "control": 67,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "total_tokens": {
+          "attack": 17830,
+          "control": 17840,
+          "abs_delta": 10,
+          "rel_delta": 0.000561
+        },
+        "input_tokens": {
+          "attack": 11366,
+          "control": 11376,
+          "abs_delta": 10,
+          "rel_delta": 0.000879
+        },
+        "requested_output_tokens": {
+          "attack": 6464,
+          "control": 6464,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "realized_output_tokens": {
+          "attack": 4789,
+          "control": 4781,
+          "abs_delta": 8,
+          "rel_delta": 0.00167
+        }
+      }
+    },
+    "43": {
+      "tolerance": 0.05,
+      "required_matched_dims": [
+        "requests",
+        "total_tokens"
+      ],
+      "violations": [],
+      "matched": true,
+      "dimensions": {
+        "requests": {
+          "attack": 73,
+          "control": 73,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "total_tokens": {
+          "attack": 19223,
+          "control": 19209,
+          "abs_delta": 14,
+          "rel_delta": 0.000728
+        },
+        "input_tokens": {
+          "attack": 12247,
+          "control": 12233,
+          "abs_delta": 14,
+          "rel_delta": 0.001143
+        },
+        "requested_output_tokens": {
+          "attack": 6976,
+          "control": 6976,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "realized_output_tokens": {
+          "attack": 5418,
+          "control": 5409,
+          "abs_delta": 9,
+          "rel_delta": 0.001661
+        }
+      }
+    },
+    "44": {
+      "tolerance": 0.05,
+      "required_matched_dims": [
+        "requests",
+        "total_tokens"
+      ],
+      "violations": [],
+      "matched": true,
+      "dimensions": {
+        "requests": {
+          "attack": 82,
+          "control": 82,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "total_tokens": {
+          "attack": 21017,
+          "control": 20998,
+          "abs_delta": 19,
+          "rel_delta": 0.000904
+        },
+        "input_tokens": {
+          "attack": 13209,
+          "control": 13190,
+          "abs_delta": 19,
+          "rel_delta": 0.001438
+        },
+        "requested_output_tokens": {
+          "attack": 7808,
+          "control": 7808,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "realized_output_tokens": {
+          "attack": 5963,
+          "control": 5967,
+          "abs_delta": 4,
+          "rel_delta": 0.00067
+        }
+      }
+    },
+    "45": {
+      "tolerance": 0.05,
+      "required_matched_dims": [
+        "requests",
+        "total_tokens"
+      ],
+      "violations": [],
+      "matched": true,
+      "dimensions": {
+        "requests": {
+          "attack": 68,
+          "control": 68,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "total_tokens": {
+          "attack": 17310,
+          "control": 17302,
+          "abs_delta": 8,
+          "rel_delta": 0.000462
+        },
+        "input_tokens": {
+          "attack": 10910,
+          "control": 10902,
+          "abs_delta": 8,
+          "rel_delta": 0.000733
+        },
+        "requested_output_tokens": {
+          "attack": 6400,
+          "control": 6400,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "realized_output_tokens": {
+          "attack": 4657,
+          "control": 4671,
+          "abs_delta": 14,
+          "rel_delta": 0.002997
+        }
+      }
+    },
+    "46": {
+      "tolerance": 0.05,
+      "required_matched_dims": [
+        "requests",
+        "total_tokens"
+      ],
+      "violations": [],
+      "matched": true,
+      "dimensions": {
+        "requests": {
+          "attack": 61,
+          "control": 61,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "total_tokens": {
+          "attack": 17542,
+          "control": 17525,
+          "abs_delta": 17,
+          "rel_delta": 0.000969
+        },
+        "input_tokens": {
+          "attack": 11398,
+          "control": 11381,
+          "abs_delta": 17,
+          "rel_delta": 0.001491
+        },
+        "requested_output_tokens": {
+          "attack": 6144,
+          "control": 6144,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "realized_output_tokens": {
+          "attack": 4524,
+          "control": 4518,
+          "abs_delta": 6,
+          "rel_delta": 0.001326
+        }
+      }
+    }
+  },
+  "run_dirs": {
+    "attack": {
+      "42": "/Users/h/Documents/paper/paper13-quotashift/quotashift-bench/results/a4_mixed_shapes__attack/20261120T125615Z_fcfs_42",
+      "43": "/Users/h/Documents/paper/paper13-quotashift/quotashift-bench/results/a4_mixed_shapes__attack/20261120T125819Z_fcfs_43",
+      "44": "/Users/h/Documents/paper/paper13-quotashift/quotashift-bench/results/a4_mixed_shapes__attack/20261120T130021Z_fcfs_44",
+      "45": "/Users/h/Documents/paper/paper13-quotashift/quotashift-bench/results/a4_mixed_shapes__attack/20261120T130225Z_fcfs_45",
+      "46": "/Users/h/Documents/paper/paper13-quotashift/quotashift-bench/results/a4_mixed_shapes__attack/20261120T130428Z_fcfs_46"
+    },
+    "control": {
+      "42": "/Users/h/Documents/paper/paper13-quotashift/quotashift-bench/results/a4_mixed_shapes__control/20261120T125717Z_fcfs_42",
+      "43": "/Users/h/Documents/paper/paper13-quotashift/quotashift-bench/results/a4_mixed_shapes__control/20261120T125920Z_fcfs_43",
+      "44": "/Users/h/Documents/paper/paper13-quotashift/quotashift-bench/results/a4_mixed_shapes__control/20261120T130123Z_fcfs_44",
+      "45": "/Users/h/Documents/paper/paper13-quotashift/quotashift-bench/results/a4_mixed_shapes__control/20261120T130326Z_fcfs_45",
+      "46": "/Users/h/Documents/paper/paper13-quotashift/quotashift-bench/results/a4_mixed_shapes__control/20261120T130530Z_fcfs_46"
+    }
+  },
+  "analysis": {
+    "metric": "ttft_p95",
+    "preregistered_threshold": 1.5,
+    "n_seeds": 5,
+    "mean_ratio": 1.3469319434796665,
+    "median_ratio": 1.26083086997056,
+    "ratio_ci95": [
+      1.2337039108480332,
+      1.4745619103165049
+    ],
+    "attack_success_rate": 0.2,
+    "mean_competitor_tokens": 14074.4,
+    "mean_competitor_requests": 35.4,
+    "slowdown_per_1k_competitor_tokens": 0.02464985672424164,
+    "slowdown_per_100_competitor_requests": 0.9800337386431257
+  },
+  "commands": [
+    "uv run quotashift budget experiments/a4_mixed_shapes.yaml",
+    "uv run quotashift experiment experiments/a4_mixed_shapes.yaml --reps 5 --live"
+  ]
+}

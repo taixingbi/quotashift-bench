@@ -1,0 +1,78 @@
+{
+  "schema_version": "1.0.0",
+  "experiment_id": "a1_burst_arrivals__attack",
+  "run_id": "20261120T234125Z_fcfs_45",
+  "created_wall_utc": "2026-11-20T23:42:26Z",
+  "seed": 45,
+  "scheduler": {
+    "name": "fcfs",
+    "deployable": true,
+    "params": {}
+  },
+  "backend_kind": "vllm",
+  "synthetic_backend": false,
+  "integrity_note": "real backend",
+  "clock": "monotonic",
+  "backend_info": {
+    "base_url": "http://192.168.86.173:8000",
+    "model": "Qwen/Qwen2.5-7B-Instruct",
+    "/version": {
+      "version": "0.17.1"
+    },
+    "/v1/models": {
+      "object": "list",
+      "data": [
+        {
+          "id": "Qwen/Qwen2.5-7B-Instruct",
+          "object": "model",
+          "created": 1795218085,
+          "owned_by": "vllm",
+          "root": "Qwen/Qwen2.5-7B-Instruct",
+          "parent": null,
+          "max_model_len": 4096,
+          "permission": [
+            {
+              "id": "modelperm-a1fd9e21141cdb8f",
+              "object": "model_permission",
+              "created": 1795218085,
+              "allow_create_engine": false,
+              "allow_sampling": true,
+              "allow_logprobs": true,
+              "allow_search_indices": false,
+              "allow_view": true,
+              "allow_fine_tuning": false,
+              "organization": "*",
+              "group": null,
+              "is_blocking": false
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "trace_sha256": "3ba2d674baaf50178e7ce72a00a375a34367648281c3c732c20b0e7cda94fc00",
+  "config_sha256": "ed63a1424a6243774f9f45dd6a3420ca839c07f213da3873ad579e0be63b2c73",
+  "git": {
+    "sha": "fc1d1559b77dbb8a7f4fd1be06f2ef4b669e88d7",
+    "dirty": false,
+    "note": null
+  },
+  "python": "3.12.13 (main, Mar 25 2026, 03:16:06) [Clang 22.1.1 ]",
+  "platform": "macOS-26.7.3-arm64-arm-64bit",
+  "machine": "arm64",
+  "packages": {
+    "quotashift": "0.1.0",
+    "numpy": "2.4.6",
+    "pandas": "2.3.3",
+    "pyarrow": "26.0.1",
+    "pydantic": "2.14.3",
+    "httpx": "0.28.1",
+    "starlette": "1.10.0",
+    "uvicorn": "0.54.0",
+    "matplotlib": "3.11.2"
+  },
+  "gpu": {
+    "available": false,
+    "reason": "nvidia-smi not found"
+  }
+}

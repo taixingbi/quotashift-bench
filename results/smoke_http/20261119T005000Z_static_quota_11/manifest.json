@@ -1,0 +1,75 @@
+{
+  "schema_version": "1.0.0",
+  "experiment_id": "smoke_http",
+  "run_id": "20261119T005000Z_static_quota_11",
+  "created_wall_utc": "2026-11-19T00:50:20Z",
+  "seed": 11,
+  "scheduler": {
+    "name": "static_quota",
+    "deployable": true,
+    "params": {
+      "max_inflight_per_tenant": 16
+    }
+  },
+  "backend_kind": "mock_http",
+  "synthetic_backend": true,
+  "integrity_note": "MOCK BACKEND: timings come from an uncalibrated simulator; NOT GPU measurements",
+  "clock": "monotonic",
+  "backend_info": {
+    "base_url": "http://127.0.0.1:65006",
+    "model": "mock-model",
+    "/version": {
+      "version": "risksched-mock-0.1",
+      "mock": true,
+      "engine_params": {
+        "kv_blocks_total": 4096,
+        "block_size": 16,
+        "max_num_seqs": 64,
+        "max_num_batched_tokens": 2048,
+        "max_model_len": 8192,
+        "scheduling_policy": "fcfs",
+        "c0_s": 0.004,
+        "c_prefill_s": 4e-05,
+        "c_decode_s": 0.0002,
+        "c_ctx_s": 2e-07,
+        "calibration_note": "UNCALIBRATED placeholder coefficients (no GPU measurement)"
+      }
+    },
+    "/v1/models": {
+      "object": "list",
+      "data": [
+        {
+          "id": "mock-model",
+          "object": "model",
+          "owned_by": "risksched-mock",
+          "max_model_len": 8192
+        }
+      ]
+    }
+  },
+  "trace_sha256": "ed773381dd0714bb43b76bd1e8645a4b8d6a83203aa5d14d8a51cef9ce2f4916",
+  "config_sha256": "ba43debc914e6a8f34d3608591b320fa56923f807d0f69e8c1faa6bce21e3f96",
+  "git": {
+    "sha": null,
+    "dirty": true,
+    "note": "no commit yet / not a git repo: results are not tied to a commit"
+  },
+  "python": "3.11.15 (main, Mar 25 2026, 02:58:47) [Clang 22.1.1 ]",
+  "platform": "macOS-26.6.2-arm64-arm-64bit",
+  "machine": "arm64",
+  "packages": {
+    "risksched": "0.1.0",
+    "numpy": "2.4.6",
+    "pandas": "2.3.3",
+    "pyarrow": "26.0.1",
+    "pydantic": "2.14.3",
+    "httpx": "0.28.1",
+    "starlette": "1.10.0",
+    "uvicorn": "0.54.0",
+    "matplotlib": "3.11.2"
+  },
+  "gpu": {
+    "available": false,
+    "reason": "nvidia-smi not found"
+  }
+}

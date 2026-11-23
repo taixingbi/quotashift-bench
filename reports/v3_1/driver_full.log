@@ -1,0 +1,5 @@
+START full 2026-11-21 21:24:46 EST commit 02448f8cb6adc31d924d9e8b3f86a0cc0e7f7585 dirty=0
+BLOCK a9_tok_longctx_v31 START 21:24:47
+reset True 96.0 -> 0.0
+BLOCK a9_tok_longctx_v31 END 21:50:30 rc=5
+STOPPED at a9_tok_longctx_v31 rc=5

@@ -1,0 +1,110 @@
+{
+  "cell_status_counts": {
+    "ok": 48,
+    "skipped_unsupported": 16
+  },
+  "max_output_tok_per_s_by_shape": {
+    "p256-o128": 2460.421808563806,
+    "p256-o512": 2598.6945620286065,
+    "p1024-o128": 1167.9504474211153,
+    "p1024-o512": 1514.7162953204931,
+    "p4096-o128": 370.0115335919347,
+    "p4096-o512": 564.1614218575736
+  },
+  "n_trials_per_cell_min": 2,
+  "cells_with_preemption": [
+    {
+      "prompt_tokens": 1024,
+      "max_tokens": 128,
+      "concurrency": 64
+    },
+    {
+      "prompt_tokens": 1024,
+      "max_tokens": 512,
+      "concurrency": 64
+    },
+    {
+      "prompt_tokens": 4096,
+      "max_tokens": 128,
+      "concurrency": 16
+    },
+    {
+      "prompt_tokens": 4096,
+      "max_tokens": 128,
+      "concurrency": 64
+    },
+    {
+      "prompt_tokens": 4096,
+      "max_tokens": 512,
+      "concurrency": 16
+    },
+    {
+      "prompt_tokens": 4096,
+      "max_tokens": 512,
+      "concurrency": 64
+    }
+  ],
+  "rate_sweep": [
+    {
+      "rate_rps": 1.0,
+      "completed_rps": 1.0499999999999998,
+      "offered_rps": 1.0666666666666669,
+      "ttft_p95_ms": 47.100770000000104,
+      "success": 1.0,
+      "trials": 2
+    },
+    {
+      "rate_rps": 2.0,
+      "completed_rps": 1.8833333333333333,
+      "offered_rps": 1.9166666666666665,
+      "ttft_p95_ms": 48.582255000000444,
+      "success": 1.0,
+      "trials": 2
+    },
+    {
+      "rate_rps": 4.0,
+      "completed_rps": 3.4916666666666667,
+      "offered_rps": 3.6333333333333333,
+      "ttft_p95_ms": 73.9073600000003,
+      "success": 1.0,
+      "trials": 2
+    },
+    {
+      "rate_rps": 8.0,
+      "completed_rps": 4.949999999999999,
+      "offered_rps": 8.041666666666668,
+      "ttft_p95_ms": 21488.641619999882,
+      "success": 0.19817439862542954,
+      "trials": 2
+    },
+    {
+      "rate_rps": 12.0,
+      "completed_rps": 4.883333333333333,
+      "offered_rps": 11.891666666666666,
+      "ttft_p95_ms": 60953.96599999998,
+      "success": 0.08354284455251157,
+      "trials": 2
+    },
+    {
+      "rate_rps": 16.0,
+      "completed_rps": 4.783333333333333,
+      "offered_rps": 16.141666666666666,
+      "ttft_p95_ms": 104518.92125000025,
+      "success": 0.06298414695252615,
+      "trials": 2
+    },
+    {
+      "rate_rps": 24.0,
+      "completed_rps": 4.75,
+      "offered_rps": 24.35,
+      "ttft_p95_ms": 189872.13029000023,
+      "success": 0.042470133718422384,
+      "trials": 2
+    }
+  ],
+  "estimated_saturation_knee_rps": 4.0,
+  "knee_rule": "max offered rate with mean completed_rps >= 0.95 x offered and mean p95 TTFT <= 2000.0 ms (provisional)",
+  "controlled_saturation_observed": true,
+  "synthetic_backend": true,
+  "wall_seconds": 19.487691164016724
+}

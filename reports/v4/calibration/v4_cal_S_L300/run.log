@@ -1,0 +1,28 @@
+START 2026-11-22 08:46:47 EST
+{
+  "scenario_id": "v4_cal_S_L300",
+  "control": "identical_workload",
+  "seeds": [
+    1000
+  ],
+  "metric": "user_ttft_p95",
+  "mean_ratio": 0.9927167411181013,
+  "classification": "insufficient_seeds",
+  "effect_direction": "two_sided",
+  "ratio_ci95": [
+    0.9927167411181013,
+    0.9927167411181013
+  ],
+  "attack_success_rate": 0.0,
+  "synthetic_backend": false,
+  "validity_passed": true,
+  "regime": null,
+  "csv": "reports/v4/calibration/v4_cal_S_L300/summary.csv",
+  "md": "reports/v4/calibration/v4_cal_S_L300/summary.md",
+  "manifest": "reports/v4/calibration/v4_cal_S_L300/manifest.json",
+  "figures": [
+    "reports/v4/calibration/v4_cal_S_L300/figure_victim_latency.png",
+    "reports/v4/calibration/v4_cal_S_L300/figure_degradation_ratio.png"
+  ]
+}
+END 2026-11-22 08:52:03 EST rc=0

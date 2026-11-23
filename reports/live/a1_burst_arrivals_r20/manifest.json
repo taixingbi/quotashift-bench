@@ -1,0 +1,918 @@
+{
+  "scenario_id": "a1_burst_arrivals",
+  "control_label": "uniform_arrivals",
+  "seeds": [
+    42,
+    43,
+    44,
+    45,
+    46,
+    47,
+    48,
+    49,
+    50,
+    51,
+    52,
+    53,
+    54,
+    55,
+    56,
+    57,
+    58,
+    59,
+    60,
+    61
+  ],
+  "synthetic_backend": false,
+  "metric": "ttft_p95",
+  "preregistered_threshold": 1.5,
+  "budget_tolerance": 0.05,
+  "per_seed_budget": {
+    "42": {
+      "tolerance": 0.05,
+      "required_matched_dims": [
+        "requests",
+        "total_tokens"
+      ],
+      "violations": [],
+      "matched": true,
+      "dimensions": {
+        "requests": {
+          "attack": 124,
+          "control": 124,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "total_tokens": {
+          "attack": 16472,
+          "control": 16472,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "input_tokens": {
+          "attack": 8536,
+          "control": 8536,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "requested_output_tokens": {
+          "attack": 7936,
+          "control": 7936,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "realized_output_tokens": {
+          "attack": 5915,
+          "control": 5915,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        }
+      }
+    },
+    "43": {
+      "tolerance": 0.05,
+      "required_matched_dims": [
+        "requests",
+        "total_tokens"
+      ],
+      "violations": [],
+      "matched": true,
+      "dimensions": {
+        "requests": {
+          "attack": 145,
+          "control": 145,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "total_tokens": {
+          "attack": 18962,
+          "control": 18962,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "input_tokens": {
+          "attack": 9682,
+          "control": 9682,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "requested_output_tokens": {
+          "attack": 9280,
+          "control": 9280,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "realized_output_tokens": {
+          "attack": 7210,
+          "control": 7210,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        }
+      }
+    },
+    "44": {
+      "tolerance": 0.05,
+      "required_matched_dims": [
+        "requests",
+        "total_tokens"
+      ],
+      "violations": [],
+      "matched": true,
+      "dimensions": {
+        "requests": {
+          "attack": 131,
+          "control": 131,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "total_tokens": {
+          "attack": 16912,
+          "control": 16912,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "input_tokens": {
+          "attack": 8528,
+          "control": 8528,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "requested_output_tokens": {
+          "attack": 8384,
+          "control": 8384,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "realized_output_tokens": {
+          "attack": 6372,
+          "control": 6372,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        }
+      }
+    },
+    "45": {
+      "tolerance": 0.05,
+      "required_matched_dims": [
+        "requests",
+        "total_tokens"
+      ],
+      "violations": [],
+      "matched": true,
+      "dimensions": {
+        "requests": {
+          "attack": 119,
+          "control": 119,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "total_tokens": {
+          "attack": 15523,
+          "control": 15523,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "input_tokens": {
+          "attack": 7907,
+          "control": 7907,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "requested_output_tokens": {
+          "attack": 7616,
+          "control": 7616,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "realized_output_tokens": {
+          "attack": 5634,
+          "control": 5634,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        }
+      }
+    },
+    "46": {
+      "tolerance": 0.05,
+      "required_matched_dims": [
+        "requests",
+        "total_tokens"
+      ],
+      "violations": [],
+      "matched": true,
+      "dimensions": {
+        "requests": {
+          "attack": 163,
+          "control": 163,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "total_tokens": {
+          "attack": 21290,
+          "control": 21290,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "input_tokens": {
+          "attack": 10858,
+          "control": 10858,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "requested_output_tokens": {
+          "attack": 10432,
+          "control": 10432,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "realized_output_tokens": {
+          "attack": 7938,
+          "control": 7938,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        }
+      }
+    },
+    "47": {
+      "tolerance": 0.05,
+      "required_matched_dims": [
+        "requests",
+        "total_tokens"
+      ],
+      "violations": [],
+      "matched": true,
+      "dimensions": {
+        "requests": {
+          "attack": 170,
+          "control": 170,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "total_tokens": {
+          "attack": 22484,
+          "control": 22484,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "input_tokens": {
+          "attack": 11604,
+          "control": 11604,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "requested_output_tokens": {
+          "attack": 10880,
+          "control": 10880,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "realized_output_tokens": {
+          "attack": 8311,
+          "control": 8311,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        }
+      }
+    },
+    "48": {
+      "tolerance": 0.05,
+      "required_matched_dims": [
+        "requests",
+        "total_tokens"
+      ],
+      "violations": [],
+      "matched": true,
+      "dimensions": {
+        "requests": {
+          "attack": 147,
+          "control": 147,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "total_tokens": {
+          "attack": 18941,
+          "control": 18941,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "input_tokens": {
+          "attack": 9533,
+          "control": 9533,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "requested_output_tokens": {
+          "attack": 9408,
+          "control": 9408,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "realized_output_tokens": {
+          "attack": 7136,
+          "control": 7136,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        }
+      }
+    },
+    "49": {
+      "tolerance": 0.05,
+      "required_matched_dims": [
+        "requests",
+        "total_tokens"
+      ],
+      "violations": [],
+      "matched": true,
+      "dimensions": {
+        "requests": {
+          "attack": 144,
+          "control": 144,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "total_tokens": {
+          "attack": 18624,
+          "control": 18624,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "input_tokens": {
+          "attack": 9408,
+          "control": 9408,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "requested_output_tokens": {
+          "attack": 9216,
+          "control": 9216,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "realized_output_tokens": {
+          "attack": 6940,
+          "control": 6940,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        }
+      }
+    },
+    "50": {
+      "tolerance": 0.05,
+      "required_matched_dims": [
+        "requests",
+        "total_tokens"
+      ],
+      "violations": [],
+      "matched": true,
+      "dimensions": {
+        "requests": {
+          "attack": 134,
+          "control": 134,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "total_tokens": {
+          "attack": 17732,
+          "control": 17732,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "input_tokens": {
+          "attack": 9156,
+          "control": 9156,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "requested_output_tokens": {
+          "attack": 8576,
+          "control": 8576,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "realized_output_tokens": {
+          "attack": 6283,
+          "control": 6283,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        }
+      }
+    },
+    "51": {
+      "tolerance": 0.05,
+      "required_matched_dims": [
+        "requests",
+        "total_tokens"
+      ],
+      "violations": [],
+      "matched": true,
+      "dimensions": {
+        "requests": {
+          "attack": 182,
+          "control": 182,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "total_tokens": {
+          "attack": 23578,
+          "control": 23578,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "input_tokens": {
+          "attack": 11930,
+          "control": 11930,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "requested_output_tokens": {
+          "attack": 11648,
+          "control": 11648,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "realized_output_tokens": {
+          "attack": 8769,
+          "control": 8769,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        }
+      }
+    },
+    "52": {
+      "tolerance": 0.05,
+      "required_matched_dims": [
+        "requests",
+        "total_tokens"
+      ],
+      "violations": [],
+      "matched": true,
+      "dimensions": {
+        "requests": {
+          "attack": 207,
+          "control": 207,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "total_tokens": {
+          "attack": 26739,
+          "control": 26739,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "input_tokens": {
+          "attack": 13491,
+          "control": 13491,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "requested_output_tokens": {
+          "attack": 13248,
+          "control": 13248,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "realized_output_tokens": {
+          "attack": 10005,
+          "control": 10005,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        }
+      }
+    },
+    "53": {
+      "tolerance": 0.05,
+      "required_matched_dims": [
+        "requests",
+        "total_tokens"
+      ],
+      "violations": [],
+      "matched": true,
+      "dimensions": {
+        "requests": {
+          "attack": 159,
+          "control": 159,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "total_tokens": {
+          "attack": 21088,
+          "control": 21088,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "input_tokens": {
+          "attack": 10912,
+          "control": 10912,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "requested_output_tokens": {
+          "attack": 10176,
+          "control": 10176,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "realized_output_tokens": {
+          "attack": 7625,
+          "control": 7625,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        }
+      }
+    },
+    "54": {
+      "tolerance": 0.05,
+      "required_matched_dims": [
+        "requests",
+        "total_tokens"
+      ],
+      "violations": [],
+      "matched": true,
+      "dimensions": {
+        "requests": {
+          "attack": 130,
+          "control": 130,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "total_tokens": {
+          "attack": 16863,
+          "control": 16863,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "input_tokens": {
+          "attack": 8543,
+          "control": 8543,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "requested_output_tokens": {
+          "attack": 8320,
+          "control": 8320,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "realized_output_tokens": {
+          "attack": 6496,
+          "control": 6496,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        }
+      }
+    },
+    "55": {
+      "tolerance": 0.05,
+      "required_matched_dims": [
+        "requests",
+        "total_tokens"
+      ],
+      "violations": [],
+      "matched": true,
+      "dimensions": {
+        "requests": {
+          "attack": 134,
+          "control": 134,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "total_tokens": {
+          "attack": 18155,
+          "control": 18155,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "input_tokens": {
+          "attack": 9579,
+          "control": 9579,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "requested_output_tokens": {
+          "attack": 8576,
+          "control": 8576,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "realized_output_tokens": {
+          "attack": 6467,
+          "control": 6467,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        }
+      }
+    },
+    "56": {
+      "tolerance": 0.05,
+      "required_matched_dims": [
+        "requests",
+        "total_tokens"
+      ],
+      "violations": [],
+      "matched": true,
+      "dimensions": {
+        "requests": {
+          "attack": 121,
+          "control": 121,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "total_tokens": {
+          "attack": 15994,
+          "control": 15994,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "input_tokens": {
+          "attack": 8250,
+          "control": 8250,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "requested_output_tokens": {
+          "attack": 7744,
+          "control": 7744,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "realized_output_tokens": {
+          "attack": 5835,
+          "control": 5835,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        }
+      }
+    },
+    "57": {
+      "tolerance": 0.05,
+      "required_matched_dims": [
+        "requests",
+        "total_tokens"
+      ],
+      "violations": [],
+      "matched": true,
+      "dimensions": {
+        "requests": {
+          "attack": 99,
+          "control": 99,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "total_tokens": {
+          "attack": 12974,
+          "control": 12974,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "input_tokens": {
+          "attack": 6638,
+          "control": 6638,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "requested_output_tokens": {
+          "attack": 6336,
+          "control": 6336,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "realized_output_tokens": {
+          "attack": 4690,
+          "control": 4690,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        }
+      }
+    },
+    "58": {
+      "tolerance": 0.05,
+      "required_matched_dims": [
+        "requests",
+        "total_tokens"
+      ],
+      "violations": [],
+      "matched": true,
+      "dimensions": {
+        "requests": {
+          "attack": 175,
+          "control": 175,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "total_tokens": {
+          "attack": 22894,
+          "control": 22894,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "input_tokens": {
+          "attack": 11694,
+          "control": 11694,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "requested_output_tokens": {
+          "attack": 11200,
+          "control": 11200,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "realized_output_tokens": {
+          "attack": 8705,
+          "control": 8705,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        }
+      }
+    },
+    "59": {
+      "tolerance": 0.05,
+      "required_matched_dims": [
+        "requests",
+        "total_tokens"
+      ],
+      "violations": [],
+      "matched": true,
+      "dimensions": {
+        "requests": {
+          "attack": 115,
+          "control": 115,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "total_tokens": {
+          "attack": 15337,
+          "control": 15337,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "input_tokens": {
+          "attack": 7977,
+          "control": 7977,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "requested_output_tokens": {
+          "attack": 7360,
+          "control": 7360,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "realized_output_tokens": {
+          "attack": 5552,
+          "control": 5552,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        }
+      }
+    },
+    "60": {
+      "tolerance": 0.05,
+      "required_matched_dims": [
+        "requests",
+        "total_tokens"
+      ],
+      "violations": [],
+      "matched": true,
+      "dimensions": {
+        "requests": {
+          "attack": 139,
+          "control": 139,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "total_tokens": {
+          "attack": 18413,
+          "control": 18413,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "input_tokens": {
+          "attack": 9517,
+          "control": 9517,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "requested_output_tokens": {
+          "attack": 8896,
+          "control": 8896,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "realized_output_tokens": {
+          "attack": 6659,
+          "control": 6659,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        }
+      }
+    },
+    "61": {
+      "tolerance": 0.05,
+      "required_matched_dims": [
+        "requests",
+        "total_tokens"
+      ],
+      "violations": [],
+      "matched": true,
+      "dimensions": {
+        "requests": {
+          "attack": 126,
+          "control": 126,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "total_tokens": {
+          "attack": 16389,
+          "control": 16389,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "input_tokens": {
+          "attack": 8325,
+          "control": 8325,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "requested_output_tokens": {
+          "attack": 8064,
+          "control": 8064,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "realized_output_tokens": {
+          "attack": 6279,
+          "control": 6279,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        }
+      }
+    }
+  },
+  "run_dirs": {
+    "attack": {
+      "42": "/Users/h/Documents/paper/paper13-quotashift/quotashift-bench/results/a1_burst_arrivals__attack/20261120T233520Z_fcfs_42",
+      "43": "/Users/h/Documents/paper/paper13-quotashift/quotashift-bench/results/a1_burst_arrivals__attack/20261120T233722Z_fcfs_43",
+      "44": "/Users/h/Documents/paper/paper13-quotashift/quotashift-bench/results/a1_burst_arrivals__attack/20261120T233925Z_fcfs_44",
+      "45": "/Users/h/Documents/paper/paper13-quotashift/quotashift-bench/results/a1_burst_arrivals__attack/20261120T234125Z_fcfs_45",
+      "46": "/Users/h/Documents/paper/paper13-quotashift/quotashift-bench/results/a1_burst_arrivals__attack/20261120T234327Z_fcfs_46",
+      "47": "/Users/h/Documents/paper/paper13-quotashift/quotashift-bench/results/a1_burst_arrivals__attack/20261120T234534Z_fcfs_47",
+      "48": "/Users/h/Documents/paper/paper13-quotashift/quotashift-bench/results/a1_burst_arrivals__attack/20261120T234737Z_fcfs_48",
+      "49": "/Users/h/Documents/paper/paper13-quotashift/quotashift-bench/results/a1_burst_arrivals__attack/20261120T234943Z_fcfs_49",
+      "50": "/Users/h/Documents/paper/paper13-quotashift/quotashift-bench/results/a1_burst_arrivals__attack/20261120T235148Z_fcfs_50",
+      "51": "/Users/h/Documents/paper/paper13-quotashift/quotashift-bench/results/a1_burst_arrivals__attack/20261120T235350Z_fcfs_51",
+      "52": "/Users/h/Documents/paper/paper13-quotashift/quotashift-bench/results/a1_burst_arrivals__attack/20261120T235600Z_fcfs_52",
+      "53": "/Users/h/Documents/paper/paper13-quotashift/quotashift-bench/results/a1_burst_arrivals__attack/20261120T235828Z_fcfs_53",
+      "54": "/Users/h/Documents/paper/paper13-quotashift/quotashift-bench/results/a1_burst_arrivals__attack/20261121T000035Z_fcfs_54",
+      "55": "/Users/h/Documents/paper/paper13-quotashift/quotashift-bench/results/a1_burst_arrivals__attack/20261121T000242Z_fcfs_55",
+      "56": "/Users/h/Documents/paper/paper13-quotashift/quotashift-bench/results/a1_burst_arrivals__attack/20261121T000442Z_fcfs_56",
+      "57": "/Users/h/Documents/paper/paper13-quotashift/quotashift-bench/results/a1_burst_arrivals__attack/20261121T000645Z_fcfs_57",
+      "58": "/Users/h/Documents/paper/paper13-quotashift/quotashift-bench/results/a1_burst_arrivals__attack/20261121T000846Z_fcfs_58",
+      "59": "/Users/h/Documents/paper/paper13-quotashift/quotashift-bench/results/a1_burst_arrivals__attack/20261121T001059Z_fcfs_59",
+      "60": "/Users/h/Documents/paper/paper13-quotashift/quotashift-bench/results/a1_burst_arrivals__attack/20261121T001301Z_fcfs_60",
+      "61": "/Users/h/Documents/paper/paper13-quotashift/quotashift-bench/results/a1_burst_arrivals__attack/20261121T001503Z_fcfs_61"
+    },
+    "control": {
+      "42": "/Users/h/Documents/paper/paper13-quotashift/quotashift-bench/results/a1_burst_arrivals__control/20261120T233620Z_fcfs_42",
+      "43": "/Users/h/Documents/paper/paper13-quotashift/quotashift-bench/results/a1_burst_arrivals__control/20261120T233823Z_fcfs_43",
+      "44": "/Users/h/Documents/paper/paper13-quotashift/quotashift-bench/results/a1_burst_arrivals__control/20261120T234024Z_fcfs_44",
+      "45": "/Users/h/Documents/paper/paper13-quotashift/quotashift-bench/results/a1_burst_arrivals__control/20261120T234226Z_fcfs_45",
+      "46": "/Users/h/Documents/paper/paper13-quotashift/quotashift-bench/results/a1_burst_arrivals__control/20261120T234432Z_fcfs_46",
+      "47": "/Users/h/Documents/paper/paper13-quotashift/quotashift-bench/results/a1_burst_arrivals__control/20261120T234636Z_fcfs_47",
+      "48": "/Users/h/Documents/paper/paper13-quotashift/quotashift-bench/results/a1_burst_arrivals__control/20261120T234841Z_fcfs_48",
+      "49": "/Users/h/Documents/paper/paper13-quotashift/quotashift-bench/results/a1_burst_arrivals__control/20261120T235047Z_fcfs_49",
+      "50": "/Users/h/Documents/paper/paper13-quotashift/quotashift-bench/results/a1_burst_arrivals__control/20261120T235249Z_fcfs_50",
+      "51": "/Users/h/Documents/paper/paper13-quotashift/quotashift-bench/results/a1_burst_arrivals__control/20261120T235456Z_fcfs_51",
+      "52": "/Users/h/Documents/paper/paper13-quotashift/quotashift-bench/results/a1_burst_arrivals__control/20261120T235717Z_fcfs_52",
+      "53": "/Users/h/Documents/paper/paper13-quotashift/quotashift-bench/results/a1_burst_arrivals__control/20261120T235934Z_fcfs_53",
+      "54": "/Users/h/Documents/paper/paper13-quotashift/quotashift-bench/results/a1_burst_arrivals__control/20261121T000140Z_fcfs_54",
+      "55": "/Users/h/Documents/paper/paper13-quotashift/quotashift-bench/results/a1_burst_arrivals__control/20261121T000341Z_fcfs_55",
+      "56": "/Users/h/Documents/paper/paper13-quotashift/quotashift-bench/results/a1_burst_arrivals__control/20261121T000544Z_fcfs_56",
+      "57": "/Users/h/Documents/paper/paper13-quotashift/quotashift-bench/results/a1_burst_arrivals__control/20261121T000745Z_fcfs_57",
+      "58": "/Users/h/Documents/paper/paper13-quotashift/quotashift-bench/results/a1_burst_arrivals__control/20261121T000957Z_fcfs_58",
+      "59": "/Users/h/Documents/paper/paper13-quotashift/quotashift-bench/results/a1_burst_arrivals__control/20261121T001200Z_fcfs_59",
+      "60": "/Users/h/Documents/paper/paper13-quotashift/quotashift-bench/results/a1_burst_arrivals__control/20261121T001402Z_fcfs_60",
+      "61": "/Users/h/Documents/paper/paper13-quotashift/quotashift-bench/results/a1_burst_arrivals__control/20261121T001605Z_fcfs_61"
+    }
+  },
+  "analysis": {
+    "metric": "ttft_p95",
+    "preregistered_threshold": 1.5,
+    "n_seeds": 20,
+    "mean_ratio": 1.5898711648143498,
+    "median_ratio": 1.5840310470126568,
+    "ratio_ci95": [
+      1.5315044515694838,
+      1.6547268230976468
+    ],
+    "attack_success_rate": 0.7,
+    "mean_competitor_tokens": 14147.15,
+    "mean_competitor_requests": 107.85,
+    "slowdown_per_1k_competitor_tokens": 0.0416954061287503,
+    "slowdown_per_100_competitor_requests": 0.5469366386781175
+  },
+  "commands": [
+    "uv run quotashift budget experiments/a1_burst_arrivals.yaml",
+    "uv run quotashift experiment experiments/a1_burst_arrivals.yaml --reps 20 --live"
+  ]
+}

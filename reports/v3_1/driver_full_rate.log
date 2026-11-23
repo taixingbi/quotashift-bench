@@ -1,0 +1,4 @@
+START rate-only 2026-11-21 21:50:53 EST commit 02448f8cb6adc31d924d9e8b3f86a0cc0e7f7585 dirty=0 (tok block ended rc=5: competitor_completion gate; rate block independent)
+reset True 96.0 -> 0.0
+BLOCK a9_rate_longctx_v31 START 21:50:53
+BLOCK a9_rate_longctx_v31 END 22:16:03 rc=0

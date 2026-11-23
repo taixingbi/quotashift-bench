@@ -1,0 +1,221 @@
+$ python -m risksched.cli doctor
+{
+  "python": "3.11.15 (main, Mar 25 2026, 02:58:47) [Clang 22.1.1 ]",
+  "packages": {
+    "risksched": "0.1.0",
+    "numpy": "2.4.6",
+    "pandas": "2.3.3",
+    "pyarrow": "26.0.1",
+    "pydantic": "2.14.3",
+    "httpx": "0.28.1",
+    "starlette": "1.10.0",
+    "uvicorn": "0.54.0",
+    "matplotlib": "3.11.2"
+  },
+  "git": {
+    "sha": null,
+    "dirty": true,
+    "note": "no commit yet / not a git repo: results are not tied to a commit"
+  },
+  "tools": {
+    "terraform": {
+      "path": "/opt/homebrew/bin/terraform",
+      "version": "Terraform v1.15.6"
+    },
+    "docker": {
+      "path": "/Applications/Docker.app/Contents/Resources/bin/docker",
+      "version": "Docker version 29.3.0, build 5927d80"
+    },
+    "aws": {
+      "path": "/opt/homebrew/bin/aws",
+      "version": "aws-cli/2.35.8 Python/3.14.6 Darwin/25.6.0 source/arm64"
+    },
+    "nvidia-smi": {
+      "path": null,
+      "version": null
+    },
+    "uv": {
+      "path": "/Users/h/.local/bin/uv",
+      "version": "uv 0.11.3 (45da18ac3 2026-04-01 aarch64-apple-darwin)"
+    },
+    "git": {
+      "path": "/opt/homebrew/bin/git",
+      "version": "git version 2.53.0"
+    }
+  },
+  "gpu": {
+    "available": false,
+    "reason": "nvidia-smi not found"
+  },
+  "notes": [
+    "No AWS API calls are made by doctor.",
+    "Real-GPU E0 requires an NVIDIA GPU host running a pinned vLLM server (see docs/REPRODUCIBILITY.md)."
+  ]
+}
+exit=0
+$ python -m risksched.cli validate-env
+{
+  "ok": true,
+  "checks": {
+    "configs/tenants/three_tenants.yaml": true,
+    "configs/experiments/smoke.yaml": true,
+    "configs/experiments/e0.yaml": true,
+    "config_schema_validation": true
+  }
+}
+exit=0
+$ python -m risksched.cli generate-workload --config configs/tenants/three_tenants.yaml --seed 11
+{
+  "trace": "/Users/h/Documents/paper/paper13-gpu-aware-llm-scheduler/gpu-aware-llm-scheduler/results/traces/three_tenants_v1_s11.jsonl",
+  "sha256": "cf1ad6edcdfe2fa5e572ee344292a4ce9497e1025f58cbacc8977cfecb2cffa0",
+  "n_requests": 479,
+  "per_tenant": {
+    "A": 245,
+    "C": 154,
+    "B": 80
+  },
+  "note": "synthetic-template prompts: token-trace simulation, not semantic replay"
+}
+exit=0
+$ python -m risksched.cli generate-workload --config configs/tenants/three_tenants.yaml --seed 12
+{
+  "trace": "/Users/h/Documents/paper/paper13-gpu-aware-llm-scheduler/gpu-aware-llm-scheduler/results/traces/three_tenants_v1_s12.jsonl",
+  "sha256": "60de28121b0045152a806f10e286843aff6d4a6de32e4e590c93fc9bdbc0dcd3",
+  "n_requests": 367,
+  "per_tenant": {
+    "A": 200,
+    "C": 99,
+    "B": 68
+  },
+  "note": "synthetic-template prompts: token-trace simulation, not semantic replay"
+}
+exit=0
+$ python -m risksched.cli run --config configs/experiments/smoke.yaml --scheduler fcfs --seed 11
+{
+  "run_dir": "/Users/h/Documents/paper/paper13-gpu-aware-llm-scheduler/gpu-aware-llm-scheduler/results/smoke/20261119T004933Z_fcfs_11",
+  "offered": 479,
+  "status_counts": {
+    "completed": 479,
+    "rejected": 0,
+    "timed_out": 0,
+    "backend_error": 0,
+    "cancelled": 0
+  },
+  "accounting_conserved": true,
+  "event_validation_ok": true,
+  "slo_goodput_rps": 1.8916666666666666,
+  "worst_tenant_slo_attainment": 0.37551020408163266,
+  "synthetic_backend": true
+}
+exit=0
+$ python -m risksched.cli run --config configs/experiments/smoke.yaml --scheduler static_quota --seed 11
+{
+  "run_dir": "/Users/h/Documents/paper/paper13-gpu-aware-llm-scheduler/gpu-aware-llm-scheduler/results/smoke/20261119T004935Z_static_quota_11",
+  "offered": 479,
+  "status_counts": {
+    "completed": 479,
+    "rejected": 0,
+    "timed_out": 0,
+    "backend_error": 0,
+    "cancelled": 0
+  },
+  "accounting_conserved": true,
+  "event_validation_ok": true,
+  "slo_goodput_rps": 2.825,
+  "worst_tenant_slo_attainment": 0.38961038961038963,
+  "synthetic_backend": true
+}
+exit=0
+$ python -m risksched.cli run --config configs/experiments/smoke.yaml --scheduler fcfs --seed 12
+{
+  "run_dir": "/Users/h/Documents/paper/paper13-gpu-aware-llm-scheduler/gpu-aware-llm-scheduler/results/smoke/20261119T004937Z_fcfs_12",
+  "offered": 367,
+  "status_counts": {
+    "completed": 367,
+    "rejected": 0,
+    "timed_out": 0,
+    "backend_error": 0,
+    "cancelled": 0
+  },
+  "accounting_conserved": true,
+  "event_validation_ok": true,
+  "slo_goodput_rps": 2.65,
+  "worst_tenant_slo_attainment": 0.7171717171717171,
+  "synthetic_backend": true
+}
+exit=0
+$ python -m risksched.cli run --config configs/experiments/smoke.yaml --scheduler static_quota --seed 12
+{
+  "run_dir": "/Users/h/Documents/paper/paper13-gpu-aware-llm-scheduler/gpu-aware-llm-scheduler/results/smoke/20261119T004938Z_static_quota_12",
+  "offered": 367,
+  "status_counts": {
+    "completed": 367,
+    "rejected": 0,
+    "timed_out": 0,
+    "backend_error": 0,
+    "cancelled": 0
+  },
+  "accounting_conserved": true,
+  "event_validation_ok": true,
+  "slo_goodput_rps": 2.6083333333333334,
+  "worst_tenant_slo_attainment": 0.45454545454545453,
+  "synthetic_backend": true
+}
+exit=0
+$ python -m risksched.cli run --config configs/experiments/smoke_http.yaml --scheduler fcfs --seed 11
+{
+  "run_dir": "/Users/h/Documents/paper/paper13-gpu-aware-llm-scheduler/gpu-aware-llm-scheduler/results/smoke_http/20261119T004939Z_fcfs_11",
+  "offered": 72,
+  "status_counts": {
+    "completed": 72,
+    "rejected": 0,
+    "timed_out": 0,
+    "backend_error": 0,
+    "cancelled": 0
+  },
+  "accounting_conserved": true,
+  "event_validation_ok": true,
+  "slo_goodput_rps": 4.8,
+  "worst_tenant_slo_attainment": 1.0,
+  "synthetic_backend": true
+}
+exit=0
+$ python -m risksched.cli run --config configs/experiments/smoke_http.yaml --scheduler static_quota --seed 11
+{
+  "run_dir": "/Users/h/Documents/paper/paper13-gpu-aware-llm-scheduler/gpu-aware-llm-scheduler/results/smoke_http/20261119T005000Z_static_quota_11",
+  "offered": 72,
+  "status_counts": {
+    "completed": 72,
+    "rejected": 0,
+    "timed_out": 0,
+    "backend_error": 0,
+    "cancelled": 0
+  },
+  "accounting_conserved": true,
+  "event_validation_ok": true,
+  "slo_goodput_rps": 4.8,
+  "worst_tenant_slo_attainment": 1.0,
+  "synthetic_backend": true
+}
+exit=0
+$ python -m risksched.cli profile --config configs/experiments/e0_smoke.yaml --seed 11
+{
+  "run_dir": "/Users/h/Documents/paper/paper13-gpu-aware-llm-scheduler/gpu-aware-llm-scheduler/results/e0_smoke/20261119T005021Z_profile_mock_11",
+  "cell_status_counts": {
+    "ok": 48,
+    "skipped_unsupported": 16
+  },
+  "estimated_saturation_knee_rps": 4.0,
+  "controlled_saturation_observed": true,
+  "synthetic_backend": true
+}
+exit=0
+$ python -m risksched.cli compare --experiment smoke
+                             run    scheduler  offered  slo_goodput_rps  offered_success_fraction  worst_tenant_slo_attainment  ttft_p95_ms  synthetic
+        20261119T004933Z_fcfs_11         fcfs      479         1.891667                  0.473904                     0.375510  21778.51396       True
+20261119T004935Z_static_quota_11 static_quota      479         2.825000                  0.707724                     0.389610  32579.94478       True
+        20261119T004937Z_fcfs_12         fcfs      367         2.650000                  0.866485                     0.717172  23076.02454       True
+20261119T004938Z_static_quota_12 static_quota      367         2.608333                  0.852861                     0.454545  31218.43546       True
+
+NOTE: descriptive per-run table only; no inferential statistics (Milestone 2+ adds paired bootstrap CIs).
+exit=0

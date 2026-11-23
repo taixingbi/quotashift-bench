@@ -1,0 +1,55 @@
+{
+  "schema_version": "1.0.0",
+  "experiment_id": "e0_smoke",
+  "run_id": "20261119T005021Z_profile_mock_11",
+  "created_wall_utc": "2026-11-19T00:50:40Z",
+  "seed": 11,
+  "scheduler": {
+    "name": "fcfs",
+    "role": "profiling passthrough"
+  },
+  "backend_kind": "mock",
+  "synthetic_backend": true,
+  "integrity_note": "MOCK BACKEND: timings come from an uncalibrated simulator; NOT GPU measurements",
+  "clock": "virtual",
+  "backend_info": {
+    "engine_params": {
+      "kv_blocks_total": 4096,
+      "block_size": 16,
+      "max_num_seqs": 64,
+      "max_num_batched_tokens": 2048,
+      "max_model_len": 8192,
+      "scheduling_policy": "fcfs",
+      "c0_s": 0.004,
+      "c_prefill_s": 4e-05,
+      "c_decode_s": 0.0002,
+      "c_ctx_s": 2e-07,
+      "calibration_note": "UNCALIBRATED placeholder coefficients (no GPU measurement)"
+    }
+  },
+  "trace_sha256": null,
+  "config_sha256": "114e96e52b62afefb8b321130175818b5e3977381960cab93a04b515c25f83d1",
+  "git": {
+    "sha": null,
+    "dirty": true,
+    "note": "no commit yet / not a git repo: results are not tied to a commit"
+  },
+  "python": "3.11.15 (main, Mar 25 2026, 02:58:47) [Clang 22.1.1 ]",
+  "platform": "macOS-26.6.2-arm64-arm-64bit",
+  "machine": "arm64",
+  "packages": {
+    "risksched": "0.1.0",
+    "numpy": "2.4.6",
+    "pandas": "2.3.3",
+    "pyarrow": "26.0.1",
+    "pydantic": "2.14.3",
+    "httpx": "0.28.1",
+    "starlette": "1.10.0",
+    "uvicorn": "0.54.0",
+    "matplotlib": "3.11.2"
+  },
+  "gpu": {
+    "available": false,
+    "reason": "nvidia-smi not found"
+  }
+}

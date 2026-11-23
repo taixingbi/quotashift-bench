@@ -1,0 +1,56 @@
+{
+  "schema_version": "1.0.0",
+  "experiment_id": "a2_prefill_heavy",
+  "run_id": "20261120T023847Z_fcfs_42",
+  "created_wall_utc": "2026-11-20T02:38:47Z",
+  "seed": 42,
+  "scheduler": {
+    "name": "fcfs",
+    "deployable": true,
+    "params": {}
+  },
+  "backend_kind": "mock",
+  "synthetic_backend": true,
+  "integrity_note": "MOCK BACKEND: timings come from an uncalibrated simulator; NOT GPU measurements",
+  "clock": "virtual",
+  "backend_info": {
+    "engine_params": {
+      "kv_blocks_total": 4096,
+      "block_size": 16,
+      "max_num_seqs": 64,
+      "max_num_batched_tokens": 2048,
+      "max_model_len": 8192,
+      "scheduling_policy": "fcfs",
+      "c0_s": 0.004,
+      "c_prefill_s": 4e-05,
+      "c_decode_s": 0.0002,
+      "c_ctx_s": 2e-07,
+      "calibration_note": "UNCALIBRATED placeholder coefficients (no GPU measurement)"
+    }
+  },
+  "trace_sha256": "2f84df2ce943b2bc7aa6335bb7f11caab88d7ff23fdaa67650eaf35a6c848b5a",
+  "config_sha256": "21f3f8a507720a5f4b850e500ba26e3293784cc767d328c322daaf37fbb4e61d",
+  "git": {
+    "sha": "02a8444ddf9ba9ab72d2e47f3f99937c53f309cd",
+    "dirty": true,
+    "note": null
+  },
+  "python": "3.12.13 (main, Mar 25 2026, 03:16:06) [Clang 22.1.1 ]",
+  "platform": "macOS-26.7.3-arm64-arm-64bit",
+  "machine": "arm64",
+  "packages": {
+    "quotashift": "0.1.0",
+    "numpy": "2.4.6",
+    "pandas": "2.3.3",
+    "pyarrow": "26.0.1",
+    "pydantic": "2.14.3",
+    "httpx": "0.28.1",
+    "starlette": "1.10.0",
+    "uvicorn": "0.54.0",
+    "matplotlib": "3.11.2"
+  },
+  "gpu": {
+    "available": false,
+    "reason": "nvidia-smi not found"
+  }
+}

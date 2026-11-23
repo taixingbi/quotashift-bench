@@ -1,0 +1,312 @@
+{
+  "scenario_id": "a9_rate_prefill",
+  "control_label": "rate_matched_short",
+  "seeds": [
+    42,
+    43,
+    44,
+    45,
+    46
+  ],
+  "synthetic_backend": false,
+  "metric": "gpu_energy_per_1k_authorized_tokens",
+  "preregistered_threshold": 1.25,
+  "budget_tolerance": 0.05,
+  "per_seed_budget": {
+    "42": {
+      "tolerance": 0.05,
+      "required_matched_dims": [
+        "requests"
+      ],
+      "violations": [],
+      "matched": true,
+      "dimensions": {
+        "requests": {
+          "attack": 164,
+          "control": 164,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "total_tokens": {
+          "attack": 75302,
+          "control": 21097,
+          "abs_delta": 54205,
+          "rel_delta": 0.719835
+        },
+        "input_tokens": {
+          "attack": 66886,
+          "control": 10601,
+          "abs_delta": 56285,
+          "rel_delta": 0.841506
+        },
+        "requested_output_tokens": {
+          "attack": 8416,
+          "control": 10496,
+          "abs_delta": 2080,
+          "rel_delta": 0.198171
+        },
+        "realized_output_tokens": {
+          "attack": 6239,
+          "control": 7851,
+          "abs_delta": 1612,
+          "rel_delta": 0.205324
+        }
+      }
+    },
+    "43": {
+      "tolerance": 0.05,
+      "required_matched_dims": [
+        "requests"
+      ],
+      "violations": [],
+      "matched": true,
+      "dimensions": {
+        "requests": {
+          "attack": 176,
+          "control": 176,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "total_tokens": {
+          "attack": 76924,
+          "control": 23047,
+          "abs_delta": 53877,
+          "rel_delta": 0.700393
+        },
+        "input_tokens": {
+          "attack": 67772,
+          "control": 11783,
+          "abs_delta": 55989,
+          "rel_delta": 0.826138
+        },
+        "requested_output_tokens": {
+          "attack": 9152,
+          "control": 11264,
+          "abs_delta": 2112,
+          "rel_delta": 0.1875
+        },
+        "realized_output_tokens": {
+          "attack": 6943,
+          "control": 8488,
+          "abs_delta": 1545,
+          "rel_delta": 0.182022
+        }
+      }
+    },
+    "44": {
+      "tolerance": 0.05,
+      "required_matched_dims": [
+        "requests"
+      ],
+      "violations": [],
+      "matched": true,
+      "dimensions": {
+        "requests": {
+          "attack": 186,
+          "control": 186,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "total_tokens": {
+          "attack": 86889,
+          "control": 24698,
+          "abs_delta": 62191,
+          "rel_delta": 0.715752
+        },
+        "input_tokens": {
+          "attack": 77385,
+          "control": 12794,
+          "abs_delta": 64591,
+          "rel_delta": 0.834671
+        },
+        "requested_output_tokens": {
+          "attack": 9504,
+          "control": 11904,
+          "abs_delta": 2400,
+          "rel_delta": 0.201613
+        },
+        "realized_output_tokens": {
+          "attack": 7290,
+          "control": 9119,
+          "abs_delta": 1829,
+          "rel_delta": 0.20057
+        }
+      }
+    },
+    "45": {
+      "tolerance": 0.05,
+      "required_matched_dims": [
+        "requests"
+      ],
+      "violations": [],
+      "matched": true,
+      "dimensions": {
+        "requests": {
+          "attack": 191,
+          "control": 191,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "total_tokens": {
+          "attack": 94770,
+          "control": 24653,
+          "abs_delta": 70117,
+          "rel_delta": 0.739865
+        },
+        "input_tokens": {
+          "attack": 85266,
+          "control": 12429,
+          "abs_delta": 72837,
+          "rel_delta": 0.854233
+        },
+        "requested_output_tokens": {
+          "attack": 9504,
+          "control": 12224,
+          "abs_delta": 2720,
+          "rel_delta": 0.222513
+        },
+        "realized_output_tokens": {
+          "attack": 6905,
+          "control": 8991,
+          "abs_delta": 2086,
+          "rel_delta": 0.23201
+        }
+      }
+    },
+    "46": {
+      "tolerance": 0.05,
+      "required_matched_dims": [
+        "requests"
+      ],
+      "violations": [],
+      "matched": true,
+      "dimensions": {
+        "requests": {
+          "attack": 197,
+          "control": 197,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "total_tokens": {
+          "attack": 94407,
+          "control": 25500,
+          "abs_delta": 68907,
+          "rel_delta": 0.729893
+        },
+        "input_tokens": {
+          "attack": 84423,
+          "control": 12892,
+          "abs_delta": 71531,
+          "rel_delta": 0.847293
+        },
+        "requested_output_tokens": {
+          "attack": 9984,
+          "control": 12608,
+          "abs_delta": 2624,
+          "rel_delta": 0.208122
+        },
+        "realized_output_tokens": {
+          "attack": 7537,
+          "control": 9456,
+          "abs_delta": 1919,
+          "rel_delta": 0.20294
+        }
+      }
+    }
+  },
+  "run_dirs": {
+    "attack": {
+      "42": "/Users/h/Documents/paper/paper13-quotashift-bench/quotashift-bench/results/a9_rate_prefill__attack/20261121T233532Z_fcfs_42",
+      "43": "/Users/h/Documents/paper/paper13-quotashift-bench/quotashift-bench/results/a9_rate_prefill__attack/20261121T234311Z_fcfs_43",
+      "44": "/Users/h/Documents/paper/paper13-quotashift-bench/quotashift-bench/results/a9_rate_prefill__attack/20261121T234539Z_fcfs_44",
+      "45": "/Users/h/Documents/paper/paper13-quotashift-bench/quotashift-bench/results/a9_rate_prefill__attack/20261121T235303Z_fcfs_45",
+      "46": "/Users/h/Documents/paper/paper13-quotashift-bench/quotashift-bench/results/a9_rate_prefill__attack/20261121T235532Z_fcfs_46"
+    },
+    "control": {
+      "42": "/Users/h/Documents/paper/paper13-quotashift-bench/quotashift-bench/results/a9_rate_prefill__control/20261121T233816Z_fcfs_42",
+      "43": "/Users/h/Documents/paper/paper13-quotashift-bench/quotashift-bench/results/a9_rate_prefill__control/20261121T234044Z_fcfs_43",
+      "44": "/Users/h/Documents/paper/paper13-quotashift-bench/quotashift-bench/results/a9_rate_prefill__control/20261121T234807Z_fcfs_44",
+      "45": "/Users/h/Documents/paper/paper13-quotashift-bench/quotashift-bench/results/a9_rate_prefill__control/20261121T235034Z_fcfs_45",
+      "46": "/Users/h/Documents/paper/paper13-quotashift-bench/quotashift-bench/results/a9_rate_prefill__control/20261121T235800Z_fcfs_46"
+    }
+  },
+  "analysis": {
+    "metric": "gpu_energy_per_1k_authorized_tokens",
+    "preregistered_threshold": 1.25,
+    "effect_direction": "two_sided",
+    "classification": "supported",
+    "n_seeds_with_metric": 5,
+    "n_seeds": 5,
+    "mean_ratio": 0.2888909348067836,
+    "median_ratio": 0.285729383000857,
+    "ratio_ci95": [
+      0.27665020187778483,
+      0.3023231418862834
+    ],
+    "attack_success_rate": 1.0,
+    "mean_competitor_tokens": 71408.2,
+    "mean_competitor_requests": 74.6,
+    "slowdown_per_1k_competitor_tokens": -0.00995836703898455,
+    "slowdown_per_100_competitor_requests": -0.9532293099104777
+  },
+  "protocol_version": 3,
+  "path": "gateway",
+  "arm_order": {
+    "42": [
+      "attack",
+      "control"
+    ],
+    "43": [
+      "control",
+      "attack"
+    ],
+    "44": [
+      "attack",
+      "control"
+    ],
+    "45": [
+      "control",
+      "attack"
+    ],
+    "46": [
+      "attack",
+      "control"
+    ]
+  },
+  "per_arm_prefix_cache_hit_ratio": {
+    "attack": {
+      "42": 0.0,
+      "43": 0.0,
+      "44": 0.0,
+      "45": 0.0,
+      "46": 0.0
+    },
+    "control": {
+      "42": 0.0,
+      "43": 0.0,
+      "44": 0.0,
+      "45": 0.0,
+      "46": 0.0
+    }
+  },
+  "unrelated_traffic_suspected": {
+    "attack": {
+      "42": false,
+      "43": false,
+      "44": false,
+      "45": false,
+      "46": false
+    },
+    "control": {
+      "42": false,
+      "43": false,
+      "44": false,
+      "45": false,
+      "46": false
+    }
+  },
+  "commands": [
+    "uv run quotashift budget experiments/v3/a9_rate_prefill.yaml",
+    "uv run quotashift experiment experiments/v3/a9_rate_prefill.yaml --reps 5 --live --path gateway"
+  ]
+}

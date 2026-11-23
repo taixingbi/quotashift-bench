@@ -1,0 +1,28 @@
+START 2026-11-22 08:09:13 EST
+{
+  "scenario_id": "v4_smoke_r1_prefill_vs_short",
+  "control": "token_matched_fixed",
+  "seeds": [
+    900
+  ],
+  "metric": "user_ttft_p95",
+  "mean_ratio": 1.5014762123660483,
+  "classification": "insufficient_seeds",
+  "effect_direction": "two_sided",
+  "ratio_ci95": [
+    1.5014762123660483,
+    1.5014762123660483
+  ],
+  "attack_success_rate": 1.0,
+  "synthetic_backend": false,
+  "validity_passed": true,
+  "regime": null,
+  "csv": "reports/v4/smoke/v4_smoke_r1_prefill_vs_short/summary.csv",
+  "md": "reports/v4/smoke/v4_smoke_r1_prefill_vs_short/summary.md",
+  "manifest": "reports/v4/smoke/v4_smoke_r1_prefill_vs_short/manifest.json",
+  "figures": [
+    "reports/v4/smoke/v4_smoke_r1_prefill_vs_short/figure_victim_latency.png",
+    "reports/v4/smoke/v4_smoke_r1_prefill_vs_short/figure_degradation_ratio.png"
+  ]
+}
+END 2026-11-22 08:11:47 EST rc=0

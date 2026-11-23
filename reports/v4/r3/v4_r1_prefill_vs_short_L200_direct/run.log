@@ -1,0 +1,32 @@
+START 2026-11-22 18:34:34 EST
+{
+  "scenario_id": "v4_r1_prefill_vs_short_L200_direct",
+  "control": "token_matched_fixed",
+  "seeds": [
+    42,
+    43,
+    44,
+    45,
+    46
+  ],
+  "metric": "user_ttft_p95",
+  "mean_ratio": 1.1505147525499626,
+  "classification": "inconclusive",
+  "effect_direction": "two_sided",
+  "ratio_ci95": [
+    1.057189513268384,
+    1.2538969961285245
+  ],
+  "attack_success_rate": 0.2,
+  "synthetic_backend": false,
+  "validity_passed": true,
+  "regime": null,
+  "csv": "reports/v4/r3/v4_r1_prefill_vs_short_L200_direct/summary.csv",
+  "md": "reports/v4/r3/v4_r1_prefill_vs_short_L200_direct/summary.md",
+  "manifest": "reports/v4/r3/v4_r1_prefill_vs_short_L200_direct/manifest.json",
+  "figures": [
+    "reports/v4/r3/v4_r1_prefill_vs_short_L200_direct/figure_victim_latency.png",
+    "reports/v4/r3/v4_r1_prefill_vs_short_L200_direct/figure_degradation_ratio.png"
+  ]
+}
+END 2026-11-22 18:59:32 EST rc=0

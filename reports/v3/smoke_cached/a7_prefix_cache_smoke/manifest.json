@@ -1,0 +1,109 @@
+{
+  "scenario_id": "a7_prefix_cache_smoke",
+  "control_label": "prefix_unique",
+  "seeds": [
+    42
+  ],
+  "synthetic_backend": false,
+  "metric": "ttft_p95",
+  "preregistered_threshold": 1.25,
+  "budget_tolerance": 0.05,
+  "per_seed_budget": {
+    "42": {
+      "tolerance": 0.05,
+      "required_matched_dims": [
+        "requests",
+        "total_tokens"
+      ],
+      "violations": [],
+      "matched": true,
+      "dimensions": {
+        "requests": {
+          "attack": 34,
+          "control": 34,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "total_tokens": {
+          "attack": 17862,
+          "control": 17862,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "input_tokens": {
+          "attack": 14278,
+          "control": 14278,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "requested_output_tokens": {
+          "attack": 3584,
+          "control": 3584,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        },
+        "realized_output_tokens": {
+          "attack": 2351,
+          "control": 2351,
+          "abs_delta": 0,
+          "rel_delta": 0.0
+        }
+      }
+    }
+  },
+  "run_dirs": {
+    "attack": {
+      "42": "/Users/h/Documents/paper/paper13-quotashift-bench/quotashift-bench/results/a7_prefix_cache_smoke__attack/20261121T123536Z_fcfs_42"
+    },
+    "control": {
+      "42": "/Users/h/Documents/paper/paper13-quotashift-bench/quotashift-bench/results/a7_prefix_cache_smoke__control/20261121T123625Z_fcfs_42"
+    }
+  },
+  "analysis": {
+    "metric": "ttft_p95",
+    "preregistered_threshold": 1.25,
+    "effect_direction": "two_sided",
+    "classification": "insufficient_seeds",
+    "n_seeds_with_metric": 1,
+    "n_seeds": 1,
+    "mean_ratio": 1.1413250121677552,
+    "median_ratio": 1.1413250121677552,
+    "ratio_ci95": [
+      1.1413250121677552,
+      1.1413250121677552
+    ],
+    "attack_success_rate": 0.0,
+    "mean_competitor_tokens": 7604.0,
+    "mean_competitor_requests": 8.0,
+    "slowdown_per_1k_competitor_tokens": 0.018585614435528034,
+    "slowdown_per_100_competitor_requests": 1.7665626520969395
+  },
+  "protocol_version": 3,
+  "path": "gateway",
+  "arm_order": {
+    "42": [
+      "attack",
+      "control"
+    ]
+  },
+  "per_arm_prefix_cache_hit_ratio": {
+    "attack": {
+      "42": 0.5163835616438356
+    },
+    "control": {
+      "42": 0.23232876712328768
+    }
+  },
+  "unrelated_traffic_suspected": {
+    "attack": {
+      "42": false
+    },
+    "control": {
+      "42": false
+    }
+  },
+  "commands": [
+    "uv run quotashift budget experiments/v3/smoke/a7_prefix_cache_smoke.yaml",
+    "uv run quotashift experiment experiments/v3/smoke/a7_prefix_cache_smoke.yaml --reps 1 --live --path gateway"
+  ]
+}

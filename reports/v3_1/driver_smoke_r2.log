@@ -1,0 +1,8 @@
+START smoke 2026-11-21 21:19:21 EST commit 02448f8cb6adc31d924d9e8b3f86a0cc0e7f7585 dirty=0
+BLOCK a9_tok_longctx_v31_smoke START 21:19:21
+reset True 96.0 -> 0.0
+BLOCK a9_tok_longctx_v31_smoke END 21:21:56 rc=0
+BLOCK a9_rate_longctx_v31_smoke START 21:21:56
+reset True 96.0 -> 0.0
+BLOCK a9_rate_longctx_v31_smoke END 21:24:32 rc=0
+END smoke 2026-11-21 21:24:32 EST

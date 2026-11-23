@@ -1,0 +1,30 @@
+START 2026-11-21 15:18:24 EST
+{
+  "scenario_id": "a7_prefix_cache",
+  "control": "prefix_unique",
+  "seeds": [
+    42,
+    43,
+    44,
+    45,
+    46
+  ],
+  "metric": "ttft_p95",
+  "mean_ratio": 0.6069332537957689,
+  "classification": "supported",
+  "effect_direction": "two_sided",
+  "ratio_ci95": [
+    0.5557768086421446,
+    0.6589398132418974
+  ],
+  "attack_success_rate": 1.0,
+  "synthetic_backend": false,
+  "csv": "reports/v3/a7_prefix_cache/summary.csv",
+  "md": "reports/v3/a7_prefix_cache/summary.md",
+  "manifest": "reports/v3/a7_prefix_cache/manifest.json",
+  "figures": [
+    "reports/v3/a7_prefix_cache/figure_victim_latency.png",
+    "reports/v3/a7_prefix_cache/figure_degradation_ratio.png"
+  ]
+}
+END 2026-11-21 15:43:36 EST rc=0

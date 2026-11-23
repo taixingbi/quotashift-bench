@@ -1,0 +1,31 @@
+START 2026-11-21 21:50:53 EST
+{
+  "scenario_id": "a9_rate_longctx_v31",
+  "control": "rate_matched_short",
+  "seeds": [
+    42,
+    43,
+    44,
+    45,
+    46
+  ],
+  "metric": "gpu_energy_per_1k_authorized_tokens",
+  "mean_ratio": 0.2130277806159843,
+  "classification": "supported",
+  "effect_direction": "two_sided",
+  "ratio_ci95": [
+    0.18525242370863526,
+    0.24080313752333335
+  ],
+  "attack_success_rate": 1.0,
+  "synthetic_backend": false,
+  "validity_passed": true,
+  "csv": "reports/v3_1/a9_rate_longctx_v31/summary.csv",
+  "md": "reports/v3_1/a9_rate_longctx_v31/summary.md",
+  "manifest": "reports/v3_1/a9_rate_longctx_v31/manifest.json",
+  "figures": [
+    "reports/v3_1/a9_rate_longctx_v31/figure_metric_by_arm.png",
+    "reports/v3_1/a9_rate_longctx_v31/figure_ratio.png"
+  ]
+}
+END 2026-11-21 22:16:03 EST rc=0

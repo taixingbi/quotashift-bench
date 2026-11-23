@@ -1,0 +1,14 @@
+START smoke 2026-11-22 08:09:12 EST commit 46e37f686c2591a2d12effe5b6fe21370396ccdb dirty=0
+BLOCK v4_smoke_r1_prefill_vs_short START 08:09:12 path=gateway
+reset True 96.0 -> 0.0
+BLOCK v4_smoke_r1_prefill_vs_short END 08:11:47 rc=0
+BLOCK v4_smoke_r2f_s96 START 08:11:47 path=gateway
+reset True 96.0 -> 0.0
+BLOCK v4_smoke_r2f_s96 END 08:14:28 rc=0
+BLOCK v4_smoke_r2b_s2048 START 08:14:28 path=gateway
+reset True 96.0 -> 0.0
+BLOCK v4_smoke_r2b_s2048 END 08:17:22 rc=0
+BLOCK v4_smoke_r2f_s96_direct START 08:17:22 path=direct
+reset True 96.0 -> 0.0
+BLOCK v4_smoke_r2f_s96_direct END 08:19:53 rc=0
+END smoke 2026-11-22 08:19:53 EST
