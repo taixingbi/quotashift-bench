@@ -402,7 +402,24 @@ def load_cell(rep: Path) -> dict:
         rows.append(row)
     return {"cell": rep.name, "comparison": comp, "L": load, "C": C, "path": "direct" if direct else "gateway",
             "report": str(rep), "synthetic_backend": bool(man.get("synthetic_backend")), "failed_gates": failed,
+            "server_start": list((man.get("provenance") or {}).get("server_start") or []),
             "seeds": [r["seed"] for r in rows], "rows": rows}
+
+
+def server_identity(cells: dict[str, dict]) -> dict:
+    """Stage gate `server_identity` (§5.1, fail): one vLLM process_start_time_seconds across every block of a stage
+    (§1: one server start per stage; checked separately for stage A = L 200 and stage B = L 400). A failure in a stage
+    invalidates that stage's cells. Not applicable to the mock."""
+    if cells and all(c["synthetic_backend"] for c in cells.values()):
+        return {"passed": True, "applicable": False, "detail": "synthetic backend: no server identity", "failed_stages": []}
+    by_stage: dict[str, set[str]] = {}
+    for c in cells.values():
+        st = next(k for k, (load, _) in build_v5.STAGES.items() if load == c["L"])
+        by_stage.setdefault(st, set()).update(c["server_start"] or ["None"])
+    bad = sorted(st for st, ss in by_stage.items() if len(ss) != 1 or "None" in ss)
+    return {"passed": not bad, "applicable": True, "failed_stages": bad,
+            "server_starts": {st: sorted(ss) for st, ss in sorted(by_stage.items())},
+            "detail": "; ".join(f"stage {st}: {sorted(ss)}" for st, ss in sorted(by_stage.items()))}
 
 
 def summarize_cell(cell: dict) -> dict:
@@ -581,6 +598,10 @@ def render_md(res: dict) -> str:
         L += ["> **SYNTHETIC BACKEND (mock): plumbing evidence only, never GPU measurements.**", ""]
     if not res["seed_set_matches_protocol"]:
         L += [f"> Seed set differs from the protocol's {SEEDS[0]}–{SEEDS[-1]}; not a protocol result.", ""]
+    sg = res.get("stage_gates", {}).get("server_identity")
+    if sg and not sg["passed"]:
+        L += [f"> **STAGE {', '.join(sg['failed_stages'])} INVALID: server_identity failed ({sg['detail']}); "
+              "its cells are ¬E.**", ""]
     L += ["Rules: `docs/PROTOCOL_V5_DRAFT.md` §3–§6, implemented in `scripts/v5_analysis.py`. No seed exclusion.", "",
           "## Hypotheses", "", "| Hypothesis | Verdict | Detail |", "|---|---|---|"]
     h = res["hypotheses"]
@@ -637,11 +658,19 @@ def run(dirs: list[Path], stage: str, out: Path, *, force: bool = False) -> dict
                          "at primary endpoints on real data (PROTOCOL_V5 §6)")
     if not cells:
         raise SystemExit("no v5 cell reports found")
+    sid = server_identity(cells)
+    if not sid["passed"]:   # a restart mid-stage invalidates that whole stage (§8 rule 3): its cells become notE
+        for c in cells.values():
+            if next(k for k, (load, _) in build_v5.STAGES.items() if load == c["L"]) not in sid["failed_stages"]:
+                continue
+            c["failed_gates"] = [*c["failed_gates"], "server_identity"]
+            c["rows"] = [r | {"integrity_ok": False, "E": False} for r in c["rows"]]
     md, js = out / f"ANALYSIS_{stage}.md", out / f"analysis_{stage}.json"
     if (md.exists() or js.exists()) and not force:
         raise SystemExit(f"refusing to overwrite {md} (use --force)")
     res = analyse(cells, stage)
     res["missing_cells"] = missing
+    res["stage_gates"] = {"server_identity": sid}
     out.mkdir(parents=True, exist_ok=True)
     js.write_text(json.dumps(res, indent=1, default=lambda o: None if isinstance(o, float) and not math.isfinite(o) else str(o),
                              allow_nan=True))

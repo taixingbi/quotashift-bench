@@ -205,4 +205,11 @@ A1–A9 results and controls are unchanged. No v4 GPU run is made before owner a
     choices are listed in `PROTOCOL_V5_DRAFT.md` §9.1 for owner review. They cover: Holm with p = 1 for
     non-evaluable members; H4(b) operationalized as "lower at C = 32 than at C = 8, and H3 passing at C = 16 and 32";
     H5 saturation measured at each arm's own cap; and enforced no-interim-look refusal.
+  - §9 item 9 gates added (2026-11-23):
+    - `cap_configured` (fail) and `occupancy_reconstruction` (flag) run for protocol_version ≥ 5 only, so v4 gate
+      sets are unchanged.
+    - `server_identity` is a per-stage gate in the loader.
+    - Scrapes add `t_gw_rel_s`.
+    - The in-process simulator now applies `max_concurrency_cap`. This is a mock fidelity fix; GPU results are
+      unaffected.
 - **Unchanged.** v4 and its results.

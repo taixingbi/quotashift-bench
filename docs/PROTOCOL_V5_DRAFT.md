@@ -263,12 +263,12 @@ cache reset, no unrelated traffic.
 |---|---|---|---|
 | `schedule_frozen` | `FROZEN_TRACES.json` reproduces `FROZEN_SCHEDULE.json` hash for hash | fail (pre-stage) | **implemented** (`freeze_v5.py --live`) |
 | `independent_aa` | A/A-ind attack and control competitor arrival hashes differ | fail | **implemented** (`freeze_v5.py --schedule`; test) |
-| `cap_configured` | resolved `max_concurrency_cap` == the cell's C; observed max gateway in-flight ≤ C | fail | to implement |
+| `cap_configured` | gateway path: every arm's resolved `max_concurrency_cap` == the cell's C, and both the sampled `gw_inflight` max and the in-flight max rebuilt from timestamps are ≤ C. Direct path: recorded only (no gateway cap) | fail | **implemented** (`evaluation/validity.py`; unit tests + mock). It found that the in-process simulator ignored the cap; fixed, see KNOWN_LIMITATIONS |
 | `engine_headroom` | host-verified `max_num_seqs ≥ 64` and `max_num_batched_tokens` recorded from the launch command (`/metrics` does not expose either, §5.2) | fail (pre-stage) | owner action |
 | `model_revision_verified` | snapshot hash read on the host and matching the target profile | fail (pre-stage); proceeding without it needs a written owner waiver | owner action |
-| `server_identity` | one `process_start_time_seconds` for the whole stage | fail | to implement (per-arm restart detection already exists) |
+| `server_identity` | one `process_start_time_seconds` for the whole stage | fail | **implemented** as a stage gate in `v5_analysis.py`. It is checked per stage, and a failure makes that stage's cells ¬E. Within a block, the `provenance` gate already requires a single start |
 | `engine_histograms_present` | per-arm queue, prefill, decode and TTFT histogram sum/count **and bucket** deltas captured | fail for H4, otherwise flag | **implemented** (bucket deltas added; test) |
-| `occupancy_reconstruction` | rebuilt in-flight agrees exactly with sampled `gw_inflight` ≥ 90% of the time after the 0.15 s lag shift | flag | to port from post-hoc code |
+| `occupancy_reconstruction` | rebuilt in-flight agrees exactly with sampled `gw_inflight` ≥ 90% of the time, sampled at the gateway-read time `t_gw_rel_s` (new in v5). Fallback without it: `t_rel_s` + 0.15 s | flag | **implemented** (`evaluation/occupancy.py`; it reproduces the post-hoc `occ_max` on all 152 v4 runs). v4 agreement at +0.15 s is 0.77–0.995 (erratum in `SLOT_TIME_ANALYSIS.md`) |
 | `no_preemption` | `num_preemptions_total` delta = 0 | flag | exists (counter delta) |
 
 ### 5.2 vLLM engine histogram semantics (review item 6)
@@ -414,7 +414,7 @@ Estimates use v4's measured 2.6 min of wall time per 120 s arm, including settle
 | 6 | Decision rules (`v5_analysis.py`) | **done** | t quantiles, strata, classification, H2a/H2b separation, sign-flip, Holm, FCFS scoring |
 | 7 | Engine histogram bucket deltas | **done** | `test_queue_histogram_bucket_deltas_and_h4_rule` |
 | 8 | Run-level loader: v5 reports → per-seed tables → rules → `reports/v5/ANALYSIS_<stage>.{md,json}` (operational choices in §9.1) | **done** | `tests/integration/test_v5_mock.py`: all 12 stage-A cells on the mock (plumbing only), rule wiring, no-interim-look refusal |
-| 9 | Gates `cap_configured`, `server_identity` (stage), `occupancy_reconstruction` | to do before stage S | unit tests and a mock run |
+| 9 | Gates `cap_configured`, `server_identity` (stage), `occupancy_reconstruction` | **done** | `test_cap_configured_gate`, `test_occupancy_reconstruction_*`, `test_v4_gate_set_unchanged_below_protocol_5`, `test_mock_applies_the_cell_cap`, `test_server_identity_stage_gate` |
 | 10 | Stage driver `scripts/run_v5.sh`: per-stage file list, cache reset per block, stop on any gate failure, one rerun max, timestamped progress | to do before stage S | dry run on the mock backend |
 | 11 | Raw-data export: release artifact, SHA-256 manifest, sanitization (`docs/RAW_DATA_AUDIT.md`) | to do before stage A | regex gate test |
 

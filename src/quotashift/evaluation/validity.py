@@ -18,6 +18,7 @@ from typing import Any
 import numpy as np
 
 from quotashift.evaluation.attack_effect import RunMetrics, metric_info
+from quotashift.evaluation.occupancy import MIN_RECON_EXACT_FRACTION
 
 MAX_BACKEND_ERROR_FRACTION = 0.01   # backend errors (any HTTP 4xx/5xx) / requests sent, per arm
 MAX_HTTP_400_FRACTION = 0.01        # HTTP 400 / requests sent, per arm
@@ -70,7 +71,8 @@ def validity_gates(attack: list[RunMetrics], control: list[RunMetrics], analysis
                    prompt_token_unit: str = "whitespace", designed_early_termination: bool = False,
                    provenance: dict[str, Any] | None = None, tokenization: dict | None = None,
                    synthetic: bool = False, protocol_version: int = 3, ignore_eos: bool = False,
-                   feasibility_gates: str = "enforce") -> dict[str, Any]:
+                   feasibility_gates: str = "enforce", expected_cap: int | None = None,
+                   path: str = "gateway") -> dict[str, Any]:
     """Evaluate every gate on one experiment; `passed` is False if any fail-severity gate fails or is unavailable."""
     arms = [*attack, *control]
     checks: list[dict[str, Any]] = []
@@ -191,6 +193,18 @@ def validity_gates(attack: list[RunMetrics], control: list[RunMetrics], analysis
         checks.append(_chk("realized_output_equals_authorized", (sum(x or 0 for x in mis) == 0)
                            if all(x is not None for x in mis) else None,
                            f"{sum(x or 0 for x in mis)} completed request(s) with output_tokens != max_output_tokens"))
+    # 11-12. protocol v5 (PROTOCOL_V5_DRAFT §5.1): the cell's cap is the one applied; slot occupancy is reconstructable
+    if protocol_version >= 5:
+        checks.append(_cap_configured(arms, expected_cap, path))
+        fr = [m.occ_recon_exact_frac for m in arms]
+        ok = bool(arms) and all(x is not None for x in fr)
+        worst_recon = min(x for x in fr if x is not None) if ok else None
+        basis = sorted({str(m.occ_recon_time_basis) for m in arms})
+        checks.append(_chk("occupancy_reconstruction",
+                           (worst_recon >= MIN_RECON_EXACT_FRACTION) if worst_recon is not None else None,
+                           f"lowest arm exact agreement {worst_recon:.3f} (min {MIN_RECON_EXACT_FRACTION}; time basis "
+                           f"{basis})" if worst_recon is not None else "unavailable (no sampled gateway in-flight)",
+                           severity="flag"))
     # v4 R2: feasibility gates classify the operating regime instead of invalidating the point
     feas = {"competitor_completion", "victim_latency_censoring"}
     regime = None
@@ -208,7 +222,23 @@ def validity_gates(attack: list[RunMetrics], control: list[RunMetrics], analysis
                            "min_competitor_completion": MIN_COMPETITOR_COMPLETION,
                            "max_victim_censored_fraction": MAX_VICTIM_CENSORED_FRACTION,
                            "max_first_arrival_fraction": MAX_FIRST_ARRIVAL_FRACTION,
-                           "min_last_arrival_fraction": MIN_LAST_ARRIVAL_FRACTION}}
+                           "min_last_arrival_fraction": MIN_LAST_ARRIVAL_FRACTION,
+                           "min_recon_exact_fraction": MIN_RECON_EXACT_FRACTION}}
+
+
+def _cap_configured(arms: list[RunMetrics], expected_cap: int | None, path: str) -> dict[str, Any]:
+    """Gateway path: every arm's resolved cap equals the cell's C, and neither the gateway's sampled in-flight count
+    nor the in-flight count rebuilt from timestamps ever exceeds C. Direct path: no gateway cap applies (recorded)."""
+    caps = sorted({m.gw_inflight_cap for m in arms}, key=str)
+    smax = [m.gw_inflight_max for m in arms if m.gw_inflight_max is not None]
+    rmax = [m.occ_recon_max for m in arms if m.occ_recon_max is not None]
+    seen = f"sampled max {max(smax) if smax else 'n/a'}, rebuilt max {max(rmax) if rmax else 'n/a'}"
+    if path == "direct":
+        return _chk("cap_configured", bool(arms), f"direct path: no gateway cap (safety stream cap {caps}); {seen}")
+    if expected_cap is None or not arms or any(c is None for c in caps) or len(rmax) != len(arms):
+        return _chk("cap_configured", None, f"unavailable (expected {expected_cap}, resolved {caps})")
+    ok = caps == [expected_cap] and all(x <= expected_cap for x in (*smax, *rmax))
+    return _chk("cap_configured", ok, f"resolved cap {caps} (expected {expected_cap}); {seen}")
 
 
 def apply_gates(analysis: dict, validity: dict) -> dict:

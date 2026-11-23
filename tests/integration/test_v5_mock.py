@@ -117,3 +117,23 @@ def test_rule_wiring_on_evaluable_cells(stage_a_reports):
     h = va.analyse(cells, "A")["hypotheses"]
     assert h["H1"]["verdict"] == "supported"
     assert h["H2a"]["verdict"] == "not_evaluable" and h["H2b"]["verdict"] == "not_evaluable"
+
+
+def test_mock_applies_the_cell_cap(stage_a_reports):
+    """The in-process simulator now applies max_concurrency_cap like the live runner; cap_configured passes."""
+    for name in ("v5_decode_vs_short_L200_C8", "v5_decode_vs_short_L200_C16", "v5_decode_vs_short_L200_direct"):
+        man = json.loads((stage_a_reports / name / "manifest.json").read_text())
+        g = {c["name"]: c for c in man["validity"]["checks"]}
+        assert g["cap_configured"]["passed"], g["cap_configured"]
+        assert "occupancy_reconstruction" in g
+
+
+def test_server_identity_stage_gate(stage_a_reports):
+    cells = {p.name: va.load_cell(p) for p in sorted(stage_a_reports.iterdir()) if va.CELL_RE.fullmatch(p.name)}
+    assert va.server_identity(cells)["applicable"] is False
+    real = {k: c | {"synthetic_backend": False, "server_start": ["1795268683.89"]} for k, c in cells.items()}
+    assert va.server_identity(real)["passed"]
+    k = "v5_aa_ind_L200_C16"
+    real[k] = real[k] | {"server_start": ["1795999999.00"]}
+    sid = va.server_identity(real)
+    assert not sid["passed"] and sid["failed_stages"] == ["A"]

@@ -336,7 +336,8 @@ def cmd_experiment(a: argparse.Namespace) -> int:
         attack, control, analysis, max_model_len=sc.model_max_len, prompt_token_unit=sc.prompt_token_unit,
         designed_early_termination=sc.lifecycle is not None, provenance=prov,
         tokenization=pairs.get("tokenization"), synthetic=target is None, protocol_version=sc.protocol_version,
-        ignore_eos=sc.ignore_eos, feasibility_gates=sc.comparison.feasibility_gates)
+        ignore_eos=sc.ignore_eos, feasibility_gates=sc.comparison.feasibility_gates,
+        expected_cap=sc.safety.max_global_inflight, path=a.path)
     if validity.get("regime") is not None:
         analysis["regime"] = validity["regime"]
     analysis = apply_gates(analysis, validity)

@@ -214,3 +214,75 @@ def test_score_fcfs():
     assert ok["seeds_within"] == 9 and ok["cell_error_ms"] == pytest.approx(3.9) and ok["pass"]
     bad = A.score_fcfs([0.0] * 10, [10.0] * 10, [7.0] * 10, 0.0, 5.0)
     assert not bad["pass"]
+
+
+# ---------------------------------------------------------------- §9 item 9: v5 gates
+def _v5_rm(arm, seed, **kw):
+    from dataclasses import replace
+
+    from quotashift.evaluation.attack_effect import RunMetrics
+    b = RunMetrics(run_dir="/x", scenario="s", arm=arm, seed=seed, synthetic_backend=True, victim_completed=50,
+                   victim_timed_out=0, victim_ttft_p50_ms=1, victim_ttft_p95_ms=1, victim_e2e_p50_ms=1,
+                   victim_e2e_p95_ms=1, competitor_requests=20, competitor_tokens=1, victim_offered=50,
+                   victim_admitted=50, competitor_offered=20, competitor_admitted=20, requests_sent=70,
+                   backend_error_total=0, http_400_total=0, victim_user_ttft_mean_ms=100.0, victim_user_ttft_p95_ms=100.0,
+                   victim_censored_fraction=0.0, competitor_first_arrival_fraction=0.05,
+                   competitor_last_arrival_fraction=0.97, output_mismatch_completed=0, gw_inflight_cap=16,
+                   gw_inflight_max=16, occ_recon_max=16, occ_recon_exact_frac=0.97, occ_recon_time_basis="t_gw_rel_s")
+    return replace(b, **kw)
+
+
+def _gates(attack, control, **kw):
+    from quotashift.evaluation.attack_effect import analyze_pair
+    from quotashift.evaluation.validity import validity_gates
+    a = analyze_pair(attack, control, metric="user_ttft_mean", threshold=1.25, direction="two_sided")
+    v = validity_gates(attack, control, a, max_model_len=4096, synthetic=True, protocol_version=5, ignore_eos=True, **kw)
+    return v, {g["name"]: g for g in v["checks"]}
+
+
+def test_cap_configured_gate():
+    ctl = [_v5_rm("control", s) for s in range(3)]
+    v, g = _gates([_v5_rm("attack", s) for s in range(3)], ctl, expected_cap=16)
+    assert v["passed"] and g["cap_configured"]["passed"] and g["cap_configured"]["severity"] == "fail"
+    _, g = _gates([_v5_rm("attack", s) for s in range(3)], ctl, expected_cap=32)      # wrong cell cap resolved
+    assert not g["cap_configured"]["passed"]
+    v, g = _gates([_v5_rm("attack", 0, occ_recon_max=17), *[_v5_rm("attack", s) for s in (1, 2)]], ctl, expected_cap=16)
+    assert not v["passed"] and not g["cap_configured"]["passed"]                       # cap exceeded (rebuilt)
+    _, g = _gates([_v5_rm("attack", 0, gw_inflight_max=17), *[_v5_rm("attack", s) for s in (1, 2)]], ctl, expected_cap=16)
+    assert not g["cap_configured"]["passed"]                                           # cap exceeded (sampled)
+    _, g = _gates([_v5_rm("attack", s) for s in range(3)], ctl, expected_cap=None)
+    assert not g["cap_configured"]["passed"] and not g["cap_configured"]["available"]  # fail-closed
+    direct = [_v5_rm(a, s, gw_inflight_cap=512, gw_inflight_max=25, occ_recon_max=25) for a in ("attack",) for s in range(3)]
+    _, g = _gates(direct, [_v5_rm("control", s, gw_inflight_cap=512) for s in range(3)], expected_cap=8, path="direct")
+    assert g["cap_configured"]["passed"] and "direct path" in g["cap_configured"]["detail"]
+
+
+def test_occupancy_reconstruction_gate_is_a_flag():
+    ctl = [_v5_rm("control", s) for s in range(3)]
+    v, g = _gates([_v5_rm("attack", 0, occ_recon_exact_frac=0.85), _v5_rm("attack", 1), _v5_rm("attack", 2)], ctl,
+                  expected_cap=16)
+    assert v["passed"] and not g["occupancy_reconstruction"]["passed"] and "occupancy_reconstruction" in v["flags"]
+
+
+def test_v4_gate_set_unchanged_below_protocol_5():
+    from quotashift.evaluation.attack_effect import analyze_pair
+    from quotashift.evaluation.validity import validity_gates
+    arms = [_v5_rm("attack", s) for s in range(3)], [_v5_rm("control", s) for s in range(3)]
+    a = analyze_pair(*arms, metric="user_ttft_mean", threshold=1.25, direction="two_sided")
+    names = {g["name"] for g in validity_gates(*arms, a, max_model_len=4096, synthetic=True, protocol_version=4)["checks"]}
+    assert not names & {"cap_configured", "occupancy_reconstruction"}
+
+
+def test_occupancy_reconstruction_and_time_basis():
+    import pandas as pd
+
+    from quotashift.evaluation.occupancy import reconstruction
+    req = pd.DataFrame({"t_sent": [0.0, 0.5, 1.0, None], "t_terminal": [2.0, 1.0, 3.0, None]})
+    # k(t): [0,0.5)=1, [0.5,1)=2, [1,2)=2 (release before admission at 1.0), [2,3)=1
+    ts = pd.DataFrame({"t_rel_s": [0.1, 0.6, 1.5, 2.5], "t_gw_rel_s": [0.2, 0.7, 1.6, 2.6], "gw_inflight": [1, 2, 2, 1]})
+    r = reconstruction(req, ts)
+    assert r["occ_recon_max"] == 2 and r["gw_inflight_max"] == 2
+    assert r["occ_recon_exact_frac"] == 1.0 and r["occ_recon_time_basis"] == "t_gw_rel_s"
+    # no t_gw_rel_s (v4 runs): samples stamped 0.15 s early agree only after the frozen +0.15 s shift
+    r = reconstruction(req, ts.drop(columns="t_gw_rel_s").assign(t_rel_s=[0.05, 0.45, 1.35, 2.35]))
+    assert r["occ_recon_time_basis"] == "t_rel_s+0.15" and r["occ_recon_exact_frac"] == 1.0

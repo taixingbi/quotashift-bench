@@ -177,8 +177,11 @@
 - **Telemetry scrape lag.**
   - `metrics_timeseries` stamps each scrape about 0.15 s before the gateway in-flight count is read (vLLM and GPU
     metrics are fetched first).
-  - Sampled `gw_inflight` matches the in-flight count rebuilt from request timestamps 66% of the time at lag 0, and
-    91–99.5% with a +0.15 s shift.
+  - Sampled `gw_inflight` matches the in-flight count rebuilt from request timestamps 66% of the time at lag 0. With a
+    +0.15 s shift it matches 0.77–0.995 of the time across the 114 gateway runs (per-stage medians 0.89–0.96).
+    - This was corrected on 2026-11-23. The earlier "91–99.5%" does not reproduce; see the `SLOT_TIME_ANALYSIS.md`
+      erratum.
+    - From v5 on, scrapes record `t_gw_rel_s`, the time of the gateway read itself.
   - Use the rebuilt occupancy for slot analyses.
 - **P95 threshold fragility.**
   - With about 100–115 victims per run, P95 sits at about the 6th-largest value.
@@ -204,3 +207,9 @@
   See `docs/PROTOCOL_V5_DRAFT.md` §3.4–§3.5.
 - **Committed raw data in a public repo.** Commit `c11decc` published local usernames, a private LAN IP and GPU device
   identifiers in run metadata. No credentials were found. See `docs/RAW_DATA_AUDIT.md`.
+- **In-process simulator ignored the concurrency cap (fixed 2026-11-23).**
+  - Before this date, `runtime/sim.py` dispatched without `max_concurrency_cap`, so mock (`--mock`) gateway runs
+    were effectively uncapped. The live runner (`runtime/live.py`), and so every GPU measurement, always applied it.
+  - Historical mock outputs are plumbing evidence only and are not regenerated.
+  - Found by the v5 `cap_configured` gate.
+

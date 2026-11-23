@@ -24,6 +24,9 @@ class SimConfig:
     metrics_interval_s: float = 0.5
     request_timeout_s: float | None = None  # client-side E2E hard timeout
     idle_tick_s: float = 0.01  # re-evaluation tick when queue non-empty but nothing dispatched
+    # hard cap on simultaneous backend streams, as in the live runner (None = uncapped; before 2026-11-23 the
+    # simulator never applied the cap, see docs/KNOWN_LIMITATIONS.md)
+    max_concurrency_cap: int | None = None
 
 
 def _obs(engine: EngineModel, now: float) -> BackendObservation:
@@ -56,6 +59,7 @@ def run_simulation(client, gateway: Gateway, engine: EngineModel, cfg: SimConfig
         row = {"t_rel_s": now, **engine.observe()}
         for t, n in gateway.queue_lengths().items():
             row[f"gw_queue_{t}"] = n
+        row["t_gw_rel_s"] = now
         row["gw_inflight"] = len(gateway.inflight)
         timeseries.append(row)
         next_sample = now + cfg.metrics_interval_s
@@ -82,7 +86,8 @@ def run_simulation(client, gateway: Gateway, engine: EngineModel, cfg: SimConfig
                 if now - gateway.recorder.rows[rid]["t_offered"] > cfg.request_timeout_s:
                     engine.abort(rid)
                     terminal(rid, EventType.TIMED_OUT, None, "client_e2e_timeout")
-        for req in gateway.dispatch(now, obs):
+        cap_left = None if cfg.max_concurrency_cap is None else cfg.max_concurrency_cap - len(gateway.inflight)
+        for req in gateway.dispatch(now, obs, limit=cap_left):
             ev = engine.add_request(
                 req.request_id, req.input_token_count, req.max_output_tokens,
                 oracle[req.request_id], priority=0,

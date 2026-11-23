@@ -124,6 +124,7 @@ async def run_live(client, gateway: Gateway, backend: OpenAICompatBackend, cfg: 
             row.update({f"gpu_{k}": val for k, val in g.items()})
             for tn, n in gateway.queue_lengths().items():
                 row[f"gw_queue_{tn}"] = n
+            row["t_gw_rel_s"] = now()  # time of the gateway read itself (t_rel_s precedes the vLLM/GPU fetch)
             row["gw_inflight"] = len(gateway.inflight)
             timeseries.append(row)
             try:

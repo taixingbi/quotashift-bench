@@ -161,3 +161,12 @@ of the time at 8/8.
 - **Cap 16/32 estimates.** They used gateway C = 8 runs only. The "3–11% longer direct-path holds" remark is a
   qualitative bias direction from R3 direct runs, which are de-facto C ≥ 16 data. It was not used numerically, and
   v5's frozen predictions exclude it (`docs/PROTOCOL_V5_DRAFT.md` §3.4).
+- **Reconstruction agreement range (added 2026-11-23).** The claim "+0.15 s raises exact agreement to 91–99.5%" does
+  not reproduce.
+  - Recomputed with `src/quotashift/evaluation/occupancy.py`, which matches this script's `occ_max` on all 152 runs.
+  - At +0.15 s, exact agreement over the 114 v4 gateway runs ranges from 0.77 to 0.995. Per-stage medians are 0.89
+    (R1), 0.93 (R2), 0.95 (calibration) and 0.96 (smokes). 35 of the 114 runs are below 0.90.
+  - +0.15 s is still the best of the lags tried (0, 0.1, 0.15, 0.2, 0.3 s).
+  - The conclusions do not change. The sampled series was only a coarse check, and the FCFS-replay agreement uses
+    request timestamps alone.
+  - v5 records the time of the gateway read itself (`t_gw_rel_s`) instead of relying on the shift.

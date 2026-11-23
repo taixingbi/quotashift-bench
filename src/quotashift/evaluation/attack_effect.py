@@ -207,6 +207,11 @@ class RunMetrics:
     victim_user_ttft_mean_ms: float | None = None
     victim_backend_ttft_mean_ms: float | None = None
     victim_gateway_queue_mean_ms: float | None = None
+    # protocol v5 gates (evaluation/occupancy.py): sampled gateway max in-flight; occupancy rebuilt from timestamps
+    gw_inflight_max: int | None = None
+    occ_recon_max: int | None = None
+    occ_recon_exact_frac: float | None = None
+    occ_recon_time_basis: str | None = None
 
     def as_row(self) -> dict:
         return {k: getattr(self, k) for k in self.__dataclass_fields__}
@@ -246,6 +251,7 @@ def run_metrics(run_dir: Path, scenario: str, arm: str, seed: int) -> RunMetrics
     adm = (lambda g: int(g["t_accepted"].notna().sum())) if "t_accepted" in df else (lambda g: None)
     ts_path = run_dir / "metrics_timeseries.parquet"
     pw_mean, pw_n = None, None
+    ts = None
     if ts_path.exists():
         ts = pd.read_parquet(ts_path)
         if "gpu_power_w" in ts:
@@ -348,11 +354,19 @@ def run_metrics(run_dir: Path, scenario: str, arm: str, seed: int) -> RunMetrics
         victim_user_ttft_mean_ms=_f(float(vic_ok["user_ttft_ms"].mean())) if len(vic_ok) else None,
         victim_backend_ttft_mean_ms=_f(float(vic_ok["backend_ttft_ms"].mean())) if len(vic_ok) else None,
         victim_gateway_queue_mean_ms=_f(float(vic_ok["gateway_queue_ms"].mean())) if len(vic_ok) else None,
+        **_occupancy(run_dir, ts),
         realized_tokens_per_s=(real_tok / window) if real_tok is not None and window else None,
         competitor_realized_tokens_per_s=(
             float(_num(comp_done["prompt_tokens_reported"]).sum() + _num(comp_done["output_tokens"]).sum()) / window
             if "prompt_tokens_reported" in df and window else None),
     )
+
+
+def _occupancy(run_dir: Path, ts: pd.DataFrame | None) -> dict:
+    """Whole-run occupancy (all rows, no warm-up cut: slots are held regardless of the analysis window)."""
+    from quotashift.evaluation.occupancy import reconstruction
+
+    return reconstruction(pd.read_parquet(run_dir / "requests.parquet"), ts)
 
 
 def _pressure(run_dir: Path, cap: int | None) -> dict:

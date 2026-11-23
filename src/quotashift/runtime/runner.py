@@ -205,7 +205,7 @@ def run_experiment(cfg: ExperimentConfig, scheduler: str, seed: int, results_roo
         engine = EngineModel(cfg.backend.engine)
         timeseries = run_simulation(client, gw, engine, SimConfig(
             end_time_s=end_time, metrics_interval_s=cfg.run.metrics_interval_s,
-            request_timeout_s=cfg.run.request_timeout_s))
+            request_timeout_s=cfg.run.request_timeout_s, max_concurrency_cap=cfg.run.max_concurrency_cap))
         backend_info = {"engine_params": cfg.backend.engine.model_dump()}
     else:
         if end_time * (cfg.backend.time_scale if cfg.backend.kind == "mock_http" else 1.0) > cfg.run.max_experiment_seconds:

@@ -159,7 +159,7 @@ Design: `docs/PROTOCOL_V5_DRAFT.md`. ADR-Q19 is proposed and needs owner approva
 |---|---|
 | 1–7: schema, 23 YAMLs, frozen schedule, FCFS predictions with leakage guard, decision rules, histogram buckets | ✅ (`tests/unit/test_v5_protocol.py`) |
 | 8: run-level loader (`scripts/v5_analysis.py --stage A\|B`) | ✅ mock-tested end to end (`tests/integration/test_v5_mock.py`, plumbing only). Operational choices in §9.1 await owner review |
-| 9: gates `cap_configured`, `server_identity`, `occupancy_reconstruction` | ⬜ before stage S |
+| 9: gates `cap_configured`, `server_identity`, `occupancy_reconstruction` | ✅ unit + mock tests; the simulator now applies the cap (mock fidelity fix) |
 | 10: stage driver `scripts/run_v5.sh` | ⬜ before stage S |
 | 11: raw-data export and sanitization | ⬜ before stage A |
 | Freeze commit 1 | 🚫 needs owner approval of ADR-Q19 + text, and the P1 host-verification outcome |
