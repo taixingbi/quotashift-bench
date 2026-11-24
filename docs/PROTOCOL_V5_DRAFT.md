@@ -617,6 +617,34 @@ Items 8–11 must not change any frozen artifact. A test pinning the frozen file
     - Otherwise the field stays unresolved, and only a written `model_revision_waiver` can stand in.
   - **Output:** the record is sanitized with the export rules and gate-checked. The canonical path is written only
     when no issue remains.
+- **Owner-approved source-default rule for `max_num_seqs` (P1 decision 2, 2026-11-23).** vLLM 0.17.1 does not log
+  `max_num_seqs` at INFO level. `scripts/p1_verify_host.py` therefore accepts `max_num_seqs = 256`, as
+  `inferred_from_source_default`, only with `--accept-source-default-max-num-seqs` **and** only if every condition
+  holds:
+  - `vllm` 0.17.1, with the installed `engine/arg_utils.py`, `config/vllm.py` and `entrypoints/cli/serve.py` matching
+    the reviewed SHA-256 values;
+  - a `vllm serve` launch (usage context `OPENAI_API_SERVER`);
+  - no `--max-num-seqs` or `--performance-mode` in argv, and the single logged "non-default args" line sets neither;
+  - an RTX 3090 GPU (under 70 GiB, so the non-H100 default table applies);
+  - the logged `max_num_batched_tokens` is 2048, the same default branch, not doubled.
+  The result is min(256, 2048) = 256.
+  - **Recorded with it:** the conditions, the pinned hashes, an explicit uncertainty statement, and the owner's
+    acceptance.
+  - **Capture size:** the engine's `max_cudagraph_capture_size` = 512 is recorded as a **consistency check only**; it
+    is not proof of the value.
+  - **P1 gate:** `v5_stage.host_record_problems` accepts only `argv`, `startup_log`, or this rule with its complete,
+    owner-approved record. For the snapshot it accepts only `verified_direct`, or `verified_by_exclusion` with recorded
+    owner acceptance.
+- **P1 outcome (2026-11-24 01:11 UTC):** **PASSED**, with the evidence levels as approved; record in
+  `experiments/v5/HOST_VERIFICATION.json`.
+  - **Server:** start 1795268683.89, the same as every v4 run.
+  - **Version:** vLLM 0.17.1.
+  - **`max_num_batched_tokens`:** 2048, from the startup log.
+  - **`max_num_seqs`:** 256, `inferred_from_source_default`. It is ≥ 64, so C = 32 is kept.
+  - **Model snapshot:** `a09a35458c702b33eeacc393d103063234e8bc28`, `verified_by_exclusion`. It is the only snapshot,
+    created 2026-03-08, before the server start. All 4 weight blobs' SHA-256 equal their names, and no weight file was
+    mapped or open.
+  - **No waiver** was needed.
 
 ## 11. Proposed freeze
 
@@ -630,8 +658,10 @@ Items 8–11 must not change any frozen artifact. A test pinning the frozen file
   - item 8 (run-level loader) done, so the analysis is complete at freeze;
   - the P1 outcome known, so any C = 32 drop happens before the freeze.
 
-**Freeze commit 2 (pre-stage P3).** Adds `FROZEN_TRACES.json` and the host-verification record. It must not modify any
-commit-1 artifact.
+**Freeze commit 2 (pre-stage P3).** Adds `FROZEN_TRACES.json`. It must not modify any commit-1 artifact.
+- *Rev 3 procedure note:* the P1 record `experiments/v5/HOST_VERIFICATION.json` was committed when P1 passed, before
+  freeze commit 1, as the owner required.
+- Freeze commit 1 pins its SHA-256 together with the other frozen artifacts.
 
 ## 12. Scope boundary
 

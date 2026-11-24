@@ -82,7 +82,7 @@ def test_flags_argv_then_log_never_defaults(tmp_path):
     c = _cache(tmp_path, {A: [W1]})
     bare = ["python", "-m", "vllm.entrypoints.openai.api_server", "--model", "Qwen/Qwen2.5-7B-Instruct"]
     rec, issues = pv.build_record(_ev(c, argv=bare), "0.17.1", START, verified_by="o", waiver=None, accept_exclusion=True)
-    assert rec["max_num_seqs"] is None and any("max_num_seqs unresolved" in i for i in issues)
+    assert rec["max_num_seqs"] is None and any("max_num_seqs source-default rule does not apply" in i for i in issues)
     log = ["non-default args: {'model': 'Qwen/Qwen2.5-7B-Instruct', 'max_num_seqs': 256}",
            "Chunked prefill is enabled with max_num_batched_tokens=2048."]
     rec, issues = pv.build_record(_ev(c, argv=bare, log=log), "0.17.1", START, verified_by="o", waiver=None,
@@ -129,3 +129,69 @@ def test_collector_is_read_only_by_construction():
             assert src.count("open(") == 2 and '"rb" if binary else "r"' in src and 'open(p, "rb")' in src
             continue
         assert forbidden not in src, forbidden
+
+
+# ---------------------------------------------------------------- owner-approved source-default rule (P1 decision 2)
+def _ev_default(tmp_path, **over):
+    c = _cache(tmp_path, {A: [W1]})
+    argv = ["/env/bin/python3.11", "/env/bin/vllm", "serve", "Qwen/Qwen2.5-7B-Instruct", "--max-model-len", "4096"]
+    log = ["(APIServer pid=10) INFO non-default args: {'model': 'Qwen/Qwen2.5-7B-Instruct', 'max_model_len': 4096}",
+           "(APIServer pid=10) INFO Chunked prefill is enabled with max_num_batched_tokens=2048.",
+           "(EngineCore_DP0 pid=11) INFO config: ... 'max_cudagraph_capture_size': 512, ..."]
+    ev = _ev(c, argv=argv, log=log)
+    ev["vllm_source"] = {"sha256": dict(pv.SOURCE_DEFAULT_RULE["source_sha256"])}
+    ev["gpu_models"] = ["NVIDIA GeForce RTX 3090"]
+    for k, v in over.items():
+        ev[k] = v
+    return ev
+
+
+def _rec(ev, **kw):
+    kw = {"verified_by": "Owner", "waiver": None, "accept_exclusion": True} | kw
+    return pv.build_record(ev, "0.17.1", START, **kw)
+
+
+def test_source_default_rule_needs_explicit_owner_acceptance(tmp_path):
+    rec, issues = _rec(_ev_default(tmp_path))
+    assert rec["max_num_seqs"] is None and any("--accept-source-default-max-num-seqs" in i for i in issues)
+    rec, issues = _rec(_ev_default(tmp_path / "b"), accept_source_default=True)
+    assert issues == [], issues
+    assert (rec["max_num_seqs"], rec["max_num_seqs_source"]) == (256, "inferred_from_source_default")
+    inf = rec["max_num_seqs_inference"]
+    assert inf["owner_approved_by"] == "Owner" and "not a direct observation" in inf["uncertainty"]
+    assert inf["consistency_check"]["max_cudagraph_capture_size"] == 512
+    assert "consistency check only" in inf["consistency_check"]["note"]
+    assert (rec["max_num_batched_tokens"], rec["max_num_batched_tokens_source"]) == (2048, "startup_log")
+    assert rec["model_snapshot_evidence_level"] == "verified_by_exclusion"   # evidence level is preserved
+    assert pv.v5_stage.host_record_problems(rec) == []
+
+
+def test_source_default_rule_is_narrow(tmp_path):
+    bad = {
+        "performance_mode": {"vllm_processes": [{"pid": 10, "ppid": 1, "start_epoch": START, "argv": [
+            "/env/bin/vllm", "serve", "Qwen/Qwen2.5-7B-Instruct", "--performance-mode", "throughput"]}]},
+        "sha": {"vllm_source": {"sha256": {"engine/arg_utils.py": "0" * 64}}},
+        "gpu": {"gpu_models": ["NVIDIA H100 80GB HBM3"]},
+        "version": {"python_vllm_version": "0.18.0"},
+    }
+    for i, (name, over) in enumerate(bad.items()):
+        rec, issues = _rec(_ev_default(tmp_path / str(i), **over), accept_source_default=True)
+        assert rec["max_num_seqs"] is None, name
+        assert any("rule does not apply" in x for x in issues), (name, issues)
+    ev = _ev_default(tmp_path / "x")
+    ev["startup_log"]["lines"] = [ln.replace("=2048", "=4096") for ln in ev["startup_log"]["lines"]]   # doubled branch
+    rec, _ = _rec(ev, accept_source_default=True)
+    assert rec["max_num_seqs"] is None and not rec["max_num_seqs_inference"]["conditions"]["logged_max_num_batched_tokens_is_2048"]
+    ev = _ev_default(tmp_path / "y")
+    ev["startup_log"]["lines"][0] = ev["startup_log"]["lines"][0].replace("}", ", 'max_num_seqs': 64}")   # override logged
+    assert _rec(ev, accept_source_default=True)[0]["max_num_seqs"] == 64   # then it is simply read from the log
+
+
+def test_p1_gate_rejects_weaker_evidence_without_recorded_owner_decision(tmp_path):
+    rec, _ = _rec(_ev_default(tmp_path), accept_source_default=True)
+    g = pv.v5_stage.host_record_problems
+    r2 = dict(rec, max_num_seqs_inference={k: v for k, v in rec["max_num_seqs_inference"].items() if k != "owner_approved_by"})
+    assert any("owner-approved rule" in p for p in g(r2))
+    r3 = dict(rec, model_snapshot_evidence=dict(rec["model_snapshot_evidence"], owner_accepted_by=None))
+    assert any("without recorded owner acceptance" in p for p in g(r3))
+    assert any("not accepted" in p for p in g(dict(rec, max_num_seqs_source="assumed_default")))

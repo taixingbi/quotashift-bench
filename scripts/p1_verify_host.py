@@ -38,6 +38,58 @@ TARGET_VERSION = "0.17.1"
 WEIGHT = re.compile(r"\.(safetensors|bin|pt)$")
 FLAGS = {"max_num_seqs": "--max-num-seqs", "max_num_batched_tokens": "--max-num-batched-tokens"}
 
+# ---- Owner-approved inference rule (2026-11-23, P1 review decision 2). NARROW BY CONSTRUCTION: it applies only to
+# vLLM 0.17.1 with exactly these installed source files (read on gpu-node-1 and reviewed: engine/arg_utils.py
+# get_batch_defaults / _set_default_max_num_seqs_and_batched_tokens_args; config/vllm.py performance_mode default
+# "balanced"; entrypoints/cli/serve.py usage context OPENAI_API_SERVER), a `vllm serve` launch, an RTX 3090, no
+# max_num_seqs / performance_mode override in argv or in the logged non-default args, and the logged
+# max_num_batched_tokens = 2048 (the same non-H100, non-doubled default branch). Result: min(256, 2048) = 256.
+SOURCE_DEFAULT_RULE = {
+    "id": "vllm-0.17.1-openai-server-default-max-num-seqs",
+    "approved_by_owner_utc": "2026-11-23",
+    "vllm_version": "0.17.1",
+    "source_sha256": {
+        "engine/arg_utils.py": "846fe5ade00f9651e7cee487092c6cb69eb02f19b15906a8c68a3683678a179f",
+        "config/vllm.py": "405074725a88d63cf1221caf84261485f97d3f1d4eadb2837df78753fc8d5490",
+        "entrypoints/cli/serve.py": "64b4427d989d6e35b353d1d718075a1c6560e1c65026de8592a57c1567e7b0ec",
+    },
+    "gpu_models": ["NVIDIA GeForce RTX 3090"],
+    "default_max_num_seqs": 256,
+    "expected_logged_max_num_batched_tokens": 2048,
+}
+INFERENCE_UNCERTAINTY = (
+    "max_num_seqs is not logged by vLLM 0.17.1 at INFO level. The value is inferred from the installed source defaults "
+    "(pinned by sha256) and the absence of any override in argv or in the logged non-default args. It is not a direct "
+    "observation; an override invisible to both (e.g. a runtime patch outside the pinned files) cannot be excluded.")
+CAPTURE_NOTE = ("engine-config max_cudagraph_capture_size = 512 is CONSISTENT with max_num_seqs >= 256 "
+                "(min(2 * max_num_seqs, 512) when unset); it is a consistency check only and does not by itself prove "
+                "the value.")
+
+
+def infer_max_num_seqs(ev: dict, argv: list[str], log: list[str], batched: int | None) -> dict:
+    """Evaluate SOURCE_DEFAULT_RULE; every condition is recorded, value only if all hold."""
+    r = SOURCE_DEFAULT_RULE
+    src = (ev.get("vllm_source") or {}).get("sha256") or {}
+    nondef = [ln for ln in log if "non-default args:" in ln and f"pid={ev.get('matched_pid')}" in ln]
+    cond = {
+        "vllm_version_is_0.17.1": ev.get("python_vllm_version") == r["vllm_version"],
+        "installed_sources_match_pinned_sha256": all(src.get(k) == v for k, v in r["source_sha256"].items()),
+        "launched_with_vllm_serve": len(argv) >= 2 and any(a.endswith("/vllm") or a == "vllm" for a in argv)
+        and "serve" in argv,
+        "no_max_num_seqs_or_performance_mode_in_argv": not any(
+            a.startswith(("--max-num-seqs", "--performance-mode")) for a in argv),
+        "nondefault_args_logged_once_without_override": len(nondef) == 1 and not any(
+            k in nondef[0] for k in ("max_num_seqs", "performance_mode")),
+        "gpu_is_rtx_3090": bool(ev.get("gpu_models")) and all(g in r["gpu_models"] for g in ev["gpu_models"]),
+        "logged_max_num_batched_tokens_is_2048": batched == r["expected_logged_max_num_batched_tokens"],
+    }
+    cap = next((m.group(1) for ln in log for m in re.finditer(r"'max_cudagraph_capture_size': (\d+)", ln)), None)
+    ok = all(cond.values())
+    return {"rule": r["id"], "conditions": cond, "all_conditions_hold": ok,
+            "value": min(r["default_max_num_seqs"], batched) if ok and batched else None,
+            "pinned_sources": r["source_sha256"], "uncertainty": INFERENCE_UNCERTAINTY,
+            "consistency_check": {"max_cudagraph_capture_size": int(cap) if cap else None, "note": CAPTURE_NOTE}}
+
 
 def flag_from_argv(argv: list[str], flag: str) -> int | None:
     for i, a in enumerate(argv):
@@ -86,7 +138,8 @@ def resolve_snapshot(ev: dict) -> dict:
 
 
 def build_record(ev: dict, live_version: str | None, live_start: float | None, *, verified_by: str | None,
-                 waiver: str | None, accept_exclusion: bool) -> tuple[dict, list[str]]:
+                 waiver: str | None, accept_exclusion: bool,
+                 accept_source_default: bool = False) -> tuple[dict, list[str]]:
     issues: list[str] = []
     pid = ev.get("matched_pid")
     proc = next((p for p in ev.get("vllm_processes", []) if p["pid"] == pid), None)
@@ -107,8 +160,20 @@ def build_record(ev: dict, live_version: str | None, live_start: float | None, *
             v, seen = flag_from_log(log, key)
             src = "startup_log" if v is not None else f"unresolved (log values {seen})"
         rec[key], rec[f"{key}_source"] = v, src
-        if v is None:
-            issues.append(f"{key} unresolved: not in argv and not uniquely in the startup log ({src})")
+    if rec["max_num_seqs"] is None:
+        inf = infer_max_num_seqs(ev, argv, log, rec["max_num_batched_tokens"])
+        rec["max_num_seqs_inference"] = inf
+        if inf["all_conditions_hold"] and accept_source_default:
+            rec["max_num_seqs"], rec["max_num_seqs_source"] = inf["value"], "inferred_from_source_default"
+            inf["owner_approved_by"] = verified_by
+        elif inf["all_conditions_hold"]:
+            issues.append("max_num_seqs only inferable from source defaults: needs --accept-source-default-max-num-seqs")
+        else:
+            failed = [k for k, v in inf["conditions"].items() if not v]
+            issues.append(f"max_num_seqs source-default rule does not apply (failed: {failed})")
+    for key in FLAGS:
+        if rec[key] is None and key != "max_num_seqs":
+            issues.append(f"{key} unresolved: not in argv and not uniquely in the startup log ({rec[f'{key}_source']})")
     rev_flag = next((a.split("=", 1)[1] if "=" in a else argv[i + 1] for i, a in enumerate(argv)
                      if a.startswith("--revision") and (i + 1 < len(argv) or "=" in a)), None)
     snap = resolve_snapshot(ev)
@@ -116,6 +181,9 @@ def build_record(ev: dict, live_version: str | None, live_start: float | None, *
     rec["model_snapshot_evidence"] = snap
     ok_snap = snap["status"] == "verified_direct" or (snap["status"] == "verified_by_exclusion" and accept_exclusion)
     rec["model_snapshot_sha"] = snap["commit"] if ok_snap else None
+    rec["model_snapshot_evidence_level"] = snap["status"] if ok_snap else "unresolved"
+    if ok_snap and snap["status"] == "verified_by_exclusion":
+        snap["owner_accepted_by"] = verified_by
     if snap["status"] == "verified_by_exclusion" and not accept_exclusion:
         issues.append(f"snapshot {snap['commit']} only by exclusion: needs --accept-exclusion (owner decision)")
     elif not ok_snap:
@@ -131,6 +199,7 @@ def build_record(ev: dict, live_version: str | None, live_start: float | None, *
     if waiver:
         rec["model_revision_waiver"] = waiver
     rec |= {"verified_by": verified_by, "verified_utc": datetime.now(UTC).isoformat() if verified_by else None,
+            "gpu_models": ev.get("gpu_models"),
             "evidence_collected_epoch": ev.get("collected_epoch"), "collector_version": ev.get("collector_version"),
             "startup_log_source": (ev.get("startup_log") or {}).get("source"),
             "environ_allowlisted": ev.get("environ_allowlisted")}
@@ -167,16 +236,21 @@ def main() -> int:
     ap.add_argument("--verified-by", default=None)
     ap.add_argument("--model-revision-waiver", default=None)
     ap.add_argument("--accept-exclusion", action="store_true", help="owner accepts snapshot identification by exclusion")
+    ap.add_argument("--accept-source-default-max-num-seqs", action="store_true",
+                    help="owner accepts the pinned source-default inference rule for max_num_seqs (P1 decision 2)")
     ap.add_argument("--out", default=str(v5_stage.HOST_RECORD))
     a = ap.parse_args()
     ev = json.loads(Path(a.evidence).read_text())
     ver, start = live()
     rec, issues = build_record(ev, ver, start, verified_by=a.verified_by, waiver=a.model_revision_waiver,
-                               accept_exclusion=a.accept_exclusion)
+                               accept_exclusion=a.accept_exclusion,
+                               accept_source_default=a.accept_source_default_max_num_seqs)
     rec = sanitize(rec)
     print(json.dumps({k: rec.get(k) for k in ("vllm_version", "max_num_seqs", "max_num_seqs_source", "max_num_batched_tokens",
                                               "max_num_batched_tokens_source", "model_revision_flag", "model_snapshot_sha",
-                                              "process_start_time_seconds")}, indent=1))
+                                              "model_snapshot_evidence_level", "process_start_time_seconds")}, indent=1))
+    if "max_num_seqs_inference" in rec:
+        print("max_num_seqs rule conditions:", rec["max_num_seqs_inference"]["conditions"])
     print(f"snapshot evidence: {rec['model_snapshot_evidence']['status']} via {rec['model_snapshot_evidence']['method']}")
     print("UNRESOLVED:\n  - " + "\n  - ".join(issues) if issues else "all P1 fields resolved")
     if a.check:

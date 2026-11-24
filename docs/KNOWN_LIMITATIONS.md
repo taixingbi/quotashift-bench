@@ -227,4 +227,12 @@
   git-ignored. Raw data is published only as sanitized, SHA-256-verified release tarballs
   (`scripts/export_v5_raw.py`). Rule 3 pseudonymizes GPU ids with a private salt, so third parties cannot link them
   to a physical device.
+- **v5 host verification evidence levels (P1, 2026-11-24).**
+  - **Model snapshot:** `a09a354…` is identified **by exclusion**, not observed directly. It is the only cached
+    snapshot, it predates the server start, and its weight blobs are hash-intact. vLLM had closed the weight files,
+    and the startup log names no path. A snapshot deleted after loading cannot be ruled out, but no deleted mapped
+    file was seen.
+  - **`max_num_seqs` = 256 is inferred** from the installed, hash-pinned vLLM 0.17.1 source defaults and the absence
+    of overrides. It is not logged. An override outside the pinned files cannot be excluded.
+  - **Unaffected:** `max_num_batched_tokens` = 2048, vLLM 0.17.1 and the server identity are directly evidenced.
 

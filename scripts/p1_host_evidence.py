@@ -183,6 +183,42 @@ def startup_log(pid: int, start: float) -> dict:
     return {"source": src, "lines": lines[:300], "log_total_lines": len(text.splitlines())}
 
 
+VLLM_SOURCES = ("engine/arg_utils.py", "config/vllm.py", "entrypoints/cli/serve.py")
+
+
+def vllm_source(exe: str | None) -> dict:
+    """sha256 of the installed vllm files that resolve the scheduler defaults (located without importing vllm)."""
+    if not exe or exe.startswith("<"):
+        return {"error": "unknown interpreter"}
+    try:
+        r = subprocess.run([exe, "-c", "import importlib.util as u; print(u.find_spec('vllm').submodule_search_locations[0])"],
+                           capture_output=True, text=True, timeout=60)
+    except (OSError, subprocess.SubprocessError) as e:
+        return {"error": str(e)}
+    root = r.stdout.strip()
+    out: dict = {"package_dir": root, "sha256": {}}
+    for rel in VLLM_SOURCES:
+        try:
+            out["sha256"][rel] = sha256_file(os.path.join(root, rel))
+        except OSError as e:
+            out["sha256"][rel] = f"<error: {e.strerror}>"
+    return out
+
+
+def gpu_models() -> list[str]:
+    """Model names from the NVIDIA driver's read-only /proc interface (no GPU tool or context)."""
+    base = "/proc/driver/nvidia/gpus"
+    names = []
+    try:
+        for d in sorted(os.listdir(base)):
+            for ln in str(_read(os.path.join(base, d, "information"))).splitlines():
+                if ln.startswith("Model:"):
+                    names.append(ln.split(":", 1)[1].strip())
+    except OSError as e:
+        names.append(f"<error: {e.strerror}>")
+    return names
+
+
 def sha256_file(p: str) -> str:
     h = hashlib.sha256()
     with open(p, "rb") as f:
@@ -201,7 +237,7 @@ def main() -> int:
     allp = [p for pid in os.listdir("/proc") if pid.isdigit() for p in [proc_info(int(pid), btime, tck)] if p]
     procs = [p for p in allp if any("vllm" in x.lower() for x in p["argv"])]   # incl. `VLLM::EngineCore`
     match = [p for p in procs if abs(p["start_epoch"] - a.expect_start) <= 1.0]
-    out: dict = {"collector": "p1_host_evidence.py", "collector_version": 1, "collected_epoch": time.time(),
+    out: dict = {"collector": "p1_host_evidence.py", "collector_version": 2, "collected_epoch": time.time(),
                  "expect_start": a.expect_start, "boot_time": btime, "clk_tck": tck, "vllm_processes": procs,
                  "matched_pid": match[0]["pid"] if len(match) == 1 else None, "match_count": len(match)}
     if len(match) == 1:
@@ -217,6 +253,8 @@ def main() -> int:
         env = environ(root["pid"])
         out["environ_allowlisted"] = env
         out["python_vllm_version"] = vllm_version(root["exe"])
+        out["vllm_source"] = vllm_source(root["exe"])
+        out["gpu_models"] = gpu_models()
         home = next((ln.split(":")[5] for ln in str(_read("/etc/passwd")).splitlines()
                      if ln.split(":")[2:3] == [str(root["uid"])]), os.path.expanduser("~"))
         out["hf_cache"] = hf_cache(a.model, env, home)

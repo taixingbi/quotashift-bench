@@ -162,8 +162,8 @@ Design: `docs/PROTOCOL_V5_DRAFT.md`. ADR-Q19 is proposed and needs owner approva
 | 9: gates `cap_configured`, `server_identity`, `occupancy_reconstruction` | ✅ unit + mock tests; the simulator now applies the cap (mock fidelity fix) |
 | 10: stage driver `scripts/run_v5.sh` (`v5_stage.py`) | ✅ mock dry run of smoke + A + B: 23/23 blocks; stop/rerun/server-identity/budget/refusal tests |
 | 11: sanitized raw-data export + SHA-256 verify (`export_v5_raw.py`) | ✅ tests; trial on real v4 R1 output (scratch): 0 leaks |
-| P1 host verification | 🟡 tooling ready (`p1_host_evidence.py` on the host, `p1_verify_host.py` here); evidence not yet collected: no SSH key access from the runner (2026-11-23) |
-| Freeze commit 1 | 🚫 ADR-Q19 approved in principle (2026-11-23); waits for the P1 evidence |
+| P1 host verification | ✅ passed 2026-11-24 (`experiments/v5/HOST_VERIFICATION.json`): vLLM 0.17.1, same server start as v4, max_num_batched_tokens 2048 (log), max_num_seqs 256 (owner-approved source-default inference), snapshot a09a354… (verified_by_exclusion, owner-accepted) |
+| Freeze commit 1 | 🚫 not created; awaits owner review of the P1 report |
 
 ## Verification (this pass)
 `uv run pytest -q` → see Phase 9 report; `ruff` + `mypy` clean;

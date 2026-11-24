@@ -81,6 +81,23 @@ def host_record_problems(rec: dict | None) -> list[str]:
         p.append(f"max_num_seqs {rec['max_num_seqs']} < {MIN_MAX_NUM_SEQS} and C = 32 not dropped before the freeze")
     if not rec.get("model_snapshot_sha") and not rec.get("model_revision_waiver"):
         p.append("model snapshot hash not verified and no written owner waiver (model_revision_waiver)")
+    # evidence levels (P1 owner decisions 2026-11-23): only these are acceptable, and each weaker level must carry the
+    # owner's recorded acceptance
+    if rec.get("model_snapshot_sha"):
+        lvl = rec.get("model_snapshot_evidence_level")
+        ev = rec.get("model_snapshot_evidence") or {}
+        if lvl not in ("verified_direct", "verified_by_exclusion"):
+            p.append(f"model snapshot evidence level {lvl!r} is not verified_direct / verified_by_exclusion")
+        elif lvl == "verified_by_exclusion" and not ev.get("owner_accepted_by"):
+            p.append("snapshot identified by exclusion without recorded owner acceptance")
+    src = rec.get("max_num_seqs_source")
+    if src not in ("argv", "startup_log", "inferred_from_source_default"):
+        p.append(f"max_num_seqs source {src!r} not accepted (argv, startup_log, or the owner-approved source-default rule)")
+    elif src == "inferred_from_source_default":
+        inf = rec.get("max_num_seqs_inference") or {}
+        if not (inf.get("all_conditions_hold") and inf.get("owner_approved_by") and inf.get("uncertainty")
+                and inf.get("rule") == "vllm-0.17.1-openai-server-default-max-num-seqs"):
+            p.append("max_num_seqs inferred from source defaults without the complete, owner-approved rule record")
     return p
 
 

@@ -237,4 +237,12 @@ A1–A9 results and controls are unchanged. No v4 GPU run is made before owner a
     99.7, JSON unchanged); a text/code/JSON consistency test is added; the export's fail-closed handling of unknown
     file types is tested; P1 read-only tooling is added (`p1_host_evidence.py`, `p1_verify_host.py`).
   - Freeze commit 1 waits for the P1 evidence.
+- **P1 decisions (2026-11-23, owner).**
+  - **Model snapshot:** `a09a35458c702b33eeacc393d103063234e8bc28` is accepted on exclusion evidence. The
+    classification stays `verified_by_exclusion`, not `verified_direct`. No waiver is needed.
+  - **`max_num_seqs`:** 256 is conditionally accepted as `inferred_from_source_default`, under a narrowly scoped,
+    hash-pinned rule in `p1_verify_host.py` and the P1 gate. The CUDA-graph capture size is recorded as consistency
+    only.
+  - **Record:** `verified_by` = "project owner", the owner's choice.
+  - **P1 passed** at 2026-11-24 01:11 UTC. Freeze commit 1 has not been created.
 - **Unchanged.** v4 and its results.

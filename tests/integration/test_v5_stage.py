@@ -101,12 +101,14 @@ def test_budget_rule_stops_live_stage(tmp_path):
 
 
 def test_live_refuses_in_the_current_repository_state(tmp_path, monkeypatch):
-    """Today: not frozen, no FROZEN_TRACES.json, no host record, no approval — every one is reported."""
+    """Today (after P1 passed, before the freeze): not frozen, no FROZEN_TRACES.json, no approval — each is reported;
+    the committed P1 host record itself passes the gate."""
     monkeypatch.delenv(vs.APPROVAL_ENV, raising=False)
     p = vs.live_problems("smoke", REPO / "reports" / "v5" / "smoke", interactive_ok=False)
     text = "\n".join(p)
-    for needle in ("QUOTASHIFT_APPROVED", "interactively", "not frozen", "FROZEN_TRACES.json", "HOST_VERIFICATION.json"):
+    for needle in ("QUOTASHIFT_APPROVED", "interactively", "not frozen", "FROZEN_TRACES.json"):
         assert needle in text, (needle, p)
+    assert vs.HOST_RECORD.exists() and vs.host_record_problems(json.loads(vs.HOST_RECORD.read_text())) == []
     r = subprocess.run(["bash", str(REPO / "scripts" / "run_v5.sh"), "smoke", "--live"], capture_output=True, text=True,
                        stdin=subprocess.DEVNULL, cwd=REPO)
     assert r.returncode == 3 and "REFUSED" in r.stderr
@@ -124,11 +126,13 @@ def test_raw_output_paths_are_git_ignored():
 
 @pytest.mark.parametrize("rec,needle", [
     ({"vllm_version": "0.17.1", "launch_command": "vllm serve ...", "max_num_seqs": 256, "max_num_batched_tokens": 2048,
-      "verified_by": "owner", "verified_utc": "2026-11-24T00:00:00Z", "model_snapshot_sha": "abc"}, None),
+      "verified_by": "owner", "verified_utc": "2026-11-24T00:00:00Z", "model_snapshot_sha": "abc",
+      "max_num_seqs_source": "argv", "model_snapshot_evidence_level": "verified_direct"}, None),
     ({"vllm_version": "0.17.1", "launch_command": "x", "max_num_seqs": 32, "max_num_batched_tokens": 2048,
       "verified_by": "o", "verified_utc": "t", "model_snapshot_sha": "abc"}, "max_num_seqs 32"),
     ({"vllm_version": "0.17.1", "launch_command": "x", "max_num_seqs": 32, "c32_dropped": True,
-      "max_num_batched_tokens": 2048, "verified_by": "o", "verified_utc": "t", "model_snapshot_sha": "abc"}, None),
+      "max_num_batched_tokens": 2048, "verified_by": "o", "verified_utc": "t", "model_snapshot_sha": "abc",
+      "max_num_seqs_source": "argv", "model_snapshot_evidence_level": "verified_direct"}, None),
     ({"vllm_version": "0.18.0", "launch_command": "x", "max_num_seqs": 256, "max_num_batched_tokens": 2048,
       "verified_by": "o", "verified_utc": "t", "model_revision_waiver": "signed"}, "0.18.0"),
     ({"vllm_version": "0.17.1", "launch_command": "x", "max_num_seqs": 256, "max_num_batched_tokens": 2048,

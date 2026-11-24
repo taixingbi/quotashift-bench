@@ -1,0 +1,67 @@
+{
+ "vllm_version": "0.17.1",
+ "launch_command": "~/miniconda3/envs/vllm/bin/python3.11 ~/miniconda3/envs/vllm/bin/vllm serve Qwen/Qwen2.5-7B-Instruct --host 0.0.0.0 --port 8000 --dtype float16 --max-model-len 4096 --gpu-memory-utilization 0.80 --enable-prefix-caching --enable-prompt-tokens-details",
+ "process_start_time_seconds": 1795268683.89,
+ "max_num_seqs": 256,
+ "max_num_seqs_source": "inferred_from_source_default",
+ "max_num_batched_tokens": 2048,
+ "max_num_batched_tokens_source": "startup_log",
+ "max_num_seqs_inference": {
+  "rule": "vllm-0.17.1-openai-server-default-max-num-seqs",
+  "conditions": {
+   "vllm_version_is_0.17.1": true,
+   "installed_sources_match_pinned_sha256": true,
+   "launched_with_vllm_serve": true,
+   "no_max_num_seqs_or_performance_mode_in_argv": true,
+   "nondefault_args_logged_once_without_override": true,
+   "gpu_is_rtx_3090": true,
+   "logged_max_num_batched_tokens_is_2048": true
+  },
+  "all_conditions_hold": true,
+  "value": 256,
+  "pinned_sources": {
+   "engine/arg_utils.py": "846fe5ade00f9651e7cee487092c6cb69eb02f19b15906a8c68a3683678a179f",
+   "config/vllm.py": "405074725a88d63cf1221caf84261485f97d3f1d4eadb2837df78753fc8d5490",
+   "entrypoints/cli/serve.py": "64b4427d989d6e35b353d1d718075a1c6560e1c65026de8592a57c1567e7b0ec"
+  },
+  "uncertainty": "max_num_seqs is not logged by vLLM 0.17.1 at INFO level. The value is inferred from the installed source defaults (pinned by sha256) and the absence of any override in argv or in the logged non-default args. It is not a direct observation; an override invisible to both (e.g. a runtime patch outside the pinned files) cannot be excluded.",
+  "consistency_check": {
+   "max_cudagraph_capture_size": 512,
+   "note": "engine-config max_cudagraph_capture_size = 512 is CONSISTENT with max_num_seqs >= 256 (min(2 * max_num_seqs, 512) when unset); it is a consistency check only and does not by itself prove the value."
+  },
+  "owner_approved_by": "project owner"
+ },
+ "model_revision_flag": null,
+ "model_snapshot_evidence": {
+  "status": "verified_by_exclusion",
+  "commit": "a09a35458c702b33eeacc393d103063234e8bc28",
+  "method": "single_complete_snapshot_predating_start",
+  "opened_weight_files": [],
+  "refs": {
+   "main": {
+    "commit": "a09a35458c702b33eeacc393d103063234e8bc28",
+    "mtime": 1795268692.9275563
+   }
+  },
+  "snapshots_with_weights": [
+   "a09a35458c702b33eeacc393d103063234e8bc28"
+  ],
+  "startup_log_commits": [],
+  "requires_owner_acceptance": true,
+  "owner_accepted_by": "project owner"
+ },
+ "model_snapshot_sha": "a09a35458c702b33eeacc393d103063234e8bc28",
+ "model_snapshot_evidence_level": "verified_by_exclusion",
+ "weight_blob_sha256_checked": 4,
+ "verified_by": "project owner",
+ "verified_utc": "2026-11-24T01:11:06.942511+00:00",
+ "gpu_models": [
+  "NVIDIA GeForce RTX 3090"
+ ],
+ "evidence_collected_epoch": 1795482492.635137,
+ "collector_version": 2,
+ "startup_log_source": "file:~/vllm.log",
+ "environ_allowlisted": {
+  "CUDA_VISIBLE_DEVICES": "0"
+ }
+}
