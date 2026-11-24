@@ -193,7 +193,7 @@ def validity_gates(attack: list[RunMetrics], control: list[RunMetrics], analysis
         checks.append(_chk("realized_output_equals_authorized", (sum(x or 0 for x in mis) == 0)
                            if all(x is not None for x in mis) else None,
                            f"{sum(x or 0 for x in mis)} completed request(s) with output_tokens != max_output_tokens"))
-    # 11-12. protocol v5 (PROTOCOL_V5_DRAFT §5.1): the cell's cap is the one applied; slot occupancy is reconstructable
+    # 11-12. protocol v5 (PROTOCOL_V5 §5.1): the cell's cap is the one applied; slot occupancy is reconstructable
     if protocol_version >= 5:
         checks.append(_cap_configured(arms, expected_cap, path))
         fr = [m.occ_recon_exact_frac for m in arms]

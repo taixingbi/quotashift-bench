@@ -8,9 +8,9 @@ The predictions are written BEFORE any v5 GPU run and are part of the v5 freeze 
   - service    = per-request gateway slot hold [t_sent, t_terminal) resampled (with replacement, per request class) from
                  a v4 hold-time pool measured at C = 8 through the gateway, for the matching (shape, load, arm);
   - discipline = one global FCFS queue with C slots (the v4 gateway; post-hoc v4 replay reproduced measured queueing);
-  - assumption = hold times are cap-invariant (see PROTOCOL_V5_DRAFT §3.3 for why this biases predictions low).
+  - assumption = hold times are cap-invariant (see PROTOCOL_V5 §3.3 for why this biases predictions low).
 
-Leakage guard (PROTOCOL_V5_DRAFT §3.4): the ONLY permitted inputs are v4 runs with path == gateway and
+Leakage guard (PROTOCOL_V5 §3.4): the ONLY permitted inputs are v4 runs with path == gateway and
 max_global_inflight == 8. Direct-vLLM (R3) runs are excluded because their observed concurrency (max 9–14 at L = 200)
 never reached 16, so they are de-facto measurements of the C = 16/32 cells. The script fails if any input violates this
 or if any v5 result directory exists. Every input file is pinned by SHA-256 in the output.

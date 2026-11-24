@@ -4,7 +4,7 @@
     uv run python scripts/p1_verify_host.py --evidence p1_evidence.json --verified-by "<owner>" \
         [--model-revision-waiver "<signed text>"]                                           # write the record
 
-Read-only towards the server (GET /version and /metrics only). Resolution rules (PROTOCOL_V5_DRAFT §10.3):
+Read-only towards the server (GET /version and /metrics only). Resolution rules (PROTOCOL_V5 §10.3):
   process      exactly one vllm process whose start time equals the LIVE process_start_time_seconds (±1 s) — the same
                server every v5 stage must run on (and that v4 ran on)
   vllm_version the process interpreter's installed vllm == GET /version == 0.17.1

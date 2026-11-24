@@ -1,4 +1,4 @@
-"""Protocol v5 pre-registered decision rules (docs/PROTOCOL_V5_DRAFT.md §4–§6). FROZEN with the v5 freeze commit.
+"""Protocol v5 pre-registered decision rules (docs/PROTOCOL_V5.md §4–§6). FROZEN with the v5 freeze commit.
 
 This module holds the statistical decision rules as pure functions so they can be unit-tested on synthetic inputs
 before any v5 GPU run, plus the run-level loader (§9 item 8, bottom of the file) that reads v5 experiment reports
@@ -635,7 +635,7 @@ def render_md(res: dict) -> str:
     if sg and not sg["passed"]:
         L += [f"> **STAGE {', '.join(sg['failed_stages'])} INVALID: server_identity failed ({sg['detail']}); "
               "its cells are ¬E.**", ""]
-    L += ["Rules: `docs/PROTOCOL_V5_DRAFT.md` §3–§6, implemented in `scripts/v5_analysis.py`. No seed exclusion.", "",
+    L += ["Rules: `docs/PROTOCOL_V5.md` §3–§6, implemented in `scripts/v5_analysis.py`. No seed exclusion.", "",
           "## Hypotheses", "", "| Hypothesis | Verdict | Detail |", "|---|---|---|"]
     h = res["hypotheses"]
     for k in ("H1", "H2a", "H2b"):

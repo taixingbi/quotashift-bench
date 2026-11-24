@@ -177,7 +177,7 @@ KNOWN_LIMITATIONS); `ignore_eos` (realized = authorized); frozen trace manifest 
 `arrival_coverage` and `realized_output_equals_authorized` gates; `feasibility_gates: classify` for sweeps. Historical
 A1–A9 results and controls are unchanged. No v4 GPU run is made before owner approval of each stage.
 
-## ADR-Q19 — PROPOSED (not accepted): gateway concurrency cap as a pre-registered blocking factor (Protocol v5 draft, 2026-11-22)
+## ADR-Q19 — ACCEPTED (2026-11-24, Freeze Commit 1): gateway concurrency cap as a pre-registered blocking factor (Protocol v5; proposed 2026-11-22)
 - **Context.** v4 R3 showed that the R1 decode effect is admission queueing at the 8-slot FCFS gateway. The post-hoc
   slot-time analysis (`reports/v4/posthoc_slot_time/`, exploratory) supports a slot-occupancy mechanism.
 - **Proposal.** v5 (`docs/PROTOCOL_V5_DRAFT.md`) varies the gateway cap C ∈ {8, 16, 32} **between blocks**, keeping it
@@ -245,4 +245,12 @@ A1–A9 results and controls are unchanged. No v4 GPU run is made before owner a
     only.
   - **Record:** `verified_by` = "project owner", the owner's choice.
   - **P1 passed** at 2026-11-24 01:11 UTC. Freeze commit 1 has not been created.
+- **Accepted (2026-11-24).**
+  - The owner formally accepted P1 (commit `0f1252d`) and ADR-Q19.
+  - The gateway cap varies only between pre-registered blocks, and is identical within each attack/control pair.
+  - At Freeze Commit 1, `docs/PROTOCOL_V5_DRAFT.md` was renamed `docs/PROTOCOL_V5.md` (status FROZEN). Earlier
+    entries that cite the draft name are historical and kept as written.
+  - The 46 generated YAMLs were regenerated so their header comment cites the new name. That is a one-line comment
+    change per file; `FROZEN_SCHEDULE.json` reproduces exactly.
+  - All frozen artifacts are pinned in `experiments/v5/FROZEN_SHA256.json`.
 - **Unchanged.** v4 and its results.

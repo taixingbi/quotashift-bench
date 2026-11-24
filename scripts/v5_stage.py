@@ -1,4 +1,4 @@
-"""Protocol v5 stage driver (docs/PROTOCOL_V5_DRAFT.md §8, §9 item 10, §10). `scripts/run_v5.sh` wraps this file.
+"""Protocol v5 stage driver (docs/PROTOCOL_V5.md §8, §9 item 10, §10). `scripts/run_v5.sh` wraps this file.
 
     scripts/run_v5.sh smoke|A|B --mock --out-root <dir> [--shorten 10]   # dry run on the in-process mock (plumbing)
     scripts/run_v5.sh smoke|A|B --live                                   # owner-approved stage only (see below)

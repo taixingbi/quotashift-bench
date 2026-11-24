@@ -101,13 +101,15 @@ def test_budget_rule_stops_live_stage(tmp_path):
 
 
 def test_live_refuses_in_the_current_repository_state(tmp_path, monkeypatch):
-    """Today (after P1 passed, before the freeze): not frozen, no FROZEN_TRACES.json, no approval — each is reported;
-    the committed P1 host record itself passes the gate."""
+    """Without stage approval and interactive confirmation the live driver always refuses; before Freeze Commit 2 it
+    also reports the missing FROZEN_TRACES.json. The protocol is frozen and the committed P1 record passes the gate."""
     monkeypatch.delenv(vs.APPROVAL_ENV, raising=False)
     p = vs.live_problems("smoke", REPO / "reports" / "v5" / "smoke", interactive_ok=False)
     text = "\n".join(p)
-    for needle in ("QUOTASHIFT_APPROVED", "interactively", "not frozen", "FROZEN_TRACES.json"):
+    for needle in ("QUOTASHIFT_APPROVED", "interactively"):
         assert needle in text, (needle, p)
+    assert "not frozen" not in text
+    assert ("FROZEN_TRACES.json" in text) != (REPO / "experiments" / "v5" / "FROZEN_TRACES.json").exists()
     assert vs.HOST_RECORD.exists() and vs.host_record_problems(json.loads(vs.HOST_RECORD.read_text())) == []
     r = subprocess.run(["bash", str(REPO / "scripts" / "run_v5.sh"), "smoke", "--live"], capture_output=True, text=True,
                        stdin=subprocess.DEVNULL, cwd=REPO)

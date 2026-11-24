@@ -1,5 +1,5 @@
 """Gateway slot occupancy rebuilt from per-request timestamps (ported from scripts/v4_posthoc_slot_time.py for the
-Protocol v5 `cap_configured` and `occupancy_reconstruction` gates; docs/PROTOCOL_V5_DRAFT.md §5.1).
+Protocol v5 `cap_configured` and `occupancy_reconstruction` gates; docs/PROTOCOL_V5.md §5.1).
 
 A gateway slot is held over [t_sent, t_terminal). k(t) is the piecewise-constant in-flight count; releases sort
 before admissions at equal times. The sampled check compares k(t) with the gateway's own `gw_inflight` count at the

@@ -1,6 +1,13 @@
-# Protocol v5 — gateway concurrency cap × request shape (DRAFT rev 3, for pre-registration review)
+# Protocol v5 — gateway concurrency cap × request shape (FROZEN, rev 3)
 
-**Status:** DRAFT rev 3, 2026-11-23. **Not frozen, not approved for GPU execution, nothing run.**
+**Status:** FROZEN 2026-11-24 (Freeze Commit 1; the owner-reviewed rev 3 text, P1 accepted). **No stage is approved for
+GPU execution, and nothing has been run.**
+- **Stage approvals:** each of S, A and B needs its own separate owner approval (§8 rule 7, §10).
+- **Freeze rules:**
+  - Every frozen artifact is pinned by SHA-256 in `experiments/v5/FROZEN_SHA256.json`, and
+    `tests/unit/test_v5_freeze.py` enforces the pins.
+  - No frozen artifact may change after this point. A change requires a new, separately pre-registered amendment.
+  - The draft history is in git, under the former name `docs/PROTOCOL_V5_DRAFT.md`.
 - **Rev 1:** 2026-11-22, in commit `ab259e4`. The owner accepted it for further preparation only.
 - **Rev 2 changes, one per review item:**
   1. H2 is split into H2a (cap dose-response) and H2b (equivalence at C = 32), each with its own decision rule.
@@ -38,8 +45,8 @@
 - **What does not change:** Protocol v4 (`docs/PROTOCOL_V4.md`), its YAMLs, its `FROZEN_TRACES.json`, its results, and
   their pre-registered classifications. `scripts/build_v4.py --check` gives 45 files, 0 differ. All v4 post-hoc work
   stays labelled **post-hoc exploratory**.
-- **Governance:** ADR-Q19 (proposed, needs owner approval) in `docs/DECISIONS.md`.
-- **Frozen artifacts (proposed for the freeze commit, §11):**
+- **Governance:** ADR-Q19 is **ACCEPTED** (`docs/DECISIONS.md`).
+- **Frozen artifacts (Freeze Commit 1, §11; the complete list with hashes is in `experiments/v5/FROZEN_SHA256.json`):**
 
   | Artifact | Content |
   |---|---|
@@ -48,6 +55,9 @@
   | `experiments/v5/FCFS_PREDICTIONS.json` | H3 predictions and tolerances |
   | `scripts/v5_analysis.py` | decision rules |
   | `tests/unit/test_v5_protocol.py` | protocol tests |
+  | `experiments/v5/HOST_VERIFICATION.json` | P1 host record (accepted evidence levels) |
+  | `scripts/{build_v5,freeze_v5,v5_fcfs_predictions,v5_stage,export_v5_raw,p1_host_evidence,p1_verify_host}.py`, `scripts/run_v5.sh` | generation, freeze, driver, export and P1 tooling |
+  | the v5 schema, metric, gate and instrumentation sources in `src/quotashift/` | as listed in the pin manifest |
 
   `experiments/v5/FROZEN_TRACES.json` (the exact prompt text) is produced at pre-stage P on the live tokenizer. It must
   reproduce `FROZEN_SCHEDULE.json` hash for hash, and `scripts/freeze_v5.py --live` refuses to write it otherwise.
@@ -646,13 +656,15 @@ Items 8–11 must not change any frozen artifact. A test pinning the frozen file
     mapped or open.
   - **No waiver** was needed.
 
-## 11. Proposed freeze
+## 11. Freeze
 
-**Freeze commit 1 (proposed; awaits owner review).**
+**Freeze commit 1 (created 2026-11-24 after owner acceptance of P1; this text).**
 - **Contents:** this protocol, renamed `docs/PROTOCOL_V5.md` with `**Status:** FROZEN`; `experiments/v5/**.yaml`
   (23 blocks + 23 pre-generated reruns); `FROZEN_SCHEDULE.json`; `FCFS_PREDICTIONS.json`;
   `scripts/{build_v5,freeze_v5,v5_fcfs_predictions,v5_analysis,v5_stage,export_v5_raw}.py`, `scripts/run_v5.sh`;
   the schema and instrumentation changes; `tests/unit/test_v5_protocol.py`; ADR-Q19 → ACCEPTED.
+  - It adds `experiments/v5/FROZEN_SHA256.json` (all pins, including `HOST_VERIFICATION.json`) and
+    `tests/unit/test_v5_freeze.py`.
 - **Preconditions:**
   - owner approval of ADR-Q19 and of this text;
   - item 8 (run-level loader) done, so the analysis is complete at freeze;

@@ -78,7 +78,7 @@ CONTROL_DIMENSIONS: dict[str, dict[str, list[str]]] = {
     "lifecycle_normal": {"controlled": ["victim_traffic", "request_count", "arrival_times", "total_tokens",
                                         "io_composition", "output_limits"],
                          "varies": ["request_lifecycle (cancel/timeout/retry -> complete)", "realized_work"]},
-    # protocol v5 (docs/PROTOCOL_V5_DRAFT.md): A/A with an independently sampled competitor trace
+    # protocol v5 (docs/PROTOCOL_V5.md): A/A with an independently sampled competitor trace
     "independent_replicate": {"controlled": ["victim_traffic", "request_count", "request_rate", "total_tokens",
                                              "io_composition", "output_limits", "arrival_law"],
                               "varies": ["competitor arrival times (independent draw of the same law)"]},

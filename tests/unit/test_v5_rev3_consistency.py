@@ -20,7 +20,7 @@ import v5_stage as S  # noqa: E402
 
 from quotashift.evaluation import occupancy as O  # noqa: E402
 
-TXT = (REPO / "docs" / "PROTOCOL_V5_DRAFT.md").read_text()
+TXT = (REPO / "docs" / "PROTOCOL_V5.md").read_text()
 PRED = json.loads((REPO / "experiments" / "v5" / "FCFS_PREDICTIONS.json").read_text())
 
 

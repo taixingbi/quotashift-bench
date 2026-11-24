@@ -151,9 +151,9 @@ S failed it at L400. The frozen monotone rule therefore gives **L\* = 200**. No 
 
 Full numbers are in `experiments/PLAN.md`. Raw reports are local and gitignored (`reports/v4/`).
 
-## Phase 10 — Protocol v5 (gateway cap × shape) 🟡 offline prep; DRAFT rev 3, not frozen, nothing run
+## Phase 10 — Protocol v5 (gateway cap × shape) 🟡 FROZEN (rev 3); no stage run
 
-Design: `docs/PROTOCOL_V5_DRAFT.md`. ADR-Q19 is proposed and needs owner approval. No v5 GPU run is approved.
+Design: `docs/PROTOCOL_V5.md` (FROZEN 2026-11-24). ADR-Q19 accepted. No v5 stage is approved for GPU execution.
 
 | §9 item | Status |
 |---|---|
@@ -163,7 +163,8 @@ Design: `docs/PROTOCOL_V5_DRAFT.md`. ADR-Q19 is proposed and needs owner approva
 | 10: stage driver `scripts/run_v5.sh` (`v5_stage.py`) | ✅ mock dry run of smoke + A + B: 23/23 blocks; stop/rerun/server-identity/budget/refusal tests |
 | 11: sanitized raw-data export + SHA-256 verify (`export_v5_raw.py`) | ✅ tests; trial on real v4 R1 output (scratch): 0 leaks |
 | P1 host verification | ✅ passed 2026-11-24 (`experiments/v5/HOST_VERIFICATION.json`): vLLM 0.17.1, same server start as v4, max_num_batched_tokens 2048 (log), max_num_seqs 256 (owner-approved source-default inference), snapshot a09a354… (verified_by_exclusion, owner-accepted) |
-| Freeze commit 1 | 🚫 not created; awaits owner review of the P1 report |
+| Freeze commit 1 | ✅ 2026-11-24: `docs/PROTOCOL_V5.md` FROZEN, ADR-Q19 ACCEPTED, pins in `experiments/v5/FROZEN_SHA256.json` |
+| P2 live trace freeze + Freeze commit 2 | ⬜ next (tokenizer only) |
 
 ## Verification (this pass)
 `uv run pytest -q` → see Phase 9 report; `ruff` + `mypy` clean;

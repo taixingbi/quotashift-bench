@@ -74,7 +74,7 @@ def counter_deltas(before: MetricSnapshot | None, after: MetricSnapshot | None, 
             out[f"{k}_sum"] = a2[0] - b2[0]
             out[f"{k}_mean"] = (a2[0] - b2[0]) / n if n > 0 else None
             # v5: cumulative bucket-count deltas [(le, count)] over the arm window (engine-global, finish-time
-            # observations; vLLM 0.17.1 request-latency buckets start at le = 0.3 s — PROTOCOL_V5_DRAFT §5.2)
+            # observations; vLLM 0.17.1 request-latency buckets start at le = 0.3 s — PROTOCOL_V5 §5.2)
             hb, ha = before.histograms.get(k), after.histograms.get(k)
             if hb is not None and ha is not None:
                 bd = dict(hb)

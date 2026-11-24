@@ -1,4 +1,4 @@
-"""Protocol v5 (docs/PROTOCOL_V5_DRAFT.md), offline only: spec-generated YAMLs, seed-shared schedules across caps,
+"""Protocol v5 (docs/PROTOCOL_V5.md), offline only: spec-generated YAMLs, seed-shared schedules across caps,
 the independent A/A control, the frozen schedule and FCFS predictions (incl. the leakage guard), engine-histogram
 bucket deltas, and the pre-registered decision rules on synthetic inputs. No GPU evidence anywhere."""
 

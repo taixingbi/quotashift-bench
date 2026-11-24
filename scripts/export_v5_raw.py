@@ -1,4 +1,4 @@
-"""Sanitized raw-data export with SHA-256 verification (PROTOCOL_V5_DRAFT §9 item 11; docs/RAW_DATA_AUDIT.md §2–§3).
+"""Sanitized raw-data export with SHA-256 verification (PROTOCOL_V5 §9 item 11; docs/RAW_DATA_AUDIT.md §2–§3).
 
     uv run python scripts/export_v5_raw.py export --stage A --salt-file ~/.config/quotashift/export_salt
     uv run python scripts/export_v5_raw.py verify --manifest reports/v5/RAW_DATA_MANIFEST_A.json \
