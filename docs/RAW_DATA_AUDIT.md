@@ -58,3 +58,17 @@ This covers what the committed raw data exposes and how future raw data should b
 
 Each export is checked by a regex gate that fails on `/Users/`, `/home/`, private keys and token patterns before
 packaging.
+
+## 4. Implementation status (added 2026-11-23)
+
+- **§3 is implemented** for Protocol v5 as `scripts/export_v5_raw.py` (rules version 1; tests in
+  `tests/unit/test_export_v5_raw.py`).
+- **Changes from the proposal:**
+  - `.prom` text and every other non-PNG file are sanitized as text. An undecodable file refuses the export.
+  - `system_env.{conda_packages, env_vars}` are dropped as well.
+- **Trial run:** a read-only run over the real v4 R1 output, written to a scratch dir, replaced 75 paths, 156 host
+  occurrences and 66 GPU-id occurrences. An independent grep then found 0 remaining `/Users/`, `/home/`, LAN-IP, GPU
+  UUID or PCI-id strings.
+- **What is unchanged:** v4 data is not modified, and no history rewrite was done.
+- **Policy item 4** (stop committing raw runs) is applied to v5 output only, through `.gitignore`.
+
