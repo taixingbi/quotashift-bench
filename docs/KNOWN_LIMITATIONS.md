@@ -177,11 +177,14 @@
 - **Telemetry scrape lag.**
   - `metrics_timeseries` stamps each scrape about 0.15 s before the gateway in-flight count is read (vLLM and GPU
     metrics are fetched first).
-  - Sampled `gw_inflight` matches the in-flight count rebuilt from request timestamps 66% of the time at lag 0. With a
-    +0.15 s shift it matches 0.77–0.995 of the time across the 114 gateway runs (per-stage medians 0.89–0.96).
-    - This was corrected on 2026-11-23. The earlier "91–99.5%" does not reproduce; see the `SLOT_TIME_ANALYSIS.md`
-      erratum.
-    - From v5 on, scrapes record `t_gw_rel_s`, the time of the gateway read itself.
+  - Sampled `gw_inflight` matches the in-flight count rebuilt from request timestamps 66% of the time at lag 0, and
+    91–99.5% with a +0.15 s shift.
+  - **Correction (2026-11-23; the original 2026-11-22 statement above is kept as written):**
+    - The "91–99.5%" range does not reproduce. Across the 114 v4 gateway runs, agreement at +0.15 s is 0.77–0.995,
+      with per-stage medians of 0.89–0.96.
+    - See the erratum in `reports/v4/posthoc_slot_time/SLOT_TIME_ANALYSIS.md`.
+    - From v5 on, scrapes record `t_gw_rel_s`, the time of the gateway read itself, and the alignment is validated per
+      arm (`gateway_timestamp_alignment`).
   - Use the rebuilt occupancy for slot analyses.
 - **P95 threshold fragility.**
   - With about 100–115 victims per run, P95 sits at about the 6th-largest value.
@@ -191,8 +194,10 @@
     0.5% of victims over 500 ms) alongside it.
 - **A/A shares the trace.** v4 A/A arms (`identical_workload`) replay the same trace, so the A/A noise floor excludes
   variation between traces. For example, seed 44 is bursty in both arms.
-- **Engine queue time: engine-global only, never per request** (corrected 2026-11-23; an earlier version of this entry
-  said v4 did not capture the histogram).
+- **Engine queue time not recorded in v4.** It is unavailable per request. vLLM exposes a
+  `request_queue_time_seconds` histogram that v4 did not capture.
+  *(Original 2026-11-22 entry, kept as written. Corrected by the next entry.)*
+- **Engine queue time: engine-global only, never per request** (correction, 2026-11-23).
   - **What v4 captured:** per-arm sum/count deltas of vLLM `request_queue_time_seconds`. That gives the exact
     engine-global mean over finished requests: ≤ 0.012 ms in every R1/R3 arm (measured). It did not capture bucket
     deltas.
@@ -212,4 +217,14 @@
     were effectively uncapped. The live runner (`runtime/live.py`), and so every GPU measurement, always applied it.
   - Historical mock outputs are plumbing evidence only and are not regenerated.
   - Found by the v5 `cap_configured` gate.
+- **Simulator sampled before same-instant dispatches (fixed 2026-11-23).**
+  - Virtual time makes samples coincide with arrivals. A sample taken before an instant's dispatch missed requests
+    sent at that instant, so rebuilt-vs-sampled agreement was 0.49–0.61 on full-length mock runs.
+  - Samples are now taken after dispatch, which gives exact agreement 1.0 on the mock. The live runner never had the
+    tie.
+  - Mock-only.
+- **v5 raw output is not committed.** `results/v5_*/` and `reports/v5/{smoke,stage_a,stage_b,export}/` are
+  git-ignored. Raw data is published only as sanitized, SHA-256-verified release tarballs
+  (`scripts/export_v5_raw.py`). Rule 3 pseudonymizes GPU ids with a private salt, so third parties cannot link them
+  to a physical device.
 

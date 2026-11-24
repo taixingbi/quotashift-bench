@@ -1,6 +1,6 @@
-# Protocol v5 — gateway concurrency cap × request shape (DRAFT rev 2, for pre-registration review)
+# Protocol v5 — gateway concurrency cap × request shape (DRAFT rev 3, for pre-registration review)
 
-**Status:** DRAFT rev 2, 2026-11-23. **Not frozen, not approved for GPU execution, nothing run.**
+**Status:** DRAFT rev 3, 2026-11-23. **Not frozen, not approved for GPU execution, nothing run.**
 - **Rev 1:** 2026-11-22, in commit `ab259e4`. The owner accepted it for further preparation only.
 - **Rev 2 changes, one per review item:**
   1. H2 is split into H2a (cap dose-response) and H2b (equivalence at C = 32), each with its own decision rule.
@@ -11,6 +11,19 @@
   6. The vLLM histogram semantics are verified, which changes H4.
   7. v4 is unchanged, and all post-hoc labels are preserved.
   8. An implementation plan, tests, frozen schedule and staged procedure are added.
+- **Rev 3 changes (owner review of §9.1 and the implementation, 2026-11-23):**
+  1. The fixed-family Holm rule (p = 1 for non-evaluable members, reported as "not evaluable") is **accepted** (§9.1).
+  2. **H4(b) is separated from H3.** Queue reduction and FCFS prediction accuracy are separate claims; H4(b) is now a
+     paired seed-level test of the queue reduction with a confirmatory rule (§3.6). A failed H3 no longer fails H4(b).
+  3. The **primary estimand** is stated as the geometric mean of the per-seed TTFT ratios (§6).
+  4. Occupancy reconstruction stays a **warning**. Timestamp alignment is validated per arm from the new gateway-read
+     scrape timestamp (`gateway_timestamp_alignment`, §5.1).
+  5. Server-start identity is checked **during stage execution**, before and after every block, as well as at
+     analysis (§5.1, §10).
+  6. The original v4 occupancy statements are preserved verbatim, with dated corrections beside them.
+  7. **H5** is described as an explanatory **consistency** test, not an independent or novel mechanism (§3.6).
+  8. Items 10 (stage driver) and 11 (sanitized raw-data export) are implemented. Each block's single permitted rerun
+     is pre-generated (§8 rule 2).
 - **What does not change:** Protocol v4 (`docs/PROTOCOL_V4.md`), its YAMLs, its `FROZEN_TRACES.json`, its results, and
   their pre-registered classifications. `scripts/build_v4.py --check` gives 45 files, 0 differ. All v4 post-hoc work
   stays labelled **post-hoc exploratory**.
@@ -208,12 +221,31 @@ These are separate hypotheses with separate tests. Both, either or neither may h
 **H4: relocation.** For D vs S at L = 200, as C rises:
 - **(a)** the attack-arm victim mean backend TTFT at C = 32 exceeds that at C = 8. One-sided paired t-test on per-seed
   log ratios, α = 0.05.
-- **(b)** the attack-arm victim mean gateway queue falls, as scored by H3.
+- **(b)** the attack-arm victim mean gateway queue falls from C = 8 to C = 32 (`h4b_queue_reduction`). This is a
+  claim about the **observed** queue only. It is separate from H3 (prediction accuracy), and H3's verdict never
+  enters it.
+  - **Statistic:** per seed, d_s = q8_s − q32_s, where q is the victim mean gateway queue (ms) in that seed's attack
+    arm. Completed post-warm-up victims are used, the same population as the primary endpoint. Seeds are paired,
+    because each seed replays the same frozen schedule at both caps.
+  - **Reported:** mean d and its 95% t CI (ms), every d_s, and descriptive paired differences C8 − C16 and C16 − C32
+    with CIs.
+  - **Confirmatory rule (pre-registered):**
+    - one-sided paired t-test of mean d > 0, giving p_t;
+    - exact one-sided sign-flip permutation over the 2^10 sign vectors, giving p_perm;
+    - p_H4b = max(p_t, p_perm).
+    - **SUPPORTED** iff p_H4b < 0.05.
+    - This mirrors H2a. The permutation guards against the heavy right tail of queue differences.
+  - **Evaluable** iff the three D-vs-S L = 200 gateway cells are E and share one seed list.
 - **(c)** the engine queue stays negligible by the §5.2 criterion in every D-vs-S arm at every C: engine-global
   histogram mean ≤ 10 ms **and** every observation in the le = 0.3 s bucket.
 - The v4 P95 ≤ 10 ms criterion is **withdrawn**: P95 is not identifiable from these buckets.
+- **H4 SUPPORTED** iff (a), (b) and (c) all hold. Each component is reported on its own. H4 is outside F1 and F2,
+  with its own frozen criteria.
 
-**H5: explanatory.**
+**H5: explanatory consistency test.**
+- **What it is:** a consistency check of the FCFS-admission account, not an independent or novel mechanism claim.
+  It asks whether victim queueing tracks the slot saturation that account implies. Passing it adds coherence, not a
+  separate discovery. Failing it means the account is incomplete.
 - Across all v5 gateway arms, victim mean gateway queue has Spearman ρ ≥ 0.6 with (a) the fraction of time at C/C and
   (b) the fraction of victims arriving during saturation, each computed by the frozen slot-time code.
 - The v4 exploratory values (0.88, 0.92) are **not** pooled.
@@ -267,6 +299,8 @@ cache reset, no unrelated traffic.
 | `engine_headroom` | host-verified `max_num_seqs ≥ 64` and `max_num_batched_tokens` recorded from the launch command (`/metrics` does not expose either, §5.2) | fail (pre-stage) | owner action |
 | `model_revision_verified` | snapshot hash read on the host and matching the target profile | fail (pre-stage); proceeding without it needs a written owner waiver | owner action |
 | `server_identity` | one `process_start_time_seconds` for the whole stage | fail | **implemented** as a stage gate in `v5_analysis.py`. It is checked per stage, and a failure makes that stage's cells ¬E. Within a block, the `provenance` gate already requires a single start |
+| `gateway_timestamp_alignment` | per arm, the lag that maximizes rebuilt-vs-sampled agreement, scanned −0.30…+0.30 s in 25 ms steps around `t_gw_rel_s` (ties toward 0), is within ±0.05 s; also reports the scraper's own offset `t_gw_rel_s − t_rel_s` | flag | **implemented** (rev 3; `evaluation/occupancy.py`). Mock: best lag ≤ 0.025 s, agreement 1.0 in all 19 stage A/B blocks |
+| `server_identity` (execution) | the vLLM `process_start_time_seconds` read **before** each block equals the stage's first value, and the block's manifest server start equals it **after** | fail (stops the stage) | **implemented** in the stage driver (`scripts/v5_stage.py`; tests) |
 | `engine_histograms_present` | per-arm queue, prefill, decode and TTFT histogram sum/count **and bucket** deltas captured | fail for H4, otherwise flag | **implemented** (bucket deltas added; test) |
 | `occupancy_reconstruction` | rebuilt in-flight agrees exactly with sampled `gw_inflight` ≥ 90% of the time, sampled at the gateway-read time `t_gw_rel_s` (new in v5). Fallback without it: `t_rel_s` + 0.15 s | flag | **implemented** (`evaluation/occupancy.py`; it reproduces the post-hoc `occ_max` on all 152 v4 runs). v4 agreement at +0.15 s is 0.77–0.995 (erratum in `SLOT_TIME_ANALYSIS.md`) |
 | `no_preemption` | `num_preemptions_total` delta = 0 | flag | exists (counter delta) |
@@ -325,7 +359,10 @@ Other histograms:
 
 - **Primary (every comparison × C × L):** the per-seed victim **mean user-facing TTFT** ratio, attack over control
   (`degradation_metric: user_ttft_mean`).
-  - **Estimand:** the mean of the per-seed log ratios.
+  - **Estimand:** the **geometric mean of the per-seed ratios**, exp(mean over seeds of ℓ_s), where ℓ_s is that
+    seed's log ratio of victim mean user-facing TTFT, attack over control.
+    - It is *not* the ratio of arm means pooled over seeds.
+    - Every cell "ratio" in reports is this geometric mean. The analysis tables label it "geo-mean ratio".
   - **Interval:** 95% t interval with n = 10 (exact t quantiles implemented and tested). A BCa bootstrap is a
     sensitivity analysis.
   - **Classification** (`classify_cell`):
@@ -380,6 +417,10 @@ Estimates use v4's measured 2.6 min of wall time per 120 s arm, including settle
 | B. Higher load, L = 400 | {A/A-ind, D vs S} × {8, 16, 32} + D vs S direct | 7 | 140 | about 6.1 h |
 | **Total** | | **23** | **388** | **about 17.3 h** (about 10.7 h for S + A only) |
 
+*Rev 3 note: the table is kept as written.* The driver's §8 rule 6 budget uses the formula stated above, including
+2 min of tokenization per block: S 14.9 min, A 648 min (10.8 h), B 378 min (6.3 h). The A and B rows above omit the
+tokenization term, so they understate the formula by 0.4 h and 0.2 h.
+
 ## 8. Stopping rules
 
 1. **Pre-stage.**
@@ -415,16 +456,17 @@ Estimates use v4's measured 2.6 min of wall time per 120 s arm, including settle
 | 7 | Engine histogram bucket deltas | **done** | `test_queue_histogram_bucket_deltas_and_h4_rule` |
 | 8 | Run-level loader: v5 reports → per-seed tables → rules → `reports/v5/ANALYSIS_<stage>.{md,json}` (operational choices in §9.1) | **done** | `tests/integration/test_v5_mock.py`: all 12 stage-A cells on the mock (plumbing only), rule wiring, no-interim-look refusal |
 | 9 | Gates `cap_configured`, `server_identity` (stage), `occupancy_reconstruction` | **done** | `test_cap_configured_gate`, `test_occupancy_reconstruction_*`, `test_v4_gate_set_unchanged_below_protocol_5`, `test_mock_applies_the_cell_cap`, `test_server_identity_stage_gate` |
-| 10 | Stage driver `scripts/run_v5.sh`: per-stage file list, cache reset per block, stop on any gate failure, one rerun max, timestamped progress | to do before stage S | dry run on the mock backend |
-| 11 | Raw-data export: release artifact, SHA-256 manifest, sanitization (`docs/RAW_DATA_AUDIT.md`) | to do before stage A | regex gate test |
+| 10 | Stage driver `scripts/run_v5.sh` → `scripts/v5_stage.py` (§10.1) | **done** | `tests/integration/test_v5_stage.py`: order, stop, single rerun, server identity before and after each block, budget, live refusal. Mock dry run of smoke + A + B at the frozen 120 s windows: 23/23 blocks completed |
+| 11 | Sanitized raw-data export with SHA-256 verification: `scripts/export_v5_raw.py` (§10.2) | **done** | `tests/unit/test_export_v5_raw.py`. Also exercised read-only on the real v4 R1 output into a scratch dir: 0 leaked paths, IPs or GPU ids |
+| 12 | Pre-generated reruns: `experiments/v5/reruns/*__r2.yaml` (23 files), frozen with the rest | **done** | `test_rerun_variants_differ_only_in_id_salt_header_and_keep_the_schedule` |
 
 ### 9.1 Loader operational choices (item 8; written before any v5 data, for owner review before the freeze)
 
 The §3–§6 text left these open. `scripts/v5_analysis.py` fixes them as follows:
 
-1. **Non-evaluable hypotheses in a Holm family.** The family size stays fixed (F1 = 3, F2 = 3). A non-evaluable
-   member enters with p = 1, so it cannot be rejected and cannot make the others easier to reject. It is reported as
-   **not evaluable**.
+1. **Non-evaluable hypotheses in a Holm family (ACCEPTED by the owner, rev 3).** The family size stays fixed (F1 = 3,
+   F2 = 3). A non-evaluable member enters with p = 1, so it cannot be rejected and cannot make the others easier to
+   reject. It is reported explicitly as **not evaluable**.
 2. **Evaluability.**
    - H1, H2a, H2b and H6 need their cells in stratum E∧Vb.
    - H2a also needs identical seed lists in the three caps.
@@ -433,8 +475,9 @@ The §3–§6 text left these open. `scripts/v5_analysis.py` fixes them as follo
    mean of t_sent − t_offered over victims with both timestamps, without warm-up exclusion.
    - The frozen cell values are used whenever the cell holds all 10 protocol seeds.
    - Plumbing subsets recompute the cell rule over the loaded seeds and are flagged `frozen_cell_values: false`.
-4. **H4(b), operationalized.** The attack-arm victim mean gateway queue (cell mean) is lower at C = 32 than at C = 8,
-   **and** the H3 score for D vs S, L = 200, attack arm passes at both C = 16 and C = 32.
+4. **H4(b): superseded in rev 3.** The rev 2 rule required a lower cell mean at C = 32 than at C = 8 *and* passing H3
+   scores at C = 16 and C = 32. The owner rejected it because it tied queue reduction to prediction accuracy. It is
+   replaced by the paired seed-level test in §3.6.
 5. **H4(c).** The verdict uses the gateway arms (C = 8, 16, 32), both arms of every seed. The direct-path arms are
    scored and reported, but descriptively only.
 6. **H5.** "Saturation" uses each arm's **own** cap C, not the v4 reference cap of 8. That means the fraction of the
@@ -453,20 +496,85 @@ Items 8–11 must not change any frozen artifact. A test pinning the frozen file
 
 | Step | What | Command(s) | Pass condition | On failure |
 |---|---|---|---|---|
-| **P1** | host verification, read-only, by the owner or with granted SSH | record `vllm --version`, the launch command (`max_num_seqs`, `max_num_batched_tokens`), the model snapshot hash | matches the target profile; `max_num_seqs ≥ 64` | stop; written waiver or drop C = 32 before freeze |
+| **P1** | host verification, read-only, by the owner or with granted SSH | write `experiments/v5/HOST_VERIFICATION.json` (§10.3) | `v5_stage.host_record_problems` is empty | stop; written waiver or drop C = 32 before freeze |
 | **P2** | live trace freeze (tokenizer only, no generation) | `uv run python scripts/freeze_v5.py --live` | every trace reproduces `FROZEN_SCHEDULE.json`; all v4-style freeze gates pass | stop |
 | **P3** | freeze commit 2 (`FROZEN_TRACES.json` + P1 record) | git, on main | tests green | — |
-| **S** | 4 smokes, seed 4900 | `scripts/run_v5.sh smoke` | every gate passes | stop; fix the harness; smokes are never analysed |
-| **A** | Stage A, 12 blocks | `scripts/run_v5.sh A` | per §5/§8 | §8 rules 2–6 |
+| **S** | 4 smokes, seed 4900 | `QUOTASHIFT_APPROVED=v5_stage_smoke scripts/run_v5.sh smoke --live` | every gate passes | stop; fix the harness; smokes are never analysed |
+| **A** | Stage A, 12 blocks | `QUOTASHIFT_APPROVED=v5_stage_A scripts/run_v5.sh A --live` | per §5/§8 | §8 rules 2–6; `--rerun <block> --reason <text>` once per block |
+| **A-export** | sanitized raw-data export of stage A | `uv run python scripts/export_v5_raw.py export --stage A --salt-file <outside repo>`, then `verify` | the regex gate passes; verify reports no mismatch | stop; extend the rules; nothing is published |
 | **A-report** | analysis after the stage completes (reads `reports/v5/stage_a/`, writes `reports/v5/ANALYSIS_A.{md,json}`) | `uv run python scripts/v5_analysis.py --stage A` | — | — |
-| **B** | Stage B, 7 blocks; only if A is all valid, with separate approval | `scripts/run_v5.sh B` | per §5/§8 | §8 |
+| **B** | Stage B, 7 blocks; only if A is all valid, with separate approval | `QUOTASHIFT_APPROVED=v5_stage_B scripts/run_v5.sh B --live` | per §5/§8 | §8 |
 | **B-report** | analysis after stage B (stage A + B cells) | `uv run python scripts/v5_analysis.py --stage B` | — | — |
+
+### 10.1 Stage driver (`scripts/run_v5.sh` → `scripts/v5_stage.py`)
+
+- **Order:** frozen block files in sorted file-name order. Completed blocks are never rerun. State is kept in
+  `reports/v5/<stage>/STAGE_LOG.json`.
+- **Per block:**
+  1. server identity check (before);
+  2. prefix-cache reset and verify, writing `prerun_cache_reset.json`. As in v4, this is a hygiene reset per block,
+     not per arm;
+  3. `quotashift experiment` with the file's own repetitions and `--path`;
+  4. stop on a non-zero exit, any failed fail-severity gate, or a changed server start (after);
+  5. stop on the §8 rule 6 budget.
+- **Progress:** a timestamped line per block, with blocks done/total and elapsed against estimated minutes.
+- **Refusals (`--live`; nothing is sent):**
+  - `QUOTASHIFT_APPROVED` is not `v5_stage_<stage>`, or there is no interactive `yes`;
+  - Protocol v5 is not frozen (`docs/PROTOCOL_V5.md` with `**Status:** FROZEN`), or `FROZEN_TRACES.json` is
+    missing;
+  - the host record fails;
+  - the tree is not clean, or the raw output paths are not git-ignored;
+  - the previous stage did not complete (also enforced in mock mode).
+- **Reruns (§8 rule 2):**
+  - `--rerun <block> --reason <text>` runs `experiments/v5/reruns/<block>__r2.yaml`. It has a new isolation salt and
+    the same frozen schedule, and its traces are frozen at P2 with the rest.
+  - It is allowed only for a block that failed, only once, and only with a reason. The failed report is kept.
+  - The loader uses a rerun only in place of a failed block.
+- **Mock mode:** `--mock --out-root <outside repo>` writes shortened or full-length copies without frozen traces.
+  It never writes under `reports/v5` or `results/`.
+- **Raw output is git-ignored** (`results/v5_*/`, `reports/v5/{smoke,stage_a,stage_b,export}/`). Otherwise the first
+  arm's untracked files would make `git status` dirty and fail every later `provenance` gate.
+  - This is a precondition the driver checks.
+  - Already-committed v4 data stays tracked.
+
+### 10.2 Raw-data export (`scripts/export_v5_raw.py`; rules from `docs/RAW_DATA_AUDIT.md` §3)
+
+- **Inputs:** every file under the stage's report dir and every run dir its manifests reference.
+- **Sanitization (rules version 1):**
+  1. absolute paths become export-relative, and other `/Users/<u>` or `/home/<u>` prefixes become `~`;
+  2. target hosts become the profile name, and other RFC1918 addresses become `<rfc1918>`;
+  3. GPU `uuid` and `pci_bus_id` become `gpu-<HMAC-SHA256[:12]>`, using a salt kept outside the repo;
+  4. `vllm_env` `*CACHE*` keys and `system_env.{pip_packages, conda_packages, env_vars}` are dropped.
+- **Coverage:**
+  - Parquet string columns are sanitized.
+  - PNGs are copied unchanged and byte-scanned.
+  - Every other file is treated as text. An undecodable file refuses the export.
+- **Regex gate:** blocks packaging on any remaining `/Users/`, `/home/`, RFC1918 address, GPU id, private key, or AWS,
+  GitHub, Hugging Face or `sk-` token.
+- **Output:**
+  - a deterministic `quotashift-v5-<stage>.tar.gz` (git-ignored; a release asset);
+  - `reports/v5/RAW_DATA_MANIFEST_<stage>.json` (committed), with path, bytes and SHA-256 per file plus the tarball's
+    SHA-256.
+  - `verify` re-checks every member.
+
+### 10.3 Host verification record (`experiments/v5/HOST_VERIFICATION.json`, written at P1)
+
+- **Required fields:**
+  - `vllm_version` (must be `0.17.1`);
+  - `launch_command` (verbatim);
+  - `max_num_seqs` (≥ 64, or `"c32_dropped": true` decided before freeze commit 1);
+  - `max_num_batched_tokens`;
+  - `model_snapshot_sha` (the HF snapshot directory hash on the host), or a written `model_revision_waiver`;
+  - `verified_by`;
+  - `verified_utc`.
+- **Checks:** `v5_stage.host_record_problems` enforces these fields, and the `--live` driver refuses without them.
 
 ## 11. Proposed freeze
 
 **Freeze commit 1 (proposed; awaits owner review).**
-- **Contents:** this protocol, renamed `docs/PROTOCOL_V5.md` with status FROZEN; `experiments/v5/**.yaml`;
-  `FROZEN_SCHEDULE.json`; `FCFS_PREDICTIONS.json`; `scripts/{build_v5,freeze_v5,v5_fcfs_predictions,v5_analysis}.py`;
+- **Contents:** this protocol, renamed `docs/PROTOCOL_V5.md` with `**Status:** FROZEN`; `experiments/v5/**.yaml`
+  (23 blocks + 23 pre-generated reruns); `FROZEN_SCHEDULE.json`; `FCFS_PREDICTIONS.json`;
+  `scripts/{build_v5,freeze_v5,v5_fcfs_predictions,v5_analysis,v5_stage,export_v5_raw}.py`, `scripts/run_v5.sh`;
   the schema and instrumentation changes; `tests/unit/test_v5_protocol.py`; ADR-Q19 → ACCEPTED.
 - **Preconditions:**
   - owner approval of ADR-Q19 and of this text;

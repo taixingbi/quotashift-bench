@@ -151,7 +151,7 @@ S failed it at L400. The frozen monotone rule therefore gives **L\* = 200**. No 
 
 Full numbers are in `experiments/PLAN.md`. Raw reports are local and gitignored (`reports/v4/`).
 
-## Phase 10 — Protocol v5 (gateway cap × shape) 🟡 offline prep; DRAFT rev 2, not frozen, nothing run
+## Phase 10 — Protocol v5 (gateway cap × shape) 🟡 offline prep; DRAFT rev 3, not frozen, nothing run
 
 Design: `docs/PROTOCOL_V5_DRAFT.md`. ADR-Q19 is proposed and needs owner approval. No v5 GPU run is approved.
 
@@ -160,8 +160,8 @@ Design: `docs/PROTOCOL_V5_DRAFT.md`. ADR-Q19 is proposed and needs owner approva
 | 1–7: schema, 23 YAMLs, frozen schedule, FCFS predictions with leakage guard, decision rules, histogram buckets | ✅ (`tests/unit/test_v5_protocol.py`) |
 | 8: run-level loader (`scripts/v5_analysis.py --stage A\|B`) | ✅ mock-tested end to end (`tests/integration/test_v5_mock.py`, plumbing only). Operational choices in §9.1 await owner review |
 | 9: gates `cap_configured`, `server_identity`, `occupancy_reconstruction` | ✅ unit + mock tests; the simulator now applies the cap (mock fidelity fix) |
-| 10: stage driver `scripts/run_v5.sh` | ⬜ before stage S |
-| 11: raw-data export and sanitization | ⬜ before stage A |
+| 10: stage driver `scripts/run_v5.sh` (`v5_stage.py`) | ✅ mock dry run of smoke + A + B: 23/23 blocks; stop/rerun/server-identity/budget/refusal tests |
+| 11: sanitized raw-data export + SHA-256 verify (`export_v5_raw.py`) | ✅ tests; trial on real v4 R1 output (scratch): 0 leaks |
 | Freeze commit 1 | 🚫 needs owner approval of ADR-Q19 + text, and the P1 host-verification outcome |
 
 ## Verification (this pass)

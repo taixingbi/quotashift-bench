@@ -212,4 +212,21 @@ A1–A9 results and controls are unchanged. No v4 GPU run is made before owner a
     - Scrapes add `t_gw_rel_s`.
     - The in-process simulator now applies `max_concurrency_cap`. This is a mock fidelity fix; GPU results are
       unaffected.
+- **Rev 3 (2026-11-23; owner review of §9.1; still PROPOSED, not frozen, nothing run on a GPU).**
+  - Fixed-family Holm, with p = 1 and an explicit "not evaluable" for non-evaluable members: **accepted**.
+  - **H4(b) separated from H3.** The paired per-seed reduction d = q8 − q32 of the attack-arm victim mean gateway queue
+    is reported with a 95% CI. It is SUPPORTED iff max(one-sided paired t p, exact sign-flip p) < 0.05. H3 prediction
+    accuracy no longer enters it.
+  - **Primary estimand** stated as the geometric mean of the per-seed ratios.
+  - **H5** is described as an explanatory consistency test.
+  - **Occupancy reconstruction** stays a flag. It gains a `gateway_timestamp_alignment` flag, a lag scan around the new
+    `t_gw_rel_s`.
+  - **Server identity** is checked before and after every block during execution, as well as at analysis.
+  - **Original v4 statements** in KNOWN_LIMITATIONS are restored verbatim, with dated corrections beside them.
+  - **Items 10 and 11** (`v5_stage.py`/`run_v5.sh`, `export_v5_raw.py`) are implemented.
+  - **Reruns:** each block's single rerun is pre-generated (`experiments/v5/reruns/`).
+  - **Raw output:** v5 raw output is git-ignored so that the provenance gate's clean-tree check can hold during a
+    stage. Sanitized exports and manifests are committed instead.
+  - **Mock fidelity:** the in-process simulator now samples after each instant's dispatches. Before, a sample at an
+    arrival instant missed the request sent then.
 - **Unchanged.** v4 and its results.
