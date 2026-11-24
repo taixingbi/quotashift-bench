@@ -70,8 +70,6 @@ def run_simulation(client, gateway: Gateway, engine: EngineModel, cfg: SimConfig
             heapq.heappush(heap, (t, next(seq), it))
 
     while True:
-        if now >= next_sample:
-            sample()
         while heap and heap[0][0] <= now:
             _, _, it = heapq.heappop(heap)
             oracle[it.request.request_id] = it.oracle.realized_output_tokens
@@ -94,6 +92,10 @@ def run_simulation(client, gateway: Gateway, engine: EngineModel, cfg: SimConfig
             )
             if ev is not None and ev.kind == "rejected":
                 terminal(req.request_id, EventType.BACKEND_ERROR, None, f"engine_rejected:{ev.detail}")
+        # sample AFTER this instant's arrivals and dispatches (virtual time makes samples coincide with events; before
+        # 2026-11-23 a sample taken first missed requests sent at the same instant, unlike a live scrape)
+        if now >= next_sample:
+            sample()
         if now >= cfg.end_time_s:
             for rid in gateway.cancel_all(now, "run_cutoff"):
                 engine.abort(rid)

@@ -212,6 +212,8 @@ class RunMetrics:
     occ_recon_max: int | None = None
     occ_recon_exact_frac: float | None = None
     occ_recon_time_basis: str | None = None
+    scrape_gw_offset_median_s: float | None = None   # median (t_gw_rel_s - t_rel_s): the scraper's own offset
+    occ_recon_best_lag_s: float | None = None        # lag (around t_gw_rel_s) maximizing rebuilt-vs-sampled agreement
 
     def as_row(self) -> dict:
         return {k: getattr(self, k) for k in self.__dataclass_fields__}

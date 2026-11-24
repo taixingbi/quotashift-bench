@@ -14,6 +14,10 @@ import pandas as pd
 
 V4_SCRAPE_OFFSET_S = 0.15
 MIN_RECON_EXACT_FRACTION = 0.90
+# timestamp-alignment validation (v5): agreement is scanned over lags around the gateway-read time; the alignment is
+# validated when the best lag is within +-MAX_ALIGNMENT_LAG_S of 0 (ties resolved toward 0)
+ALIGNMENT_LAGS_S = tuple(round(-0.30 + 0.025 * i, 3) for i in range(25))
+MAX_ALIGNMENT_LAG_S = 0.05
 
 
 def occupancy_steps(req: pd.DataFrame) -> tuple[np.ndarray, np.ndarray]:
@@ -34,7 +38,8 @@ def reconstruction(req: pd.DataFrame, ts: pd.DataFrame | None) -> dict:
     terminal event)."""
     times, k = occupancy_steps(req)
     out: dict = {"occ_recon_max": int(k.max()) if len(k) else 0, "occ_recon_exact_frac": None,
-                 "occ_recon_time_basis": None, "gw_inflight_max": None}
+                 "occ_recon_time_basis": None, "gw_inflight_max": None, "scrape_gw_offset_median_s": None,
+                 "occ_recon_best_lag_s": None}
     if ts is None or not len(ts) or "gw_inflight" not in ts:
         return out
     out["gw_inflight_max"] = int(ts["gw_inflight"].max())
@@ -42,8 +47,23 @@ def reconstruction(req: pd.DataFrame, ts: pd.DataFrame | None) -> dict:
         t, basis = ts["t_gw_rel_s"].to_numpy(float), "t_gw_rel_s"
     else:
         t, basis = ts["t_rel_s"].to_numpy(float) + V4_SCRAPE_OFFSET_S, f"t_rel_s+{V4_SCRAPE_OFFSET_S}"
-    m = t <= (times.max() if len(times) else -np.inf)
-    if m.any():
-        out["occ_recon_exact_frac"] = float((k_at(times, k, t[m]) == ts["gw_inflight"].to_numpy()[m]).mean())
-        out["occ_recon_time_basis"] = basis
+    g = ts["gw_inflight"].to_numpy()
+    tmax = times.max() if len(times) else -np.inf
+
+    def agree(tt: np.ndarray) -> float | None:
+        m = tt <= tmax
+        return float((k_at(times, k, tt[m]) == g[m]).mean()) if m.any() else None
+
+    out["occ_recon_exact_frac"] = agree(t)
+    out["occ_recon_time_basis"] = basis if out["occ_recon_exact_frac"] is not None else None
+    if basis == "t_gw_rel_s":
+        out["scrape_gw_offset_median_s"] = float(np.median(ts["t_gw_rel_s"] - ts["t_rel_s"]))
+        scan: dict[float, float] = {}
+        for lag in ALIGNMENT_LAGS_S:
+            v = agree(t + lag)
+            if v is not None:
+                scan[lag] = v
+        if scan:
+            best = max(scan.values())
+            out["occ_recon_best_lag_s"] = min((lag for lag, v in scan.items() if v == best), key=abs)
     return out

@@ -44,7 +44,7 @@ def test_v5_files_are_exactly_the_generated_spec():
 
 
 def test_every_v5_scenario_validates_and_only_the_cap_varies():
-    files = sorted(V5.rglob("*.yaml"))
+    files = sorted(f for f in V5.rglob("*.yaml") if "reruns" not in f.parts)
     assert len(files) == 23  # 4 smoke + 12 stage A + 7 stage B
     for f in files:
         sc = load_scenario(f)
@@ -286,3 +286,62 @@ def test_occupancy_reconstruction_and_time_basis():
     # no t_gw_rel_s (v4 runs): samples stamped 0.15 s early agree only after the frozen +0.15 s shift
     r = reconstruction(req, ts.drop(columns="t_gw_rel_s").assign(t_rel_s=[0.05, 0.45, 1.35, 2.35]))
     assert r["occ_recon_time_basis"] == "t_rel_s+0.15" and r["occ_recon_exact_frac"] == 1.0
+
+
+def test_rerun_variants_differ_only_in_id_salt_header_and_keep_the_schedule():
+    """§8 rule 2: one pre-generated rerun per block; new salt, same frozen schedule (keyed by the base id)."""
+    build_v5 = _mod("build_v5")
+    schedule_sha = _mod("freeze_v5").schedule_sha
+    sched = json.loads((V5 / "FROZEN_SCHEDULE.json").read_text())["scenarios"]
+    reruns = sorted((V5 / "reruns").glob("*.yaml"))
+    assert len(reruns) == 23
+    for r in reruns:
+        base = next(f for f in V5.rglob(r.name.replace(build_v5.RERUN, "")) if "reruns" not in f.parts)
+        body = lambda p: [ln for ln in p.read_text().splitlines()  # noqa: E731
+                          if not ln.startswith(("#", "scenario_id:", "isolation_salt:"))]
+        assert body(r) == body(base)
+        a, b = load_scenario(r), load_scenario(base)
+        assert a.scenario_id == b.scenario_id + "__r2" and a.isolation_salt != b.isolation_salt
+        assert a.frozen_traces == b.frozen_traces and build_v5.path_of(r) == build_v5.path_of(base)
+        if "smoke" in b.scenario_id:
+            continue
+        atk, ctl, _ = _paired_traces_raw(a, a.seed)
+        ent = sched[b.scenario_id]["seeds"][str(a.seed)]
+        assert schedule_sha(atk) == ent["attack"]["schedule_sha256"] and schedule_sha(ctl) == ent["control"]["schedule_sha256"]
+
+
+# ---------------------------------------------------------------- rev 3
+def test_h4b_is_a_paired_queue_reduction_test_independent_of_h3():
+    q8 = [60.0, 55.0, 70.0, 40.0, 80.0, 52.0, 65.0, 58.0, 49.0, 75.0]
+    r = A.h4b_queue_reduction(q8, [0.0] * 10)
+    assert r["supported"] and r["p_perm"] == 1 / 1024 and r["mean_reduction_ms"] == pytest.approx(60.4)
+    assert r["ci95_ms"][0] > 0 and len(r["per_seed_reduction_ms"]) == 10
+    mixed = A.h4b_queue_reduction(q8, [q + (5 if i % 2 else -5) for i, q in enumerate(q8)])  # no net reduction
+    assert not mixed["supported"]
+    one = A.h4b_queue_reduction([500.0] + [1.0] * 9, [0.0] * 10)   # one huge seed, 9 tiny: the sign-flip still holds
+    assert one["p"] == max(one["p_t"], one["p_perm"])
+    import inspect
+    assert "score_fcfs" not in inspect.getsource(A.h4b_queue_reduction)
+
+
+def test_primary_ratio_is_the_geometric_mean_of_per_seed_ratios():
+    ratios = [2.0, 0.5, 4.0, 1.0]
+    c = A.classify_cell([math.log(r) for r in ratios])
+    assert c["ratio"] == pytest.approx(math.prod(ratios) ** (1 / 4))   # geometric, not arithmetic (1.875)
+
+
+def test_gateway_timestamp_alignment_scan():
+    import pandas as pd
+
+    from quotashift.evaluation.occupancy import reconstruction
+    req = pd.DataFrame({"t_sent": [0.0, 1.0, 2.0, 3.0], "t_terminal": [0.6, 1.6, 2.6, 3.6]})
+    grid = [0.1 + 0.1 * i for i in range(38)]
+    from quotashift.evaluation.occupancy import k_at, occupancy_steps
+    t, k = occupancy_steps(req)
+    truth = k_at(t, k, pd.Series(grid).to_numpy())
+    ok = pd.DataFrame({"t_rel_s": grid, "t_gw_rel_s": grid, "gw_inflight": truth})
+    r = reconstruction(req, ok)
+    assert r["occ_recon_best_lag_s"] == 0.0 and r["scrape_gw_offset_median_s"] == 0.0
+    late = ok.assign(t_gw_rel_s=[x - 0.2 for x in grid])   # the recorded read time is 0.2 s early
+    r = reconstruction(req, late)
+    assert abs(r["occ_recon_best_lag_s"] - 0.2) <= 0.05 and r["occ_recon_exact_frac"] < 1.0

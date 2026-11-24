@@ -113,14 +113,17 @@ def main() -> int:
 
         count = WhitespaceTokenizer()
         identity = count.identity
+    import build_v5
+
     sched = json.loads(SCHEDULE.read_text())["scenarios"]
-    files = sorted(V5.rglob("*.yaml"))
+    files = sorted(V5.rglob("*.yaml"))   # includes the pre-generated reruns (experiments/v5/reruns/*__r2.yaml)
     for f in files:  # calibrated traces must keep the frozen schedule (calibration may only change prompt text)
         sc = load_scenario(f)
+        sid = build_v5.base_id(sc.scenario_id)   # a rerun replays its block's frozen schedule
         for s in range(sc.seed, sc.seed + sc.comparison.repetitions):
             atk, ctl, _ = paired_traces(sc, s, count)
             for arm, tr in (("attack", atk), ("control", ctl)):
-                if schedule_sha(tr) != sched[sc.scenario_id]["seeds"][str(s)][arm]["schedule_sha256"]:
+                if schedule_sha(tr) != sched[sid]["seeds"][str(s)][arm]["schedule_sha256"]:
                     raise SystemExit(f"schedule mismatch after calibration: {sc.scenario_id} {arm} seed {s}")
     man = freeze_v4.freeze(files, count, identity)
     out.write_text(json.dumps(man, indent=1) + "\n")

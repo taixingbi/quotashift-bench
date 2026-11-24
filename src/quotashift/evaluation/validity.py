@@ -18,7 +18,7 @@ from typing import Any
 import numpy as np
 
 from quotashift.evaluation.attack_effect import RunMetrics, metric_info
-from quotashift.evaluation.occupancy import MIN_RECON_EXACT_FRACTION
+from quotashift.evaluation.occupancy import MAX_ALIGNMENT_LAG_S, MIN_RECON_EXACT_FRACTION
 
 MAX_BACKEND_ERROR_FRACTION = 0.01   # backend errors (any HTTP 4xx/5xx) / requests sent, per arm
 MAX_HTTP_400_FRACTION = 0.01        # HTTP 400 / requests sent, per arm
@@ -204,6 +204,16 @@ def validity_gates(attack: list[RunMetrics], control: list[RunMetrics], analysis
                            (worst_recon >= MIN_RECON_EXACT_FRACTION) if worst_recon is not None else None,
                            f"lowest arm exact agreement {worst_recon:.3f} (min {MIN_RECON_EXACT_FRACTION}; time basis "
                            f"{basis})" if worst_recon is not None else "unavailable (no sampled gateway in-flight)",
+                           severity="flag"))
+        lags = [m.occ_recon_best_lag_s for m in arms]
+        offs = [m.scrape_gw_offset_median_s for m in arms if m.scrape_gw_offset_median_s is not None]
+        aok = bool(arms) and all(x is not None for x in lags)
+        worst_lag = max(abs(x) for x in lags if x is not None) if aok else None
+        checks.append(_chk("gateway_timestamp_alignment",
+                           (worst_lag <= MAX_ALIGNMENT_LAG_S) if worst_lag is not None else None,
+                           f"largest |best lag| around t_gw_rel_s {worst_lag:.3f} s (max {MAX_ALIGNMENT_LAG_S}); scraper "
+                           f"offset t_gw_rel_s - t_rel_s median {min(offs):.3f}–{max(offs):.3f} s"
+                           if worst_lag is not None and offs else "unavailable (no t_gw_rel_s in the scrapes)",
                            severity="flag"))
     # v4 R2: feasibility gates classify the operating regime instead of invalidating the point
     feas = {"competitor_completion", "victim_latency_censoring"}

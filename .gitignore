@@ -22,3 +22,12 @@ infra/terraform/local-state/
 
 # Suite S original-data archive: tarball stays local; checksums/file lists are tracked
 archive/*/*.tar.gz
+
+# Protocol v5 (2026-11-23): raw run output is never committed (RAW_DATA_AUDIT.md §2; v4 data already tracked stays
+# tracked). Untracked run output would otherwise make `git status --porcelain` dirty mid-stage and fail the provenance
+# gate. Sanitized exports + SHA-256 manifests are committed instead (scripts/export_v5_raw.py).
+results/v5_*/
+reports/v5/smoke/
+reports/v5/stage_a/
+reports/v5/stage_b/
+reports/v5/export/

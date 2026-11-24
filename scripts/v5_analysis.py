@@ -12,6 +12,9 @@ overwrite an existing analysis without --force.
 
 Per-seed inputs, per (comparison, L, C) cell:
   log_ratio[seed]   = log(mean victim user-facing TTFT, attack) - log(same, control)          (primary)
+  Primary estimand: the GEOMETRIC MEAN of the per-seed attack/control ratios, exp(mean_s log_ratio[seed]), with a
+  95% t interval on the log scale back-transformed. Every "ratio" this module reports for a cell is that geometric
+  mean (`MeanCI.ratio`); it is not the ratio of arm means.
   E[seed]           = execution feasibility of the pair (both arms)                           (§4.1)
   Vb[seed]          = baseline victim-SLO feasibility: CONTROL-arm victim offered SLO success >= 0.95 (§4.2)
   slo_attack, slo_control = victim offered-load SLO success per arm (attack-arm degradation is an OUTCOME, §4.3)
@@ -296,10 +299,25 @@ def h4a_backend_relocation(backend_c8: Sequence[float], backend_c32: Sequence[fl
             "supported": p < ALPHA}
 
 
+def h4b_queue_reduction(queue_c8: Sequence[float], queue_c32: Sequence[float]) -> dict:
+    """H4(b): attack-arm victim mean gateway queue (ms) falls from C = 8 to C = 32. Separate from H3: it is scored
+    on the observed paired reduction alone, never on FCFS prediction accuracy.
+    Per seed d_s = q8_s - q32_s (same frozen schedule at both caps). SUPPORTED iff the one-sided paired t p (H: mean
+    d > 0) < alpha AND the exact one-sided sign-flip p < alpha; p = max of the two (as H2a; robust to the heavy right
+    tail of queue differences). Reported: mean d with its 95% t CI (ms)."""
+    d = [a - b for a, b in zip(queue_c8, queue_c32, strict=True)]
+    ci = mean_ci(d)
+    p_t = 1.0 - t_cdf(ci.mean / ci.se, ci.n - 1) if ci.se > 0 else float(ci.mean <= 0)
+    p_perm = sign_flip_p([-x for x in d])     # sign_flip_p tests mean < 0
+    p = max(p_t, p_perm)
+    return {"mean_reduction_ms": ci.mean, "ci95_ms": [ci.lo95, ci.hi95], "per_seed_reduction_ms": d, "p_t": p_t,
+            "p_perm": p_perm, "p": p, "supported": p < ALPHA}
+
+
 # ================================================================ run-level loader (§9 item 8)
 
 PREDICTIONS = REPO / "experiments" / "v5" / "FCFS_PREDICTIONS.json"
-CELL_RE = re.compile(r"v5_(aa_ind|decode_vs_short|prefill_vs_short)_L(\d+)_(?:C(\d+)|(direct))")
+CELL_RE = re.compile(r"v5_(aa_ind|decode_vs_short|prefill_vs_short)_L(\d+)_(?:C(\d+)|(direct))(__r2)?")
 TAIL_MS = (500.0, 2000.0)
 SEEDS = list(range(build_v5.SEED0, build_v5.SEED0 + build_v5.REPS))
 H5_RHO_MIN = SPEARMAN_MIN
@@ -356,6 +374,12 @@ def _engine_queue(run: Path) -> dict:
             "buckets": ec.get("queue_time_seconds_buckets")}
 
 
+def _rel(p: Path) -> str:
+    """Repo-relative path for anything written into a committed analysis (no absolute local paths)."""
+    q = p.resolve()
+    return str(q.relative_to(REPO)) if REPO in q.parents else str(p)
+
+
 def load_cell(rep: Path) -> dict:
     """One v5 experiment report -> per-seed table and cell metadata. Integrity = every fail-severity gate passed."""
     m = CELL_RE.fullmatch(rep.name)
@@ -400,8 +424,8 @@ def load_cell(rep: Path) -> dict:
                 "path": r.path,
             }
         rows.append(row)
-    return {"cell": rep.name, "comparison": comp, "L": load, "C": C, "path": "direct" if direct else "gateway",
-            "report": str(rep), "synthetic_backend": bool(man.get("synthetic_backend")), "failed_gates": failed,
+    return {"cell": build_v5.base_id(rep.name), "rerun": rep.name.endswith(build_v5.RERUN), "comparison": comp, "L": load, "C": C, "path": "direct" if direct else "gateway",
+            "report": _rel(rep), "synthetic_backend": bool(man.get("synthetic_backend")), "failed_gates": failed,
             "server_start": list((man.get("provenance") or {}).get("server_start") or []),
             "seeds": [r["seed"] for r in rows], "rows": rows}
 
@@ -526,13 +550,16 @@ def analyse(cells: dict[str, dict], stage: str) -> dict:
         h3v = "supported" if all(v["pass"] for v in hi) else "not_supported"
     hyp["H3"] = {"verdict": h3v, "scores": h3}
     # ---- H4 relocation (D vs S, L = 200)
-    if all(ds[C] in cells and cells[ds[C]]["summary"]["stratum"] != "notE" for C in build_v5.CAPS):
+    if all(ds[C] in cells and cells[ds[C]]["summary"]["stratum"] != "notE" for C in build_v5.CAPS) and len(
+            {tuple(cells[ds[C]]["seeds"]) for C in build_v5.CAPS}) == 1:
         a = h4a_backend_relocation([r["attack"]["backend_ttft_mean_ms"] for r in cells[ds[8]]["rows"]],
                                    [r["attack"]["backend_ttft_mean_ms"] for r in cells[ds[32]]["rows"]])
-        q = {C: cells[ds[C]]["summary"]["attack_means"]["gateway_queue_mean_ms"] for C in build_v5.CAPS}
-        h3_ok = all(h3.get(f"{ds[C]}/attack", {}).get("pass") for C in (16, 32))
-        b = {"attack_victim_gateway_queue_mean_ms": q, "falls": q[32] < q[8], "h3_attack_pass_c16_c32": h3_ok,
-             "supported": q[32] < q[8] and h3_ok}
+        qs = {C: [r["attack"]["gateway_queue_mean_ms"] for r in cells[ds[C]]["rows"]] for C in build_v5.CAPS}
+        b = h4b_queue_reduction(qs[8], qs[32]) | {
+            "attack_victim_gateway_queue_cell_mean_ms": {C: float(np.mean(v)) for C, v in qs.items()},
+            "descriptive_paired_reduction_ms": {f"C{x}-C{y}": (lambda ci: {"mean": ci.mean, "ci95": [ci.lo95, ci.hi95]})(
+                mean_ci([u - w for u, w in zip(qs[x], qs[y], strict=True)])) for x, y in ((8, 16), (16, 32))},
+            "h3_reported_separately": True}
         eq = {}
         for cc in [ds[C] for C in build_v5.CAPS] + [cid("decode_vs_short", 200, None)]:
             if cc not in cells:
@@ -551,8 +578,10 @@ def analyse(cells: dict[str, dict], stage: str) -> dict:
                                  "supported" if a["supported"] and b["supported"] and cres["negligible_all_gateway_arms"]
                                  else "not_supported")}
     else:
-        hyp["H4"] = {"verdict": "not_evaluable", "reason": "a D-vs-S L200 gateway cell is missing or not E"}
-    # ---- H5 explanatory (all loaded gateway arms)
+        hyp["H4"] = {"verdict": "not_evaluable", "reason": "a D-vs-S L200 gateway cell is missing, not E, or the "
+                                                            "caps' seed lists differ"}
+    # ---- H5: explanatory CONSISTENCY test (all loaded gateway arms). It checks that victim queueing tracks the slot
+    # saturation the FCFS account implies; it is not an independent or novel mechanism claim.
     pts = [(r[arm]["gateway_queue_mean_ms"], r[arm]["slot"]["frac_time_at_cap"], r[arm]["slot"]["victim_arrivals_during_saturation"])
            for c in cells.values() if c["path"] == "gateway" for r in c["rows"] for arm in ("attack", "control")]
     if len(pts) >= 3:
@@ -580,7 +609,8 @@ def analyse(cells: dict[str, dict], stage: str) -> dict:
     hyp["H6"] = h6
     # ---- H7 descriptive, every cell
     for k, c in sorted(cells.items()):
-        res["cells"][k] = {kk: c[kk] for kk in ("comparison", "L", "C", "path", "seeds", "failed_gates", "synthetic_backend")} | {
+        res["cells"][k] = {kk: c[kk] for kk in ("comparison", "L", "C", "path", "seeds", "failed_gates", "synthetic_backend",
+                                                "rerun")} | {
             "summary": c["summary"], "per_seed": c["rows"]}
     res["hypotheses"] = hyp
     res["synthetic_backend"] = any(c["synthetic_backend"] for c in cells.values())
@@ -616,17 +646,20 @@ def render_md(res: dict) -> str:
     L.append(f"| H3 (FCFS predictions) | **{h['H3']['verdict']}** | {len(h['H3']['scores'])} (cell, arm) scores |")
     h4 = h["H4"]
     L.append(f"| H4 (relocation) | **{h4['verdict']}** | " + (
-        f"(a) backend C32/C8 {_fmt(h4['a']['ratio_c32_over_c8'])} p {_fmt(h4['a']['p'], 4)}; (b) {h4['b']['supported']}; "
+        f"(a) backend C32/C8 {_fmt(h4['a']['ratio_c32_over_c8'])} p {_fmt(h4['a']['p'], 4)}; (b) queue reduction "
+        f"C8−C32 {_fmt(h4['b']['mean_reduction_ms'], 1)} ms [{_fmt(h4['b']['ci95_ms'][0], 1)}, "
+        f"{_fmt(h4['b']['ci95_ms'][1], 1)}] p {_fmt(h4['b']['p'], 4)} → {h4['b']['supported']}; "
         f"(c) {h4['c']['negligible_all_gateway_arms']} |" if "a" in h4 else f"{h4.get('reason')} |"))
     h5 = h["H5"]
-    L.append(f"| H5 (explanatory) | **{h5['verdict']}** | n {h5['n_arms']} arms" + (
+    L.append(f"| H5 (explanatory consistency) | **{h5['verdict']}** | n {h5['n_arms']} arms" + (
         f", ρ(at-cap) {_fmt(h5['rho_frac_time_at_cap'])}, ρ(victims in saturation) {_fmt(h5['rho_victims_during_saturation'])} |"
         if "rho_frac_time_at_cap" in h5 else " |"))
     for C, v in h["H6"].items():
         L.append(f"| H6 P vs S {C} (F2) | **{v['verdict']}** | " + (
             f"ratio {_fmt(v['ratio'])}, p_TOST {_fmt(v['p_tost'], 4)} |" if v["evaluable"] else "not E&Vb |"))
-    L += ["", "## Cells (primary: mean user-facing TTFT ratio; H7 strata)", "",
-          "| Cell | Stratum | n | Ratio [95% CI] | Class | P95 ratio | ΔSLO (atk−ctl) | Δ>500 ms | Gw queue mean atk/ctl (ms) | "
+    L += ["", "## Cells (primary: geometric mean over seeds of the per-seed victim mean user-facing TTFT ratio, "
+          "attack/control; H7 strata)", "",
+          "| Cell | Stratum | n | Geo-mean ratio [95% CI] | Class | P95 ratio | ΔSLO (atk−ctl) | Δ>500 ms | Gw queue mean atk/ctl (ms) | "
           "Threshold > noise | Failed gates |", "|---|---|---|---|---|---|---|---|---|---|---|"]
     for k, c in res["cells"].items():
         s = c["summary"]
@@ -647,10 +680,20 @@ def render_md(res: dict) -> str:
 
 
 def run(dirs: list[Path], stage: str, out: Path, *, force: bool = False) -> dict:
-    cells = {}
+    cells: dict[str, dict] = {}
+    reruns: dict[str, dict] = {}
     for d in dirs:
         for rep in sorted(p for p in d.iterdir() if (p / "manifest.json").exists() and CELL_RE.fullmatch(p.name)):
-            cells[rep.name] = load_cell(rep)
+            c = load_cell(rep)
+            (reruns if c["rerun"] else cells)[c["cell"]] = c
+    replaced = {}
+    for k, r in reruns.items():   # §8 rule 2: a rerun replaces its block only if that block failed; the failure is kept
+        b = cells.get(k)
+        if b is None or not b["failed_gates"]:
+            raise SystemExit(f"rerun {k}{build_v5.RERUN} found but {k} is {'missing' if b is None else 'valid'}: "
+                             "a rerun is permitted only after the block failed a gate")
+        replaced[k] = {"original_report": b["report"], "original_failed_gates": b["failed_gates"], "rerun_report": r["report"]}
+        cells[k] = r
     missing = [c for c in expected_cells(stage) if c not in cells]
     synthetic = bool(cells) and all(c["synthetic_backend"] for c in cells.values())
     if missing and not synthetic:
@@ -670,6 +713,7 @@ def run(dirs: list[Path], stage: str, out: Path, *, force: bool = False) -> dict
         raise SystemExit(f"refusing to overwrite {md} (use --force)")
     res = analyse(cells, stage)
     res["missing_cells"] = missing
+    res["replaced_by_rerun"] = replaced
     res["stage_gates"] = {"server_identity": sid}
     out.mkdir(parents=True, exist_ok=True)
     js.write_text(json.dumps(res, indent=1, default=lambda o: None if isinstance(o, float) and not math.isfinite(o) else str(o),

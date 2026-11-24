@@ -122,9 +122,33 @@ def build() -> dict[Path, str]:
     return files
 
 
+RERUN = "__r2"   # §8 rule 2: at most one rerun per block, with a new isolation salt (pre-generated, frozen with the rest)
+
+
+def build_reruns(files: dict[Path, str] | None = None) -> dict[Path, str]:
+    """The single permitted rerun of every block: identical to the block except scenario id (+ `__r2`), isolation salt
+    (`-r2`) and a header note. Same seeds => same frozen schedule (FROZEN_SCHEDULE.json is keyed by the base id);
+    traces are frozen with the rest at pre-stage P. Executed only by run_v5.sh --rerun after the block failed a gate."""
+    out: dict[Path, str] = {}
+    for p, t in (files if files is not None else build()).items():
+        sid = p.stem
+        a, b = f"scenario_id: {sid}\n", f"isolation_salt: v5-{sid}-r1\n"
+        assert t.count(a) == 1 and t.count(b) == 1, sid
+        note = (f"# RERUN VARIANT of {sid} (PROTOCOL_V5 §8 rule 2): the only permitted rerun; identical except the id and\n"
+                f"# the isolation salt. Run only as `scripts/run_v5.sh <stage> --rerun {sid} --reason <text>` after {sid}\n"
+                "# failed a gate; the failed block is kept as invalid.\n")
+        out[V5 / "reruns" / f"{sid}{RERUN}.yaml"] = note + t.replace(a, f"scenario_id: {sid}{RERUN}\n").replace(
+            b, f"isolation_salt: v5-{sid}-r2\n")
+    return out
+
+
+def base_id(sid: str) -> str:
+    return sid.removesuffix(RERUN)
+
+
 def path_of(p: Path) -> str:
     """--path for a generated file (the runner flag; the YAML does not carry it)."""
-    return "direct" if p.stem.endswith("_direct") else "gateway"
+    return "direct" if base_id(p.stem).endswith("_direct") else "gateway"
 
 
 def main() -> int:
@@ -132,6 +156,7 @@ def main() -> int:
     ap.add_argument("--check", action="store_true")
     args = ap.parse_args()
     files = build()
+    files |= build_reruns(files)
     if args.check:
         bad = [p for p, t in files.items() if not p.exists() or p.read_text() != t]
         extra = sorted(set(V5.rglob("*.yaml")) - set(files)) if V5.exists() else []
@@ -139,10 +164,11 @@ def main() -> int:
         for p in [*bad, *extra][:10]:
             print("  :", p.relative_to(REPO))
         return 1 if bad or extra else 0
-    existing = [p for p in files if p.exists()]
-    if existing:
-        print(f"refusing to overwrite {len(existing)} existing v5 file(s), e.g. {existing[0]}", file=sys.stderr)
+    differ = [p for p, t in files.items() if p.exists() and p.read_text() != t]
+    if differ:
+        print(f"refusing to overwrite {len(differ)} differing v5 file(s), e.g. {differ[0]}", file=sys.stderr)
         return 3
+    files = {p: t for p, t in files.items() if not p.exists()}   # only add missing files; identical ones stay
     for p, t in files.items():
         p.parent.mkdir(parents=True, exist_ok=True)
         p.write_text(t)
