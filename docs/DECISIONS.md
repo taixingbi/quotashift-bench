@@ -229,4 +229,12 @@ A1–A9 results and controls are unchanged. No v4 GPU run is made before owner a
     stage. Sanitized exports and manifests are committed instead.
   - **Mock fidelity:** the in-process simulator now samples after each instant's dispatches. Before, a sample at an
     arrival instant missed the request sent then.
+- **Rev 3 approval (2026-11-23, owner).**
+  - ADR-Q19 is **APPROVED in principle**: the gateway cap may vary across pre-registered blocks, and stays identical
+    within each attack/control pair.
+  - The H4(b) paired rule is **APPROVED**.
+  - Before the freeze: the sign-symmetry assumption is documented (§6); the §3.3 table transcription is fixed (99.8 →
+    99.7, JSON unchanged); a text/code/JSON consistency test is added; the export's fail-closed handling of unknown
+    file types is tested; P1 read-only tooling is added (`p1_host_evidence.py`, `p1_verify_host.py`).
+  - Freeze commit 1 waits for the P1 evidence.
 - **Unchanged.** v4 and its results.

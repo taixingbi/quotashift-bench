@@ -24,6 +24,17 @@
   7. **H5** is described as an explanatory **consistency** test, not an independent or novel mechanism (§3.6).
   8. Items 10 (stage driver) and 11 (sanitized raw-data export) are implemented. Each block's single permitted rerun
      is pre-generated (§8 rule 2).
+- **Rev 3 approval (2026-11-23):** ADR-Q19 is approved in principle, and the H4(b) rule is approved. Pre-freeze
+  corrections:
+  - The sign-symmetry assumption of the permutation tests is documented (§6).
+  - A transcription error in the §3.3 table is fixed: D vs S, L = 400, C = 8 control reads 99.7 ms, matching the
+    frozen JSON (99.748); it was printed as 99.8. The JSON is unchanged, and the cell is extrapolated, so it is outside
+    the H3 verdict.
+  - `tests/unit/test_v5_rev3_consistency.py` now pins this text to the code and frozen JSON.
+  - The export's fail-closed handling of unknown file types is tested explicitly.
+  - P1 tooling is added (§10.3).
+  - No hypothesis, threshold or prediction was changed because of mock outcomes. The mock-driven changes are harness
+    fixes only: simulator cap and sampling, and the driver's stage-order check.
 - **What does not change:** Protocol v4 (`docs/PROTOCOL_V4.md`), its YAMLs, its `FROZEN_TRACES.json`, its results, and
   their pre-registered classifications. `scripts/build_v4.py --check` gives 45 files, 0 differ. All v4 post-hoc work
   stays labelled **post-hoc exploratory**.
@@ -102,7 +113,8 @@ These are separate hypotheses with separate tests. Both, either or neither may h
 - **Statistic:** for each seed, the OLS slope b_s of ℓ on log2(C) over C ∈ {8, 16, 32}. Seeds are paired across caps.
 - **Test:**
   - one-sided t-test of mean(b_s) < 0, giving p_t;
-  - exact sign-flip permutation, 2^10 = 1024 sign vectors, one-sided, giving p_perm;
+  - exact sign-flip permutation, 2^10 = 1024 sign vectors, one-sided, giving p_perm. Its sign-symmetry assumption is
+    stated in §6;
   - p_H2a = max(p_t, p_perm).
 - **SUPPORTED** iff Holm rejects within F1.
 - **Reported:** mean slope and 95% CI as the ratio change per doubling of C.
@@ -173,7 +185,7 @@ These are separate hypotheses with separate tests. Both, either or neither may h
 | D vs S, L200 | **56.8** / 3.0 ms (4.7% of attack victims > 500 ms; 10.8% of time at cap) | 0.0 / 0.0 | 0.0 / 0.0 | validated |
 | P vs S, L200 | 0.0 / 3.4 | 0.0 / 0.0 | 0.0 / 0.0 | validated |
 | A/A-ind, L200 | 7.9 / 3.1 | 0.0 / 0.0 | 0.0 / 0.0 | validated |
-| D vs S, L400 | **3,895** / 99.8 (82% of attack victims > 500 ms) | 2.2 / 0.0 | 0.0 / 0.0 | extrapolated |
+| D vs S, L400 | **3,895** / 99.7 (82% of attack victims > 500 ms) | 2.2 / 0.0 | 0.0 / 0.0 | extrapolated |
 | A/A-ind, L400 | 99.8 / 100.8 | 0.0 / 0.0 | 0.0 / 0.0 | extrapolated |
 
 **What H3 can and cannot show.**
@@ -234,7 +246,8 @@ These are separate hypotheses with separate tests. Both, either or neither may h
     - exact one-sided sign-flip permutation over the 2^10 sign vectors, giving p_perm;
     - p_H4b = max(p_t, p_perm).
     - **SUPPORTED** iff p_H4b < 0.05.
-    - This mirrors H2a. The permutation guards against the heavy right tail of queue differences.
+    - This mirrors H2a. The permutation guards against the heavy right tail of queue differences, and the t-test
+      guards against the permutation's sign-symmetry assumption (§6). Using the maximum requires both to reject.
   - **Evaluable** iff the three D-vs-S L = 200 gateway cells are E and share one seed list.
 - **(c)** the engine queue stays negligible by the §5.2 criterion in every D-vs-S arm at every C: engine-global
   histogram mean ≤ 10 ms **and** every observation in the le = 0.3 s bucket.
@@ -372,6 +385,17 @@ Other histograms:
     - otherwise **inconclusive**.
   - **Threshold validity:** 1.25 counts only if log 1.25 > 2× the A/A-ind 95% half-width at the same (C, L). Otherwise
     the cell is flagged "threshold not above noise".
+- **Permutation tests (H2a, H4(b)): sign-symmetry assumption.** The exact sign-flip test is valid under this null:
+  the per-seed statistics (slopes b_s, or reductions d_s) are independent across seeds, and each is symmetrically
+  distributed about 0, so every sign vector is equally likely.
+  - **Independence:** seeds are independent draws of the frozen schedule law, run in separate arms.
+  - **Not tested by a symmetric null:** it is stronger than "mean 0". A skewed per-seed distribution with mean 0 is
+    not covered, and the sign-flip p can then be miscalibrated in either direction.
+  - **Hence the max rule:** the t-test is not sign-symmetry based, so neither test's assumption alone decides.
+  - **Mechanics:**
+    - The p value counts the observed sign vector, so its minimum is 1/1024 at n = 10.
+    - Seeds with a statistic of exactly 0 are unchanged by a flip and stay in the count.
+    - Ties with the observed mean count as at least as extreme.
 - **Multiplicity:**
   - **F1 = {H1, H2a, H2b}**, Holm at α = 0.05 (`holm`).
   - **F2 = H6** at C = 8, 16, 32, Holm at α = 0.05.
@@ -496,7 +520,7 @@ Items 8–11 must not change any frozen artifact. A test pinning the frozen file
 
 | Step | What | Command(s) | Pass condition | On failure |
 |---|---|---|---|---|
-| **P1** | host verification, read-only, by the owner or with granted SSH | write `experiments/v5/HOST_VERIFICATION.json` (§10.3) | `v5_stage.host_record_problems` is empty | stop; written waiver or drop C = 32 before freeze |
+| **P1** | host verification, read-only (§10.3) | on the host: `python3 - --expect-start <live start> < scripts/p1_host_evidence.py > p1_evidence.json`; on the runner: `uv run python scripts/p1_verify_host.py --evidence p1_evidence.json --verified-by <owner>` | no unresolved issue; `v5_stage.host_record_problems` is empty | stop; written waiver or drop C = 32 before freeze |
 | **P2** | live trace freeze (tokenizer only, no generation) | `uv run python scripts/freeze_v5.py --live` | every trace reproduces `FROZEN_SCHEDULE.json`; all v4-style freeze gates pass | stop |
 | **P3** | freeze commit 2 (`FROZEN_TRACES.json` + P1 record) | git, on main | tests green | — |
 | **S** | 4 smokes, seed 4900 | `QUOTASHIFT_APPROVED=v5_stage_smoke scripts/run_v5.sh smoke --live` | every gate passes | stop; fix the harness; smokes are never analysed |
@@ -568,6 +592,31 @@ Items 8–11 must not change any frozen artifact. A test pinning the frozen file
   - `verified_by`;
   - `verified_utc`.
 - **Checks:** `v5_stage.host_record_problems` enforces these fields, and the `--live` driver refuses without them.
+- **Collection (read-only):** `scripts/p1_host_evidence.py` runs on the host, standard library only.
+  - It never writes, signals or restarts anything, and touches no GPU.
+  - It records every vLLM process with its start time. The start time uses the same formula as Prometheus
+    `process_start_time_seconds`, so the evidence is tied to the exact server the stages run on.
+  - It records the matched process's argv, and the `vllm` version of that process's own interpreter.
+  - It records the weight files mapped or open in the server and its child processes.
+  - It records allowlisted HF/vLLM cache environment variables, never tokens.
+  - It records the served model's HF cache: refs, and every snapshot with each file's blob, size and mtime.
+  - It records startup-log lines from the journal, the container or the stdout file, and optionally the SHA-256 of
+    the weight blobs.
+- **Resolution (`scripts/p1_verify_host.py`):**
+  - **Identity:** the evidence's process start must equal the **live** `process_start_time_seconds` (±1 s).
+  - **Version:** the interpreter's `vllm` version must equal `GET /version`, which must be `0.17.1`.
+  - **`max_num_seqs` and `max_num_batched_tokens`** come from argv, otherwise from a unique value in the startup log.
+    They are **never** taken from defaults.
+  - **Loaded snapshot:**
+    - `verified_direct`: the mapped or open weight files resolve to blobs that exactly one snapshot links, or the
+      startup log names one `snapshots/<commit>`.
+    - `verified_by_exclusion`: exactly one snapshot holds a complete weight set, it and its weight blobs predate the
+      process start, and no mapped weight file is deleted or elsewhere. It counts **only** with the owner's explicit
+      `--accept-exclusion`.
+    - **refs/main alone is never accepted**, whatever it points to.
+    - Otherwise the field stays unresolved, and only a written `model_revision_waiver` can stand in.
+  - **Output:** the record is sanitized with the export rules and gate-checked. The canonical path is written only
+    when no issue remains.
 
 ## 11. Proposed freeze
 

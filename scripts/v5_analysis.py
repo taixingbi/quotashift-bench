@@ -212,7 +212,10 @@ def per_seed_slopes(by_cap: dict[int, Sequence[float]]) -> list[float]:
 
 
 def sign_flip_p(slopes: Sequence[float]) -> float:
-    """Exact one-sided sign-flip permutation p for H: mean slope < 0 (2^n flips; n = 10 -> 1024)."""
+    """Exact one-sided sign-flip permutation p for H: mean slope < 0 (2^n flips; n = 10 -> 1024).
+    Valid under a SIGN-SYMMETRIC null: per-seed values independent and each symmetric about 0 (stronger than mean 0);
+    hence the decision rules combine it with the t-test by max(p_t, p_perm) (PROTOCOL_V5 §6). The observed sign vector
+    is counted (minimum p = 2^-n); ties with the observed mean count as extreme; exact zeros are flip-invariant."""
     obs = sum(slopes) / len(slopes)
     hits = tot = 0
     for signs in product((1, -1), repeat=len(slopes)):

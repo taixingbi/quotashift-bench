@@ -108,3 +108,27 @@ def test_salt_must_live_outside_the_repository(tmp_path):
     p = tmp_path / "salt"
     s = ex.load_salt(p)
     assert len(s) == 64 and ex.load_salt(p) == s and (p.stat().st_mode & 0o777) == 0o600
+
+
+def test_unknown_file_types_fail_closed(tree, tmp_path):
+    """Owner pre-freeze check 1. Unknown extensions are sanitized AND gated as text, never copied raw; an undecodable
+    unknown file refuses the export; a PNG (copied unchanged) is still byte-scanned by the gate."""
+    rep = tree / "v5_x"
+    (rep / "weird.xyz").write_text(f"host={HOST} uuid={UUID}\n")
+    (rep / "NOEXT").write_text("cwd=/Users/someone/x\n")
+    m, tar, _ = _export(tree, tmp_path / "1")
+    files = _members(tar)
+    for name in ("weird.xyz", "NOEXT"):
+        b = next(v for k, v in files.items() if k.endswith(name))
+        assert HOST.encode() not in b and UUID.encode() not in b and b"/Users/" not in b, (name, b)
+    for bad, match in ((b"\x80\x81\x82 not utf-8", "neither a known binary type"),):
+        (rep / "data.weird").write_bytes(bad)
+        import pytest as _p
+        with _p.raises(SystemExit, match=match):
+            _export(tree, tmp_path / "2")
+        (rep / "data.weird").unlink()
+    (rep / "leak.png").write_bytes(b"\x89PNG\r\n\x1a\n/Users/someone/secret\x00")
+    import pytest as _p
+    with _p.raises(SystemExit, match="regex gate"):
+        _export(tree, tmp_path / "3")
+    assert not (tmp_path / "2" / "out").exists() and not (tmp_path / "3" / "out").exists()
