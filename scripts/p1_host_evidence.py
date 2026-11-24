@@ -165,10 +165,11 @@ def startup_log(pid: int, start: float) -> dict:
                                capture_output=True, text=True, timeout=60)
             text = r.stdout + r.stderr
         else:
-            text = ""
+            text, seen = "", set()
             for fd in ("1", "2"):
                 t = _link(f"/proc/{pid}/fd/{fd}")
-                if t and t.startswith("/") and os.path.isfile(t):
+                if t and t.startswith("/") and os.path.isfile(t) and t not in seen:   # stdout and stderr may share a file
+                    seen.add(t)
                     src = f"file:{t}"
                     content = _read(t)
                     text += content if isinstance(content, str) else ""
@@ -178,8 +179,8 @@ def startup_log(pid: int, start: float) -> dict:
         return {"source": src, "error": str(e), "lines": []}
     for ln in text.splitlines():
         if LOG_RE.search(ln):
-            lines.append(ln[:2000])
-    return {"source": src, "lines": lines[:300]}
+            lines.append(ln[:20000])
+    return {"source": src, "lines": lines[:300], "log_total_lines": len(text.splitlines())}
 
 
 def sha256_file(p: str) -> str:
@@ -197,8 +198,8 @@ def main() -> int:
     ap.add_argument("--hash", action="store_true", help="sha256 the matched snapshot's weight blobs (disk reads only)")
     a = ap.parse_args()
     btime, tck = boot_time(), os.sysconf("SC_CLK_TCK")
-    procs = [p for pid in os.listdir("/proc") if pid.isdigit()
-             for p in [proc_info(int(pid), btime, tck)] if p and any("vllm" in x for x in p["argv"])]
+    allp = [p for pid in os.listdir("/proc") if pid.isdigit() for p in [proc_info(int(pid), btime, tck)] if p]
+    procs = [p for p in allp if any("vllm" in x.lower() for x in p["argv"])]   # incl. `VLLM::EngineCore`
     match = [p for p in procs if abs(p["start_epoch"] - a.expect_start) <= 1.0]
     out: dict = {"collector": "p1_host_evidence.py", "collector_version": 1, "collected_epoch": time.time(),
                  "expect_start": a.expect_start, "boot_time": btime, "clk_tck": tck, "vllm_processes": procs,
@@ -207,10 +208,11 @@ def main() -> int:
         root = match[0]
         kids, frontier = [], [root["pid"]]
         while frontier:
-            nxt = [p["pid"] for p in procs if p["ppid"] in frontier]
+            nxt = [p["pid"] for p in allp if p["ppid"] in frontier]   # every descendant, whatever its argv
             kids += nxt
             frontier = nxt
         out["descendants"] = kids
+        out["descendant_processes"] = [p for p in allp if p["pid"] in kids]
         out["weight_files"] = {str(pid): weight_files(pid) for pid in [root["pid"], *kids]}
         env = environ(root["pid"])
         out["environ_allowlisted"] = env
