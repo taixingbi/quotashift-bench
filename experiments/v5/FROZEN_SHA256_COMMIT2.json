@@ -1,0 +1,23 @@
+{
+ "freeze": "Protocol v5 Freeze Commit 2 (P2 live tokenizer trace freeze)",
+ "created_utc": "2026-11-24T01:53:01.235972+00:00",
+ "freeze_commit_1": "be4500aef8ad670ea5710438bc040e5bc6e1a677",
+ "files": {
+  "experiments/v5/FROZEN_TRACES.json": "1fe4876226f88bc667de72bfb356bbec6ec9a6c2202b492bc4e3c5b18640b247"
+ },
+ "p2": {
+  "tokenizer": "vllm POST /tokenize (no generation)",
+  "server_process_start_time_seconds": 1795268683.89,
+  "scenarios": 46,
+  "arm_traces": 776,
+  "requests": 241918,
+  "tokenized_input_tokens": 17471044,
+  "started_local": "2026-11-23T20:33:33-05:00",
+  "finished_local": "2026-11-23T20:51:52-05:00",
+  "generation_tokens_total_before_after": [
+   6202273,
+   6202273
+  ],
+  "checks": "freeze_v5 --live: every trace's schedule sha256 == FROZEN_SCHEDULE.json; every request tokenizes to exactly its planned input_token_count; context, budget and arrival-coverage gates; independent offline audit: counts, competitor budgets, exact token totals, distinct rerun and A/A-ind texts"
+ }
+}
