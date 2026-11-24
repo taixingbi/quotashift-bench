@@ -1,0 +1,31 @@
+cell,arm,envelope,pred_ms,obs_ms,err_ms,case,rel_err,direction,pass
+v5_aa_ind_L200_C16,attack,validated,0.0,0.0,0.0,zero,,exact,True
+v5_aa_ind_L200_C16,control,validated,0.0,0.0,0.0,zero,,exact,True
+v5_aa_ind_L200_C32,attack,validated,0.0,0.0,0.0,zero,,exact,True
+v5_aa_ind_L200_C32,control,validated,0.0,0.0,0.0,zero,,exact,True
+v5_aa_ind_L200_C8,attack,validated,7.888413741550484,8.72556667980872,0.8371529382582361,nonzero,0.10612436995396389,under-predicted (obs > pred),True
+v5_aa_ind_L200_C8,control,validated,3.060342350729983,3.4517981073006596,0.39145575657067644,nonzero,0.12791240707997997,under-predicted (obs > pred),True
+v5_aa_ind_L400_C16,attack,extrapolated,0.00043943511291050317,0.0,-0.00043943511291050317,zero,,over-predicted (obs < pred),True
+v5_aa_ind_L400_C16,control,extrapolated,0.0,0.0,0.0,zero,,exact,True
+v5_aa_ind_L400_C32,attack,extrapolated,0.0,0.0,0.0,zero,,exact,True
+v5_aa_ind_L400_C32,control,extrapolated,0.0,0.0,0.0,zero,,exact,True
+v5_aa_ind_L400_C8,attack,extrapolated,99.82226893827499,96.6343787936998,-3.187890144575192,nonzero,-0.03193566103517865,over-predicted (obs < pred),True
+v5_aa_ind_L400_C8,control,extrapolated,100.77215333445443,98.83322348047845,-1.9389298539759778,nonzero,-0.019240730596882555,over-predicted (obs < pred),True
+v5_decode_vs_short_L200_C16,attack,validated,0.0,0.0,0.0,zero,,exact,True
+v5_decode_vs_short_L200_C16,control,validated,0.0,0.0,0.0,zero,,exact,True
+v5_decode_vs_short_L200_C32,attack,validated,0.0,0.0,0.0,zero,,exact,True
+v5_decode_vs_short_L200_C32,control,validated,0.0,0.0,0.0,zero,,exact,True
+v5_decode_vs_short_L200_C8,attack,validated,56.817738535815806,57.650929087422696,0.83319055160689,nonzero,0.014664268115523068,under-predicted (obs > pred),True
+v5_decode_vs_short_L200_C8,control,validated,2.972443646953564,3.2568217545973055,0.2843781076437417,nonzero,0.09567148831743162,under-predicted (obs > pred),True
+v5_decode_vs_short_L400_C16,attack,extrapolated,2.186404431864343,3.123781791403402,0.9373773595390591,nonzero,0.42873008574162064,under-predicted (obs > pred),True
+v5_decode_vs_short_L400_C16,control,extrapolated,0.0,0.0,0.0,zero,,exact,True
+v5_decode_vs_short_L400_C32,attack,extrapolated,0.0,0.0,0.0,zero,,exact,True
+v5_decode_vs_short_L400_C32,control,extrapolated,0.0,0.0,0.0,zero,,exact,True
+v5_decode_vs_short_L400_C8,attack,extrapolated,3894.560634849874,3616.239636512856,-278.32099833701795,nonzero,-0.07146403007479342,over-predicted (obs < pred),True
+v5_decode_vs_short_L400_C8,control,extrapolated,99.74815803363074,99.24036503878835,-0.50779299484239,nonzero,-0.005090750594824862,over-predicted (obs < pred),True
+v5_prefill_vs_short_L200_C16,attack,validated,0.0,0.0,0.0,zero,,exact,True
+v5_prefill_vs_short_L200_C16,control,validated,0.0,0.0,0.0,zero,,exact,True
+v5_prefill_vs_short_L200_C32,attack,validated,0.0,0.0,0.0,zero,,exact,True
+v5_prefill_vs_short_L200_C32,control,validated,0.0,0.0,0.0,zero,,exact,True
+v5_prefill_vs_short_L200_C8,attack,validated,0.0,0.0,0.0,zero,,exact,True
+v5_prefill_vs_short_L200_C8,control,validated,3.4015136714553287,3.6989334821142363,0.29741981065890766,nonzero,0.08743748794978601,under-predicted (obs > pred),True

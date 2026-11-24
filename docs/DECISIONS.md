@@ -254,3 +254,20 @@ A1–A9 results and controls are unchanged. No v4 GPU run is made before owner a
     change per file; `FROZEN_SCHEDULE.json` reproduces exactly.
   - All frozen artifacts are pinned in `experiments/v5/FROZEN_SHA256.json`.
 - **Unchanged.** v4 and its results.
+
+## ADR-Q20 — Consolidated v4/v5 report: post-hoc conventions (2026-11-24, after every v5 stage finished)
+- **Context.** After both v5 stages were accepted on review, the owner asked for a consolidated report
+  (`docs/RESULTS_V4_V5.md`), figures, and a cross-platform validation design. No frozen code, threshold, prediction or
+  seed changes.
+- **Decisions.** Everything below is labelled **[post-hoc]** wherever it appears.
+  - Tables and figures come from a new read-only script, `scripts/v5_consolidated.py`. It reads only frozen outputs and
+    raw request logs.
+  - **FCFS prediction-error split.** A (cell, arm) is a "zero-queue" case iff its frozen predicted cell mean is < 1 ms.
+    Otherwise it is "nonzero", and only nonzero cases get relative errors.
+  - **Error sign.** Error = observed − predicted, so positive means under-predicted.
+  - **Offered slot demand** = Σ(t_terminal − t_sent) over all requests / (C × 120 s). It is descriptive only, and
+    undefined on the direct path.
+  - The H3 verdict stays as frozen. Extrapolated L = 400 scores are reported but never enter the verdict.
+- **Proposed, not adopted.** `docs/PROTOCOL_X1_CROSS_PLATFORM_DRAFT.md` would promote the control-arm slot demand at
+  C = 8 to a *preregistered* load-calibration variable for cross-platform work. That needs owner approval and a freeze
+  of its own.

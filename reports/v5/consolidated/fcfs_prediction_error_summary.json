@@ -1,0 +1,138 @@
+{
+ "validated/zero": {
+  "n_cell_arms": 13,
+  "n_seed_scores": 130,
+  "cell_mae_ms": 0.0,
+  "cell_max_abs_err_ms": 0.0,
+  "seed_mae_ms": 0.0,
+  "seed_max_abs_err_ms": 0.0,
+  "seed_bias_ms": 0.0,
+  "seed_frac_obs_gt_5ms": 0.0,
+  "seed_max_obs_ms": 0.0
+ },
+ "validated/nonzero": {
+  "n_cell_arms": 5,
+  "n_seed_scores": 50,
+  "cell_mae_ms": 0.5287194329476904,
+  "cell_max_abs_err_ms": 0.8371529382582361,
+  "seed_mae_ms": 0.7022905599103757,
+  "seed_max_abs_err_ms": 3.2952855241590555,
+  "seed_bias_ms": 0.5287194329476903,
+  "cell_rel_err": {
+   "v5_aa_ind_L200_C8/attack": 0.1061,
+   "v5_aa_ind_L200_C8/control": 0.1279,
+   "v5_decode_vs_short_L200_C8/attack": 0.0147,
+   "v5_decode_vs_short_L200_C8/control": 0.0957,
+   "v5_prefill_vs_short_L200_C8/control": 0.0874
+  },
+  "cell_median_abs_rel_err": 0.09567148831743162,
+  "seed_median_abs_rel_err": 0.19568068601702537,
+  "seed_frac_obs_gt_pred": 0.62,
+  "seed_frac_obs_lt_pred": 0.34,
+  "per_cell_seed_err_ms": {
+   "v5_aa_ind_L200_C8/attack": {
+    "min": -0.011463520903806939,
+    "max": 2.5493342998938004,
+    "n_obs_lt_pred": 1,
+    "rel_min": -1.0,
+    "rel_max": 0.3776365144163477
+   },
+   "v5_aa_ind_L200_C8/control": {
+    "min": -0.06481952956605076,
+    "max": 0.8500969110656976,
+    "n_obs_lt_pred": 2,
+    "rel_min": -1.0,
+    "rel_max": 0.855427899988884
+   },
+   "v5_decode_vs_short_L200_C8/attack": {
+    "min": -1.1608709058577702,
+    "max": 3.2952855241590555,
+    "n_obs_lt_pred": 4,
+    "rel_min": -0.07069562149797487,
+    "rel_max": 0.0757874649959563
+   },
+   "v5_decode_vs_short_L200_C8/control": {
+    "min": -0.3038393428735755,
+    "max": 2.436490807593156,
+    "n_obs_lt_pred": 4,
+    "rel_min": -1.0,
+    "rel_max": 0.4521045139638311
+   },
+   "v5_prefill_vs_short_L200_C8/control": {
+    "min": -0.27629237640351745,
+    "max": 1.7122726065369758,
+    "n_obs_lt_pred": 6,
+    "rel_min": -1.0,
+    "rel_max": 1.0622310250590248
+   }
+  }
+ },
+ "extrapolated/zero": {
+  "n_cell_arms": 7,
+  "n_seed_scores": 70,
+  "cell_mae_ms": 6.277644470150045e-05,
+  "cell_max_abs_err_ms": 0.00043943511291050317,
+  "seed_mae_ms": 6.277644470150045e-05,
+  "seed_max_abs_err_ms": 0.004394351129105032,
+  "seed_bias_ms": -6.277644470150045e-05,
+  "seed_frac_obs_gt_5ms": 0.0,
+  "seed_max_obs_ms": 0.0
+ },
+ "extrapolated/nonzero": {
+  "n_cell_arms": 5,
+  "n_seed_scores": 50,
+  "cell_mae_ms": 56.978597737990114,
+  "cell_max_abs_err_ms": 278.32099833701795,
+  "seed_mae_ms": 57.310015296660225,
+  "seed_max_abs_err_ms": 480.52236860025914,
+  "seed_bias_ms": -56.603646794174395,
+  "cell_rel_err": {
+   "v5_aa_ind_L400_C8/attack": -0.0319,
+   "v5_aa_ind_L400_C8/control": -0.0192,
+   "v5_decode_vs_short_L400_C16/attack": 0.4287,
+   "v5_decode_vs_short_L400_C8/attack": -0.0715,
+   "v5_decode_vs_short_L400_C8/control": -0.0051
+  },
+  "cell_median_abs_rel_err": 0.03193566103517865,
+  "seed_median_abs_rel_err": 0.03696484509850724,
+  "seed_frac_obs_gt_pred": 0.26,
+  "seed_frac_obs_lt_pred": 0.66,
+  "per_cell_seed_err_ms": {
+   "v5_aa_ind_L400_C8/attack": {
+    "min": -9.229395464471736,
+    "max": -0.05870458283268931,
+    "n_obs_lt_pred": 10,
+    "rel_min": -0.06205614780855648,
+    "rel_max": -0.0009055536142124589
+   },
+   "v5_aa_ind_L400_C8/control": {
+    "min": -8.832399315664048,
+    "max": 0.938390658622211,
+    "n_obs_lt_pred": 7,
+    "rel_min": -0.06774572672183252,
+    "rel_max": 0.00952652803602662
+   },
+   "v5_decode_vs_short_L400_C16/attack": {
+    "min": 0.0,
+    "max": 3.1336769404522773,
+    "n_obs_lt_pred": 0,
+    "rel_min": 0.08541434977054636,
+    "rel_max": 26.22425688956523
+   },
+   "v5_decode_vs_short_L400_C8/attack": {
+    "min": -480.52236860025914,
+    "max": -86.64321363527165,
+    "n_obs_lt_pred": 10,
+    "rel_min": -0.10637578080323637,
+    "rel_max": -0.051810485541616054
+   },
+   "v5_decode_vs_short_L400_C8/control": {
+    "min": -5.583810247914457,
+    "max": 3.8587130546222,
+    "n_obs_lt_pred": 6,
+    "rel_min": -0.04739177676459357,
+    "rel_max": 0.029035005784769415
+   }
+  }
+ }
+}

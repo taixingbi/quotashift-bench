@@ -236,3 +236,19 @@
     of overrides. It is not logged. An override outside the pinned files cannot be excluded.
   - **Unaffected:** `max_num_batched_tokens` = 2048, vLLM 0.17.1 and the server identity are directly evidenced.
 
+
+### v5 final results (2026-11-24, after Stages A and B; `docs/RESULTS_V4_V5.md` §5, §7)
+- **The FCFS prediction error direction is wrong in the saturated regime.**
+  - Protocol v5 §3.5 and the C = 8 leave-one-seed-out validation expected under-prediction.
+  - At L = 400, C = 8 the attack arm was over-predicted in 10/10 seeds, by 87–481 ms (5–11%; cell −7.1%).
+  - The L = 400 controls and A/A arms were over-predicted by 0.5–3.2%.
+  - All of these still passed the frozen tolerance, but they were extrapolated and are excluded from H3.
+- **The threshold is not above noise at L = 400, C = 8.** The 18.1× D vs S classification there carries the
+  preregistered flag: the A/A-ind per-seed ratios range 0.72–1.36 at that point.
+- **No noise check is possible for the L = 400 direct cell.** The frozen design has no L = 400 direct A/A-ind cell.
+- **Prefill has a small backend effect.** P vs S attack arms show 3–6 ms higher backend TTFT at every cap and on the
+  direct path. It stays inside the H6 equivalence band, but it is not zero.
+- **Output filename mismatch.** The frozen `v5_analysis.py` writes `analysis_<stage>.json`, while its docstring says
+  `ANALYSIS_<stage>.json`. Left unchanged because the code is frozen.
+- **Backups are on a single disk.** As of 2026-11-24 every copy of the v4/v5 raw data and the export salt sits on one
+  disk. The off-machine checklist is in `docs/RESULTS_V4_V5.md` §8.
