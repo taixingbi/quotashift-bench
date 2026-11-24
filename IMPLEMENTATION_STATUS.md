@@ -165,7 +165,8 @@ Design: `docs/PROTOCOL_V5.md` (FROZEN 2026-11-24). ADR-Q19 accepted. No v5 stage
 | P1 host verification | ✅ passed 2026-11-24 (`experiments/v5/HOST_VERIFICATION.json`): vLLM 0.17.1, same server start as v4, max_num_batched_tokens 2048 (log), max_num_seqs 256 (owner-approved source-default inference), snapshot a09a354… (verified_by_exclusion, owner-accepted) |
 | Freeze commit 1 | ✅ 2026-11-24: `docs/PROTOCOL_V5.md` FROZEN, ADR-Q19 ACCEPTED, pins in `experiments/v5/FROZEN_SHA256.json` |
 | P2 live trace freeze + Freeze commit 2 | ✅ 2026-11-24: 46 scenarios, 776 arm traces, 241,918 requests, 17,471,044 tokens, all exact; `/tokenize` only (generation counter unchanged); pin in `experiments/v5/FROZEN_SHA256_COMMIT2.json` |
-| Stage S | 🚫 awaits separate owner approval |
+| Stage S | ✅ 2026-11-23 20:57–21:07 local (10.7 min vs 14.9 est), owner-approved, commit 81be372: 4/4 blocks passed every gate, no flags; cache resets verified; one server start; preemptions 0, prefix hits 0, no unrelated traffic; engine-queue buckets captured. Smokes are never analysed |
+| Stage A | 🚫 awaits separate owner approval (12 blocks, ≈ 10.8 h) |
 
 ## Verification (this pass)
 `uv run pytest -q` → see Phase 9 report; `ruff` + `mypy` clean;
