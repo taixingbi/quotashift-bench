@@ -1,0 +1,16 @@
+# Re-verified 2026-11-24 via the AWS Price List API (us-east-1, On-Demand): g6.xlarge, EBS gp3, NAT gateway hour + GB unchanged.
+# Other values carried from the 2026-11-18 retrieval; Fargate values are UNVERIFIED list prices.
+# Fargate values were NOT matched by the API query; they are AWS public list prices — verify before relying on them.
+as_of: "2026-11-24"
+region: us-east-1
+gpu_instance_hour: 0.8048           # g6.xlarge Linux shared tenancy
+public_ipv4_hour: 0.005
+ebs_gp3_gb_month: 0.08
+nat_gateway_hour: 0.045
+nat_gateway_gb: 0.045
+interface_endpoint_hour_per_az: 0.01
+cloudwatch_logs_ingest_gb: 0.50
+s3_standard_gb_month: 0.023
+fargate_vcpu_hour: 0.04048          # UNVERIFIED (not returned by API query)
+fargate_gb_hour: 0.004445           # UNVERIFIED (not returned by API query)
+ecr_gb_month: 0.10

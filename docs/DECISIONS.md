@@ -295,3 +295,15 @@ A1–A9 results and controls are unchanged. No v4 GPU run is made before owner a
   - g6.xlarge vs g6.2xlarge;
   - fp16 vs bf16.
 - **Security finding.** The workstation's AWS credentials are the root user. Replace them with a least-privilege identity before any AWS stage (stage X1-B).
+
+## ADR-X1-G1 — G1 = AWS g6.xlarge; n = 24 on X-a/X-d with the 1.25 primary threshold (owner, 2026-11-24)
+- **Decision.**
+  - G1 = EC2 **g6.xlarge** in us-east-1 (4 vCPU, 16 GiB RAM, 1 × L4). This replaces the g6.2xlarge recommendation.
+  - **No** 8-vCPU quota request.
+  - Kept: full 2 × 2, fp16, the existing model revisions, n = 24 for X-a and X-d, the primary X1-H1 threshold of 1.25× (power option (a) only), the $60 cap and the cost controls.
+- **Consequences** (draft rev 3):
+  - CPU and RAM are treated as cross-platform confounders, with preflight checks for CPU utilisation, available RAM, model-load success, KV capacity and tokenization throughput;
+  - per-arm `host_cpu_headroom` and `host_ram_headroom` flag gates;
+  - G1 contrasts that carry a flag are reported as "GPU+host, host-limited".
+- **Cost.** Recalculated AWS cost ≈ $36 planned, $51 pessimistic.
+- **Not done:** no provisioning, Terraform apply, restart, download or GPU run.

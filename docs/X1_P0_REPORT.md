@@ -153,3 +153,29 @@ Resolved in draft rev 2, §6.
 - Per-platform slot-demand calibration (draft §3) and independently sampled seeds (draft §4) are kept.
 - The v4/v5 results and all frozen artifacts are unchanged.
 - No AWS resource was created. No model, image or weights were downloaded. No GPU work was run. Nothing was frozen.
+
+---
+
+## Addendum: owner decision of 2026-11-24 (g6.xlarge)
+
+The owner chose **g6.xlarge** (4 vCPU, 16 GiB, 1 × L4) in us-east-1. This replaces the recommendation in §2 and §4
+of this report.
+- **No quota increase.** The current 4-vCPU G/VT quota fits exactly one g6.xlarge.
+- **Kept:** fp16, the model revisions, the full 2 × 2 design, n = 24 for X-a and X-d (power option (a)), and the primary 1.25× threshold.
+
+**Recalculated AWS cost** (g6.xlarge $0.8048/h re-verified today):
+- **Inputs:** `configs/infrastructure/prices.us-east-1.2026-11-24.yaml`; NAT mode; the stack existing 120 h; 60 GB through the NAT; 120 GB EBS.
+- **GPU-hours:** G1 calibration ≈ 6.5 h, plus G1 main 14.7 h of blocks at n = 24 (≈ 19.1 h with the 1.3 rule), plus startup.
+
+| Scenario | GPU-hours | Total |
+|---|---|---|
+| Plan | ≈ 29 | **$36.24** |
+| Pessimistic | 45 | **$50.91** |
+
+The $60 cap and every cost control are kept.
+
+**CPU and RAM confounders.** CPU and RAM limits on g6.xlarge are treated as possible cross-platform confounders. Draft
+rev 3 adds:
+- preregistered preflight checks (§9.1): model-loading success, GPU KV capacity, available system RAM, CPU utilisation and tokenization throughput;
+- per-arm host-telemetry flag gates (§9.2);
+- an interpretation rule that labels flagged GPU contrasts "GPU+host, host-limited" (§2.2).
