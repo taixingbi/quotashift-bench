@@ -1,0 +1,21 @@
+{
+ "kind": "X1 Amendment A1 (post hoc, 2026-11-25): sampler on/off equivalence",
+ "approval": "x1_amend_a1",
+ "reviewed_proposal_commit": "02eafae",
+ "created_utc": "2026-11-25T12:31:45.202050+00:00",
+ "files": {
+  "docs/PROTOCOL_X1_AMENDMENT_A1.md": "961f6080ee6e1bf9e01bb12085f18aecd72a4c68753ccb9a6834058d53024721",
+  "docs/X1_AMENDMENT_A1_SAMPLER_EQUIVALENCE.md": "7e3a5bb607f703c33a427c4f31ca7898a0bd26b9cff5da8c3589c7f3722e9bc8",
+  "src/quotashift/x1/sampler_equivalence_a1.py": "e2ab7486073334350a5ef7497248787b136d1343f658634526055a527414e545",
+  "scripts/x1_amendment_a1_power.py": "7d308b167ca69914caa11cbdce6d364eb901d76145fc93af45d1930286ed2e83",
+  "reports/x1/AMENDMENT_A1_POWER.json": "95aa2e8538b3cd63a895839597d80363fe3f28ba265ba7b8e4d953da9a9468a1",
+  "scripts/x1_preflight.py": "696e23d5aafa8f90ad4a4759f860cb030ac452e5efaed0640335721ddfec1cc3",
+  "scripts/pin_x1_amendment.py": "fe80136829d750f96eb3b753f191d85dde1c0421cae313616985e379068e5217",
+  "experiments/x1/g0m0/HOST_VERIFICATION.attempt1.json": "ef6c6b47417a0788d284a30849f132ad1bcb4c801f62feb182b58f38929615b8",
+  "experiments/x1/g0m0/HOST_VERIFICATION.attempt2.json": "80f8c46c02590dd7871b8b01d76d735664334dee1f0694f8aaf0c718e6c1573c"
+ },
+ "freeze1_manifest_sha256": "39ae158cb36389fb6e1e9a0fa1b59d2990267be04800a031b504f86e7aa216f9",
+ "v5_manifest_sha256": "e8aa80835c2f99a5b9ccec028fef2dba44196c176c0794329612510f7c3ceca2",
+ "supersedes": "rev 4 section 9.1 row 'Sampler on/off equivalence', for Phase 1 runs started after this pin only",
+ "unchanged": "frozen protocol file, preflight.py thresholds incl. sampler_overhead < 1% core, seeds, hypotheses, families, predictions, analysis; attempts 1 and 2 remain FAIL"
+}
