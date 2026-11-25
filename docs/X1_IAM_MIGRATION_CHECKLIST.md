@@ -1,6 +1,15 @@
 # X1-B: least-privilege, temporary-credential IAM migration checklist
 
-**Status:** prepared 2026-11-24 for owner execution. **Nothing has been created, deactivated or rotated.**
+**Status, 2026-11-24 20:20:**
+- **Option B in progress.** The owner chose for Claude to create the two roles.
+- **Done (by Claude, on the owner's instruction):** step B.1, i.e. roles `quotashift-x1-readonly` (max session 4 h) and `quotashift-x1-operator` (max session 1 h), with the validated inline policies, tags `Project=QuotaShift, Purpose=X1-B`, and a trust policy that allows `sts:AssumeRole` only from IAM user `quotashift-x1-owner`, only with MFA no older than 1 h.
+- **Policy-simulator verification:** 23 of 23 checks as expected.
+- **Not done:** no user and no access key created; root keys untouched.
+- **Not yet usable:** the roles cannot be used until the owner completes B.2 (AWS never lets the root user assume a role).
+
+The original preparation note follows, kept as written:
+
+**Prepared 2026-11-24 for owner execution. Nothing has been created, deactivated or rotated.**
 - Every step marked ⚠️ changes the AWS account. The **owner** performs it, after explicit confirmation, normally in the console with MFA.
 - The repository only provides policy drafts, verification commands and a guard in `scripts/aws_ops.sh`.
 
@@ -70,7 +79,11 @@ for both identity policies after one redundancy fix, and 0 for the trust templat
      Credentials come from `aws sso login` and expire automatically.
 - **Option B: IAM roles plus an MFA-only user.**
   1. ⚠️ Create the roles `quotashift-x1-readonly` and `quotashift-x1-operator`, with the trust template filled in and the two JSON policies inline. Set the operator's max session to 1 h.
-  2. ⚠️ Create an IAM user for the owner whose only permission is `sts:AssumeRole` on those two roles, with MFA.
+  2. ⚠️ **Owner, next:**
+     - Create IAM user **`quotashift-x1-owner`**. The name must match the trust policy.
+     - Attach `infra/iam/x1-owner-user-policy.json` as its only policy: assume the two roles with MFA, and manage its own MFA device.
+     - Enable MFA.
+     - Create one access key for CLI use. It is long-lived but can do nothing except assume roles with MFA.
   3. Local configuration: profiles with `role_arn` + `mfa_serial` + `source_profile`, so the CLI asks for an MFA code and receives temporary credentials.
   
   Option B still needs one long-lived access key on that limited user, which is why A is preferred.

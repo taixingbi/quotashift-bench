@@ -357,6 +357,27 @@
         "identitystore:*"
       ],
       "Resource": "*"
+    },
+    {
+      "Sid": "DenySelfModificationAndPassOfX1Roles",
+      "Effect": "Deny",
+      "Action": [
+        "iam:PutRolePolicy",
+        "iam:DeleteRolePolicy",
+        "iam:AttachRolePolicy",
+        "iam:DetachRolePolicy",
+        "iam:UpdateAssumeRolePolicy",
+        "iam:UpdateRole",
+        "iam:UpdateRoleDescription",
+        "iam:DeleteRole",
+        "iam:TagRole",
+        "iam:UntagRole",
+        "iam:PutRolePermissionsBoundary",
+        "iam:DeleteRolePermissionsBoundary",
+        "iam:PassRole",
+        "iam:CreateRole"
+      ],
+      "Resource": "arn:aws:iam::*:role/quotashift-x1-*"
     }
   ]
 }

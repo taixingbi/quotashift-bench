@@ -77,3 +77,19 @@ def test_policies_parse_and_keep_guard_rails():
 def test_no_real_account_ids_in_iam_files():
     for p in (REPO / "infra" / "iam").glob("*.json"):
         assert not re.search(r"\b\d{12}\b", p.read_text()), p
+
+
+def test_operator_cannot_modify_or_pass_the_x1_roles():
+    op = json.loads((REPO / "infra" / "iam" / "x1-operator-policy.json").read_text())
+    s = next(x for x in op["Statement"] if x["Sid"] == "DenySelfModificationAndPassOfX1Roles")
+    assert s["Effect"] == "Deny" and s["Resource"] == "arn:aws:iam::*:role/quotashift-x1-*"
+    for a in ("iam:PutRolePolicy", "iam:AttachRolePolicy", "iam:UpdateAssumeRolePolicy", "iam:PassRole"):
+        assert a in s["Action"]
+
+
+def test_owner_user_can_only_assume_the_two_roles_with_mfa():
+    u = json.loads((REPO / "infra" / "iam" / "x1-owner-user-policy.json").read_text())
+    s = next(x for x in u["Statement"] if x["Sid"] == "AssumeOnlyTheTwoX1RolesWithMfa")
+    assert s["Action"] == "sts:AssumeRole" and len(s["Resource"]) == 2
+    assert s["Condition"]["Bool"]["aws:MultiFactorAuthPresent"] == "true"
+    assert not any(x["Effect"] == "Allow" and x.get("Action") == "*" for x in u["Statement"])

@@ -326,3 +326,16 @@ A1–A9 results and controls are unchanged. No v4 GPU run is made before owner a
   - `docs/X1_IAM_MIGRATION_CHECKLIST.md`, plus `infra/iam/*.json`: Access Analyzer reports 0 findings.
   - `aws_ops.sh` refuses root credentials for every action except `stop-gpu`.
   - No credential was created, deactivated or rotated.
+
+## ADR-X1-A — X1 protocol rev 4 approved as final; X1-B roles created (2026-11-24)
+- **X1-A.** The owner approved rev 4 as final with no content change. It is not frozen. Freeze Commit 1 (X1-G) needs separate approval, after `scripts/x1_analysis.py` and the X1 schedule generator are built and tested.
+- **X1-B, Option B, on the owner's instruction.**
+  - Claude created IAM roles `quotashift-x1-readonly` (4 h) and `quotashift-x1-operator` (1 h). Each has the validated inline policy (Access Analyzer: 0 findings) and a trust policy limited to IAM user `quotashift-x1-owner`, with MFA no older than 1 h.
+  - **Security fix before creation.** A deny was added so the operator cannot modify, re-trust or pass any `quotashift-x1-*` role. This closes a self-escalation path in the rev 4 draft policy.
+  - **Policy-simulator check:** 23 of 23 decisions as expected. These cover:
+    - g6.xlarge only, us-east-1 only, project tag;
+    - Cost Explorer, quota increases, spot and access keys denied;
+    - no self-modification or admin-policy attach;
+    - stack roles manageable.
+  - **Not done.** The owner user, MFA, access key, local profiles and every root-key step (deactivate or delete) are left to the owner.
+  - **Recorded identifiers.** No ARNs or account IDs are recorded here.
