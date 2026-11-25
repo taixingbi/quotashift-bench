@@ -16,6 +16,7 @@ from __future__ import annotations
 import argparse
 import json
 import math
+import os
 import statistics as st
 import subprocess
 import sys
@@ -33,6 +34,7 @@ from quotashift.instrumentation.cache_reset import reset_and_verify  # noqa: E40
 from quotashift.instrumentation.prom import parse_prometheus_text, resolve  # noqa: E402
 from quotashift.targets import active_target  # noqa: E402
 from quotashift.x1 import preflight as pf  # noqa: E402
+from quotashift.x1 import sampler_equivalence_a1 as a1  # noqa: E402
 from quotashift.x1.tokenize_probe import burst, clock_offset_probe, isolated  # noqa: E402
 
 X1 = REPO / "experiments" / "x1"
@@ -230,6 +232,104 @@ def overhead(samples: list[dict]) -> dict:
 SAMPLER_PHASE1_S = 65      # >= 60 samples at 1 s, and the frozen sampler's summary line on exit
 
 
+# ------------------------------------------------------------------------------------------------ Amendment A1
+def sampler_running(host: str) -> bool:
+    return bool(ssh(host, "pgrep -f '[x]1_host_sampler' || true").strip())
+
+
+def ttft_hist(base: str) -> dict:
+    """Server-side vllm:time_to_first_token_seconds histogram sum/count (summed over label sets). Recorded only."""
+    s = c = 0.0
+    try:
+        for ln in httpx.get(base + "/metrics", timeout=10).text.splitlines():
+            if ln.startswith("vllm:time_to_first_token_seconds_sum"):
+                s += float(ln.rsplit(" ", 1)[1])
+            elif ln.startswith("vllm:time_to_first_token_seconds_count"):
+                c += float(ln.rsplit(" ", 1)[1])
+    except (httpx.HTTPError, ValueError):
+        return {"sum_s": None, "count": None}
+    return {"sum_s": s, "count": c}
+
+
+def timed(base: str, model: str, prompt: str) -> dict:
+    """One sequential streamed request (fresh connection), timed on the runner. Errors are recorded, never raised."""
+    t_send = time.time()
+    try:
+        r, err = completion(base, model, prompt, 8, stream=True), None
+    except (httpx.HTTPError, json.JSONDecodeError, KeyError) as e:
+        r, err = {}, f"{type(e).__name__}: {str(e)[:120]}"
+    return {"t_send": t_send, "t_end": time.time(), "ttft_ms": r.get("ttft_ms"), "chunks": r.get("chunks"), "error": err}
+
+
+def a1_measure(host: str, base: str, model: str, plat: str, rawdir: Path) -> list[dict]:
+    """Amendment A1.2 procedure. Returns the segments in execution order (input to a1.equivalence_a1)."""
+    warm = [(s, prompt_of(60, s)) for s in a1.WARMUP_SEEDS]
+    meas = [(s, prompt_of(60, s)) for s in a1.PROMPT_SEEDS]
+    if sampler_running(host):
+        ssh(host, "pkill -f '[x]1_host_sampler' || true")
+    (rawdir / "a1_telemetry").mkdir(parents=True, exist_ok=True)
+    segs: list[dict] = []
+    rows: list[dict] = []
+    order = a1.segment_order()
+    for i, (k, arm) in enumerate(order):
+        tag = f"{plat}_a1_p{k:02d}"
+        if arm == "on":
+            sampler_start(host, tag)                                # frozen sampler, daemon mode, unchanged
+        pre = sampler_running(host)
+        h0 = ttft_hist(base)
+        reset = reset_and_verify(base, model, tag=f"x1-a1-{plat}-{k}-{arm}")
+        w = [timed(base, model, p) | {"seed": s} for s, p in warm]
+        m = [timed(base, model, p) | {"seed": s} for s, p in meas]
+        h1 = ttft_hist(base)
+        post = sampler_running(host)
+        tel_n = stopped = None
+        if arm == "on":
+            samples = sampler_stop(host, tag, rawdir / "a1_telemetry" / f"{tag}.jsonl")
+            stopped = not sampler_running(host)
+            t0, t1 = m[0]["t_send"], m[-1]["t_end"]
+            tel_n = sum(1 for s in samples if "ts" in s and t0 - 5 <= s["ts"] <= t1 + 5)
+            state_ok = bool(pre and post and stopped and tel_n >= 1)
+        else:
+            state_ok = (not pre) and (not post)
+        dc = (h1["count"] - h0["count"]) if h0["count"] is not None and h1["count"] is not None else None
+        segs.append({"pair": k, "arm": arm, "position": i, "ttft_ms": [r["ttft_ms"] for r in m],
+                     "warmup_ttft_ms": [r["ttft_ms"] for r in w], "reset": reset,
+                     "reset_verified": bool(reset.get("verified")), "sampler_state_ok": state_ok,
+                     "sampler_running_before": pre, "sampler_running_after": post, "sampler_stopped_after": stopped,
+                     "telemetry_samples_in_window": tel_n, "errors": sum(1 for r in w + m if r["error"]),
+                     "t_start": m[0]["t_send"], "t_end": m[-1]["t_end"],
+                     "server_ttft_hist": {"requests": dc, "mean_ms": (1000 * (h1["sum_s"] - h0["sum_s"]) / dc) if dc else None,
+                                          "note": "includes reset-probe and warm-up requests; recorded only"}})
+        rows += [{"pair": k, "arm": arm, "position": i, "kind": "warmup", **r} for r in w]
+        rows += [{"pair": k, "arm": arm, "position": i, "kind": "measured", **r} for r in m]
+        good = [v for v in segs[-1]["ttft_ms"] if v is not None]
+        print(f"[{datetime.now().strftime('%H:%M:%S')}] A1 segment {i + 1}/{len(order)} pair {k:02d} {arm:3s}: "
+              f"p50 {pf.pctl(good, 50) if good else float('nan'):.2f} ms, n {len(good)}, reset {segs[-1]['reset_verified']}, "
+              f"sampler ok {state_ok}", flush=True)
+        (rawdir / "a1_requests.json").write_text(json.dumps(rows))
+        (rawdir / "a1_segments.json").write_text(json.dumps(segs))
+    return segs
+
+
+def a1_problems(plat: str, *, root: Path = X1, env: dict | None = None) -> list[str]:
+    """Phase 1 under Amendment A1: pinned amendment (incl. Freeze 1 + v5), the per-platform token, one run only,
+    and any earlier record preserved byte-identically as HOST_VERIFICATION.attempt*.json."""
+    import pin_x1_amendment
+    env = dict(os.environ) if env is None else env
+    p = [f"Amendment A1 pin: {x}" for x in pin_x1_amendment.check()]
+    tok = f"x1_preflight_a1_{plat}"
+    if env.get("QUOTASHIFT_APPROVED") != tok:
+        p.append(f"QUOTASHIFT_APPROVED must be {tok} (one amended Phase 1 run, owner approval)")
+    hv = root / plat / "HOST_VERIFICATION.json"
+    if hv.exists():
+        rec = json.loads(hv.read_text())
+        if ((rec.get("preflight") or {}).get("phase1") or {}).get("amendment", {}).get("id") == "A1":
+            p.append(f"{plat}: an A1 Phase 1 record already exists (one amended run only; no retries)")
+        elif not any(a.read_bytes() == hv.read_bytes() for a in (root / plat).glob("HOST_VERIFICATION.attempt*.json")):
+            p.append(f"{hv.name} is not preserved as a byte-identical HOST_VERIFICATION.attempt*.json")
+    return p
+
+
 # ------------------------------------------------------------------------------------------------ mini-blocks
 def mini_block(plat: str, rate: int, reps: int, runtime: int, tag: str, out: Path) -> dict:
     """D vs S at C = 8 through the harness (`quotashift experiment --live`), all v5 gates. Never analysed."""
@@ -287,23 +387,18 @@ def phase1(plat: str, host: str, anchor_tps: float | None) -> dict:
     (rawdir / "isolated_ms.json").write_text(json.dumps(iso))
     tps = [completion(base, model, prompt_of(60, 100 + k), 256, stream=True)["decode_tps"] for k in range(5)]
     decode_tps = st.median([x for x in tps if x])
-    # Sampler on/off TTFT floor (ADR-X1-G0M0-P1-RECOVERY): the same 20 prompts in both passes, each pass starting from
-    # a verified-cold prefix cache, so a cache hit can never masquerade as a sampler effect.
-    reset_off = reset_and_verify(base, model, tag=f"x1-ttft-off-{plat}")
-    time.sleep(3)
-    ttft_off = [completion(base, model, prompt_of(60, 200 + k), 8, stream=True)["ttft_ms"] for k in range(20)]
+    # Sampler on/off equivalence under Amendment A1 (docs/PROTOCOL_X1_AMENDMENT_A1.md): 24 balanced OFF/ON segment
+    # pairs x 80 identical-prompt requests, verified cold cache + 3 warm-ups per segment; paired-segment TOST.
+    segs = a1_measure(host, base, model, plat, rawdir)
+    eq = a1.equivalence_a1(segs) | {"amendment": "A1"}
+    on_all = [v for s in segs if s["arm"] == "on" for v in s["ttft_ms"] if v is not None]
+    off_all = [v for s in segs if s["arm"] == "off" for v in s["ttft_ms"] if v is not None]
+    legacy = pf.sampler_equivalence_check(on_all, off_all) if on_all and off_all else {"status": "n/a"}
+    # sampler_overhead (frozen rule, unchanged): dedicated finite 65 s sampler run on the idle server, as in attempt 2
     sampler_start(host, f"{plat}_phase1", duration=SAMPLER_PHASE1_S)
-    reset_on = reset_and_verify(base, model, tag=f"x1-ttft-on-{plat}")
-    time.sleep(3)
-    ttft_on = [completion(base, model, prompt_of(60, 200 + k), 8, stream=True)["ttft_ms"] for k in range(20)]
     tq0 = time.time()
     sampler_exited = sampler_wait(host, SAMPLER_PHASE1_S + 60)
     samples = sampler_stop(host, f"{plat}_phase1", rawdir / "telemetry_phase1.jsonl")
-    (rawdir / "ttft_onoff_ms.json").write_text(json.dumps({"off": ttft_off, "on": ttft_on}))
-    cold = {"status": "pass" if reset_off.get("verified") and reset_on.get("verified") else "fail",
-            "reasons": [] if reset_off.get("verified") and reset_on.get("verified")
-            else ["prefix cache not verified cold before a TTFT pass"],
-            "reset_before_off": reset_off, "reset_before_on": reset_on, "sampler_exited_by_itself": sampler_exited}
     idle = window(samples, tq0, time.time() + 5)
     clock = clock_offset_probe(base, n=20)
     s_p = 1.0 if plat == "g0m0" else (decode_tps / anchor_tps if anchor_tps else None)
@@ -326,9 +421,8 @@ def phase1(plat: str, host: str, anchor_tps: float | None) -> dict:
         "tokenizer_parity": {"status": "pass" if parity["ok"] else "fail", **parity},
         "ram_idle": pf.ram_check(idle),
         "tokenization_isolated": pf.tokenization_check(isolated_ms=iso, peak_request_rps=0.0),
-        "sampler_overhead": pf.sampler_overhead_check(overhead(samples) or {}),
-        "sampler_equivalence": pf.sampler_equivalence_check([x for x in ttft_on if x], [x for x in ttft_off if x]),
-        "ttft_passes_cache_cold": cold,
+        "sampler_overhead": pf.sampler_overhead_check(overhead(samples) or {}) | {"sampler_exited_by_itself": sampler_exited},
+        "sampler_equivalence": eq,
         "clock_offset": pf.clock_offset_check(clock.get("offset_s"), clock.get("bound_s")),
         "smoke_mini_block": smoke,
     }
@@ -336,15 +430,19 @@ def phase1(plat: str, host: str, anchor_tps: float | None) -> dict:
             "decode_tps_D": decode_tps, "decode_tps_samples": tps, "speed_factor": s_p,
             "anchor_decode_tps": anchor_tps if plat != "g0m0" else decode_tps,
             "clock_offset_s": clock.get("offset_s"), "clock_bound_s": clock.get("bound_s"),
-            "ttft_floor_ms": {"median_rule": "nearest-rank p50 (frozen pf.pctl, as the equivalence check)",
-                              "sampler_off_median": pf.pctl([x for x in ttft_off if x], 50),
-                              "sampler_on_median": pf.pctl([x for x in ttft_on if x], 50),
-                              "sampler_off_ms": ttft_off, "sampler_on_ms": ttft_on},
+            "ttft_floor_ms": {"median_rule": "nearest-rank p50 (frozen pf.pctl) of all measured A1 OFF requests",
+                              "sampler_off_median": pf.pctl(off_all, 50) if off_all else None,
+                              "sampler_on_median": pf.pctl(on_all, 50) if on_all else None,
+                              "n_off": len(off_all), "n_on": len(on_all),
+                              "per_request_file": "reports/x1/<plat>/preflight/a1_requests.json (git-ignored)"},
+            "legacy_rev4_point_rule": legacy | {"gating": False,
+                                                "note": "frozen rev 4 rule on the pooled A1 requests; reported only (A1.4)"},
+            "a1_segments": [{k: v for k, v in s.items() if k not in ("ttft_ms", "warmup_ttft_ms", "reset")} for s in segs],
             "finished_utc": now()}
     p1 = {"platform": plat, "model": model, "revision": build_x1.PLATFORMS[plat]["revision"],
           "vllm_version": facts["vllm_version"], "process_start_time_seconds": facts["process_start_time_seconds"],
           "argv": argv, "weights": weights, "kv_tokens": facts["kv_tokens"], "launch_startup_s": launch["startup_s"],
-          "verified_by": "Claude under owner batch approval x1_local_restart (experiments/x1/approvals/)",
+          "verified_by": f"Claude under owner approval x1_preflight_a1_{plat} (Amendment A1); server started under x1_local_restart",
           "verified_utc": now()}
     return {"p1": p1, "phase1": rec}
 
@@ -387,6 +485,10 @@ def main() -> int:
     a = ap.parse_args()
     out = X1 / a.platform / "HOST_VERIFICATION.json"
     if a.phase == "phase1":
+        probs = a1_problems(a.platform)
+        if probs:
+            print("REFUSED:\n  " + "\n  ".join(probs), file=sys.stderr)
+            return 3
         anchor = None
         if a.platform != "g0m0":
             av = X1 / "g0m0" / "HOST_VERIFICATION.json"
@@ -395,6 +497,12 @@ def main() -> int:
                 return 3
             anchor = json.loads(av.read_text())["preflight"]["phase1"]["decode_tps_D"]
         r = phase1(a.platform, a.host, anchor)
+        import pin_x1_amendment
+        r["phase1"]["amendment"] = {"id": "A1", "document": "docs/PROTOCOL_X1_AMENDMENT_A1.md",
+                                    "manifest": "experiments/x1/AMENDMENT_A1_SHA256.json",
+                                    "manifest_sha256": pin_x1_amendment.manifest_sha(),
+                                    "approval": f"x1_preflight_a1_{a.platform}",
+                                    "rule": "A1 paired-segment TOST decides sampler_equivalence; rev 4 point rule reported only"}
         doc = {"platform": a.platform, "p1": r["p1"], "preflight": {"phase1": r["phase1"]}}
     else:
         doc = json.loads(out.read_text())

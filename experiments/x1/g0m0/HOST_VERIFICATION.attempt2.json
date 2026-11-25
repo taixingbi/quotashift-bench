@@ -1,0 +1,247 @@
+{
+ "platform": "g0m0",
+ "p1": {
+  "platform": "g0m0",
+  "model": "Qwen/Qwen2.5-7B-Instruct",
+  "revision": "a09a35458c702b33eeacc393d103063234e8bc28",
+  "vllm_version": "0.17.1",
+  "process_start_time_seconds": 1795583406.76,
+  "argv": {
+   "ok": true,
+   "model": "Qwen/Qwen2.5-7B-Instruct",
+   "unexpected": [],
+   "mismatched": [],
+   "env_python_is_pinned_env": true
+  },
+  "weights": {
+   "ok": true,
+   "files": {
+    "model-00001-of-00004.safetensors": {
+     "expected": "a1333e6293854747c481288ea83b348226af178dd565c49b6f9495ba1966aba7",
+     "actual": "a1333e6293854747c481288ea83b348226af178dd565c49b6f9495ba1966aba7"
+    },
+    "model-00002-of-00004.safetensors": {
+     "expected": "f5d25a2772cb825164a2a2c0fb6d51a87e282abf21e4dd75bc5cfb3cd0ea6185",
+     "actual": "f5d25a2772cb825164a2a2c0fb6d51a87e282abf21e4dd75bc5cfb3cd0ea6185"
+    },
+    "model-00003-of-00004.safetensors": {
+     "expected": "8efdec4c1bc12317ae1a38dc42b595ce777738a64deea3fcb8a0a91381bcdfd5",
+     "actual": "8efdec4c1bc12317ae1a38dc42b595ce777738a64deea3fcb8a0a91381bcdfd5"
+    },
+    "model-00004-of-00004.safetensors": {
+     "expected": "1a72d403cdf0c1ec3cb7f289f17b394a01e64394c2e9b3c0f94dbce3faf879bd",
+     "actual": "1a72d403cdf0c1ec3cb7f289f17b394a01e64394c2e9b3c0f94dbce3faf879bd"
+    }
+   }
+  },
+  "kv_tokens": 65936,
+  "launch_startup_s": 40.4,
+  "verified_by": "Claude under owner batch approval x1_local_restart (experiments/x1/approvals/)",
+  "verified_utc": "2026-11-25T11:50:07.632575+00:00"
+ },
+ "preflight": {
+  "phase1": {
+   "started_utc": "2026-11-25T11:43:42.778038+00:00",
+   "status": "fail",
+   "checks": {
+    "server_version": {
+     "status": "pass",
+     "value": "0.17.1"
+    },
+    "env_sources": {
+     "status": "pass",
+     "vllm": "0.17.1",
+     "torch": "2.10.0",
+     "transformers": "4.57.6",
+     "mistral_common": "1.10.0",
+     "sources": {
+      "engine/arg_utils.py": "846fe5ade00f9651e7cee487092c6cb69eb02f19b15906a8c68a3683678a179f",
+      "config/vllm.py": "405074725a88d63cf1221caf84261485f97d3f1d4eadb2837df78753fc8d5490",
+      "entrypoints/cli/serve.py": "64b4427d989d6e35b353d1d718075a1c6560e1c65026de8592a57c1567e7b0ec"
+     },
+     "sources_match_v5_pins": true
+    },
+    "model_load": {
+     "status": "pass",
+     "reasons": [],
+     "startup_s": 40.4,
+     "log_error_lines": []
+    },
+    "kv_capacity": {
+     "status": "pass",
+     "reasons": [],
+     "kv_tokens": 65936
+    },
+    "prefix_cache": {
+     "status": "pass",
+     "block_size": "16",
+     "num_gpu_blocks": "4121",
+     "gpu_memory_utilization": "0.8",
+     "enable_prefix_caching": "True",
+     "cache_dtype": "auto"
+    },
+    "prefix_cache_reset": {
+     "status": "pass",
+     "endpoint": "/reset_prefix_cache",
+     "verified": true,
+     "reset_http_status": 200,
+     "probe_hits_before_reset": 96.0,
+     "probe_hits_after_reset": 0.0
+    },
+    "tokenizer_parity": {
+     "status": "pass",
+     "ok": true,
+     "n": 60,
+     "mismatches": 0,
+     "examples": [],
+     "offline": "transformers AutoTokenizer"
+    },
+    "ram_idle": {
+     "status": "pass",
+     "reasons": [],
+     "min_mem_available": 27854733312,
+     "oom_kills": 0,
+     "swap_in": 0
+    },
+    "tokenization_isolated": {
+     "status": "pass",
+     "reasons": [],
+     "isolated_p50_ms": 12.45612499769777,
+     "isolated_p99_ms": 22.00866607017815,
+     "isolated_mean_ms": 12.93808726943098,
+     "rho_at_peak": 0.0,
+     "peak_request_rps": 0.0
+    },
+    "sampler_overhead": {
+     "status": "pass",
+     "reasons": [],
+     "overhead_core_frac": 0.000546
+    },
+    "sampler_equivalence": {
+     "status": "fail",
+     "reasons": [
+      "sampler shifts idle TTFT median by +1.23 ms"
+     ],
+     "median_on_ms": 59.151708032004535,
+     "median_off_ms": 57.91974999010563,
+     "diff_ms": 1.2319580418989062
+    },
+    "ttft_passes_cache_cold": {
+     "status": "pass",
+     "reasons": [],
+     "reset_before_off": {
+      "endpoint": "/reset_prefix_cache",
+      "verified": true,
+      "reset_http_status": 200,
+      "probe_hits_before_reset": 96.0,
+      "probe_hits_after_reset": 0.0
+     },
+     "reset_before_on": {
+      "endpoint": "/reset_prefix_cache",
+      "verified": true,
+      "reset_http_status": 200,
+      "probe_hits_before_reset": 96.0,
+      "probe_hits_after_reset": 0.0
+     },
+     "sampler_exited_by_itself": true
+    },
+    "clock_offset": {
+     "status": "pass",
+     "reasons": [],
+     "offset_s": -0.4204920530319214,
+     "bound_s": 0.05014598369598389
+    },
+    "smoke_mini_block": {
+     "rc": 0,
+     "t0": 1795607153.997261,
+     "t1": 1795607407.6324348,
+     "rate": 200,
+     "reps": 2,
+     "runtime_s": 60,
+     "gates": {
+      "backend_error_rate": "pass",
+      "http_400_rate": "pass",
+      "admission_rate": "pass",
+      "competitor_completion": "pass",
+      "primary_metric_present": "pass",
+      "tokenized_context": "pass",
+      "planned_vs_reported_tokens": "pass",
+      "provenance": "pass",
+      "victim_latency_censoring": "pass",
+      "arrival_coverage": "pass",
+      "realized_output_equals_authorized": "pass",
+      "cap_configured": "pass",
+      "occupancy_reconstruction": "pass",
+      "gateway_timestamp_alignment": "pass"
+     },
+     "failed_gates": [],
+     "flagged_gates": [],
+     "status": "pass",
+     "stderr_tail": ""
+    }
+   },
+   "decode_tps_D": 50.86872774432933,
+   "decode_tps_samples": [
+    50.7928030863217,
+    50.995897380280915,
+    50.76374030348843,
+    50.91628810314044,
+    50.86872774432933
+   ],
+   "speed_factor": 1.0,
+   "anchor_decode_tps": 50.86872774432933,
+   "clock_offset_s": -0.4204920530319214,
+   "clock_bound_s": 0.05014598369598389,
+   "ttft_floor_ms": {
+    "median_rule": "nearest-rank p50 (frozen pf.pctl, as the equivalence check)",
+    "sampler_off_median": 57.91974999010563,
+    "sampler_on_median": 59.151708032004535,
+    "sampler_off_ms": [
+     105.47287506051362,
+     63.05245799012482,
+     61.54362496454269,
+     53.479709080420434,
+     62.54241697024554,
+     60.80345902591944,
+     66.77579099778086,
+     58.61295899376273,
+     57.91974999010563,
+     56.040416937321424,
+     58.28766606282443,
+     55.33112492412329,
+     57.447792030870914,
+     54.74437493830919,
+     65.46345795504749,
+     55.87504094000906,
+     56.022124947048724,
+     55.10104191489518,
+     60.34975009970367,
+     55.76045892667025
+    ],
+    "sampler_on_ms": [
+     108.72087499592453,
+     62.0230829808861,
+     73.5640829661861,
+     60.76191703323275,
+     60.963166994042695,
+     57.2610420640558,
+     62.16620793566108,
+     61.9447500212118,
+     59.151708032004535,
+     57.03433393500745,
+     58.219792088493705,
+     61.09791703056544,
+     54.412500001490116,
+     60.96037500537932,
+     57.5387499993667,
+     58.63216705620289,
+     61.839791014790535,
+     57.24620900582522,
+     50.06112495902926,
+     53.26383304782212
+    ]
+   },
+   "finished_utc": "2026-11-25T11:50:07.632562+00:00"
+  }
+ }
+}
