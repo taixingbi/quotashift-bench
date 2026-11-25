@@ -46,3 +46,10 @@ reports/x2/g1m0/
 reports/x2/g1m1/
 .x2_inputs/
 results/x2_*/
+
+# state bootstrap: local suffix + plan files (never committed)
+infra/state-bootstrap/.bucket_suffix
+infra/state-bootstrap/*.tfplan
+infra/terraform/*.tfplan
+infra/terraform/backend.hcl
+.local-archive/

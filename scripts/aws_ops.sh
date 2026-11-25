@@ -8,6 +8,11 @@ set -euo pipefail
 ACTION="${1:?action}"; ENVIRONMENT="${2:?env (dev|research)}"
 TF="terraform -chdir=infra/terraform"
 VARS="-var-file=envs/${ENVIRONMENT}.tfvars${QUOTASHIFT_MODEL:+ -var-file=envs/${ENVIRONMENT}.${QUOTASHIFT_MODEL}.tfvars}"   # X1: QUOTASHIFT_MODEL=m1-mistral
+# X2: QUOTASHIFT_OVERLAYS="x2" (Qwen) or "x2 m1-mistral" (Mistral); each must exist as envs/<env>.<overlay>.tfvars
+for O in ${QUOTASHIFT_OVERLAYS:-}; do
+  [[ "$O" =~ ^[a-z0-9-]+$ && -f "infra/terraform/envs/${ENVIRONMENT}.${O}.tfvars" ]] || { echo "REFUSED: unknown overlay '$O'" >&2; exit 3; }
+  VARS="$VARS -var-file=envs/${ENVIRONMENT}.${O}.tfvars"
+done
 
 gate() {
   if [[ "${QUOTASHIFT_APPROVED:-}" != "$1" ]]; then

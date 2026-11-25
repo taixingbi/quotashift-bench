@@ -245,3 +245,13 @@ def test_readiness_stats_and_no_address_leak():
     assert nr.IPV4.search("10.0.0.1") and not nr.IPV4.search("x2-g0-qwen")
     for f in (REPO / "reports" / "x2" / "readiness").glob("*.json"):
         assert not nr.IPV4.search(f.read_text()), f
+
+
+def test_overlays_are_layered_in_order_and_unknown_ones_refused(tmp_path):
+    env = _bins(tmp_path)
+    r, log = _run(env, "plan", "research", QUOTASHIFT_OVERLAYS="x2 m1-mistral")
+    plan = next(x for x in log if x.startswith("terraform") and " plan " in x)
+    assert plan.index("envs/research.tfvars") < plan.index("envs/research.x2.tfvars") < plan.index("envs/research.m1-mistral.tfvars")
+    r, log = _run(_bins(tmp_path / "z" if (tmp_path / "z").mkdir() is None else tmp_path), "plan", "research",
+                  QUOTASHIFT_OVERLAYS="x2 ../../etc")
+    assert r.returncode == 3 and "unknown overlay" in r.stderr
