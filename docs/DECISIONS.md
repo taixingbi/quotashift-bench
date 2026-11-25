@@ -307,3 +307,22 @@ A1–A9 results and controls are unchanged. No v4 GPU run is made before owner a
   - G1 contrasts that carry a flag are reported as "GPU+host, host-limited".
 - **Cost.** Recalculated AWS cost ≈ $36 planned, $51 pessimistic.
 - **Not done:** no provisioning, Terraform apply, restart, download or GPU run.
+
+## ADR-X1-R4 — X1 draft rev 4: two-phase preflight, observable load criteria, tokenization rationale; X1-B prepared (2026-11-24)
+- **Owner review of rev 3.**
+  - X1-A approved conditionally, for final revisions; X1-B preparation approved.
+  - Kept: g6.xlarge, fp16, vLLM 0.17.1, n = 24 on X-a/X-d (n = 10 elsewhere), the 1.25× threshold, the optional 4-core diagnostic, and the power, cost and statistical rules.
+- **Preflight ordering.**
+  - Phase 1 runs before calibration: model load, KV capacity, idle RAM, isolated tokenization latency, idle TTFT floor, sampler on/off equivalence.
+  - Phase 2 runs after calibration A and before calibration B, at the calibrated high rate: CPU and RAM under load, tokenization capacity.
+- **Model loading.** Failure is judged on observable serving failure or identity mismatch only. WARNING lines are never relevant. ERROR/Traceback lines on a healthy server only flag for owner review.
+- **Tokenization.** The rev 3 "p99 > 50 ms during a concurrency-8 burst" mixed per-request cost with queueing. It is replaced by:
+  - isolated p99 ≤ 25 ms (flag > 2 × G0);
+  - utilisation ρ = λ_peak × E[S] ≤ 0.10 (the 10× rule, justified by the M/G/1 wait ≤ 0.11 E[S]);
+  - an open-loop burst at 10 × λ_peak that is sustained (≥ 95%), with p99 excess ≤ 10 ms (flag > 5 ms).
+- **Preserved.** RAM ≥ 1 GiB, zero OOM kills, KV ≥ 20,480 tokens.
+- **Sampler.** `scripts/x1_host_sampler.py` measured 0.046% of one core and 12.6 MiB on gpu-node-2 (60 s, read-only). The fail threshold is 1% of a core. A load check (sampler on/off idle TTFT) runs in Phase 1.
+- **X1-B.**
+  - `docs/X1_IAM_MIGRATION_CHECKLIST.md`, plus `infra/iam/*.json`: Access Analyzer reports 0 findings.
+  - `aws_ops.sh` refuses root credentials for every action except `stop-gpu`.
+  - No credential was created, deactivated or rotated.

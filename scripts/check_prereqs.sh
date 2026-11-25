@@ -1,16 +1,18 @@
 #!/usr/bin/env bash
 # READ-ONLY preflight before requesting apply approval. No resources created or modified.
-# Verifies identity, G/VT vCPU quota, g5.2xlarge availability, and the ECS GPU AMI.
+# Verifies identity (refuses ROOT), G/VT vCPU quota, g6.xlarge availability (X1 G1), and the ECS GPU AMI.
 set -euo pipefail
 REGION="${AWS_REGION:-us-east-1}"
 echo "== caller identity (expect a least-privilege IAM identity, NOT root keys) =="
-aws sts get-caller-identity
-echo "== Running On-Demand G and VT instances vCPU quota (L-DB2E81BA); g5.2xlarge needs 8 =="
+ARN="$(aws sts get-caller-identity --query Arn --output text)"
+if [[ "$ARN" == *":root" ]]; then echo "FAIL: credentials are the account ROOT user; see docs/X1_IAM_MIGRATION_CHECKLIST.md" >&2; exit 3; fi
+echo "caller is not root: ${ARN##*:}"
+echo "== Running On-Demand G and VT instances vCPU quota (L-DB2E81BA); g6.xlarge needs 4 (X1: no increase requested) =="
 aws service-quotas get-service-quota --service-code ec2 --quota-code L-DB2E81BA --region "$REGION" \
   --query 'Quota.Value' --output text || echo "quota lookup failed (check permissions)"
-echo "== g5.2xlarge offerings in $REGION =="
+echo "== g6.xlarge offerings in $REGION =="
 aws ec2 describe-instance-type-offerings --location-type availability-zone \
-  --filters Name=instance-type,Values=g5.2xlarge --region "$REGION" \
+  --filters Name=instance-type,Values=g6.xlarge --region "$REGION" \
   --query 'InstanceTypeOfferings[].Location' --output text
 echo "== ECS GPU-optimized AMI (SSM recommended) =="
 aws ssm get-parameter --name /aws/service/ecs/optimized-ami/amazon-linux-2023/gpu/recommended/image_id \

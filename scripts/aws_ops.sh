@@ -16,6 +16,21 @@ gate() {
 }
 out() { $TF output -raw "$1"; }
 
+# X1-B (least-privilege migration): never operate with the account ROOT user. `stop-gpu` stays allowed with any
+# identity because it only reduces cost. The ARN is not printed (it contains the account id).
+refuse_root() {
+  local arn
+  arn="$(aws sts get-caller-identity --query Arn --output text 2>/dev/null || true)"
+  if [[ -z "$arn" ]]; then
+    echo "REFUSED: cannot determine the AWS caller identity (configure the quotashift-x1 profile)." >&2; exit 3
+  fi
+  if [[ "$arn" == *":root" ]]; then
+    echo "REFUSED: the active AWS credentials are the account ROOT user. Use the least-privilege, temporary-credential" \
+         "profile from docs/X1_IAM_MIGRATION_CHECKLIST.md (e.g. AWS_PROFILE=quotashift-x1-operator)." >&2; exit 3
+  fi
+}
+[[ "$ACTION" == "stop-gpu" ]] || refuse_root
+
 case "$ACTION" in
   plan)        # read-only AWS API calls; no resources created
     $TF init -backend-config=backend.hcl -input=false

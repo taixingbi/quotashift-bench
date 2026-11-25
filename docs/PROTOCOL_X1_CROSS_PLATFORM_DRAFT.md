@@ -1,17 +1,36 @@
-# Protocol X1: independent cross-model and cross-GPU validation (DRAFT rev 3, not frozen, not run)
+# Protocol X1: independent cross-model and cross-GPU validation (DRAFT rev 4, not frozen, not run)
 
-**Status:** draft rev 3 for owner review, 2026-11-24.
-- **Supersedes:** rev 2 (commit `32f8994`).
-- **Incorporates the owner's decision of 2026-11-24:**
-  - G1 runs on **AWS EC2 g6.xlarge**, in us-east-1, with 4 vCPU, 16 GiB system RAM and 1 × NVIDIA L4. This **replaces** the earlier preference for g6.2xlarge.
-  - **No 8-vCPU quota increase** will be requested.
-  - Kept: the full 2 × 2 design, fp16, the existing model revisions, **n = 24 for X-a and X-d**, and the **primary 1.25× threshold**.
-- **Not yet done:** no hardware provisioned, no model downloaded, no restart, nothing frozen. Every host, GPU or AWS step follows §10, and each stage needs its own approval.
+**Status:** draft rev 4 for owner review, 2026-11-24.
+- **Supersedes:** rev 3 (commit `a151327`).
+- **Owner review of rev 3:**
+  - X1-A approved **conditionally**, for final protocol revisions;
+  - preparation of the X1-B least-privilege IAM migration approved.
+- **Kept:**
+  - g6.xlarge (4 vCPU, 16 GiB, 1 × L4);
+  - fp16 and vLLM 0.17.1;
+  - n = 24 for X-a and X-d, n = 10 elsewhere;
+  - X1-H1 threshold 1.25×;
+  - the optional, separately gated 4-core diagnostic;
+  - the power analysis, the cost limits and the statistical rules (all unchanged).
+- **Rev 4 resolves the rev 3 review items:**
+  - **Preflight ordering:** preflight is split into Phase 1 and Phase 2 (§9.1).
+  - **Model-loading failure conditions:** failure is judged on observable serving failure, not log text (§9.1).
+  - **Tokenization thresholds:** rationale given; isolated latency is separated from burst queueing (§9.1).
+  - **Sampler distortion:** measured (§9.2).
+  - **Staged plan:** updated (§10).
+- **Implementation (not frozen):**
+  - `src/quotashift/x1/preflight.py` (rules);
+  - `src/quotashift/x1/tokenize_probe.py`;
+  - `scripts/x1_host_sampler.py`.
+  
+  Tests are in `tests/unit/test_x1_*.py` and `tests/integration/test_x1_tokenize_probe.py`.
+- **Not yet done:** no hardware provisioned, no model downloaded, no restart, nothing frozen. Every host, GPU or AWS step follows §10.
 - **Unchanged by X1:** the v4/v5 results and every frozen v5 artifact.
 
 Companion documents:
-- `docs/X1_P0_REPORT.md` (P0 research, with an addendum for this decision);
+- `docs/X1_P0_REPORT.md`;
 - `docs/X1_M1_COMPATIBILITY_AUDIT.md`;
+- `docs/X1_IAM_MIGRATION_CHECKLIST.md`;
 - `reports/x1/P0_POWER.md`.
 
 ## 1. Purpose (unchanged)
@@ -179,27 +198,85 @@ low power, not as absence of the mechanism.
 - **Export.** The existing sanitizer, with AWS identifiers (account, instance, VPC IDs and private addresses) added to the regex gate before any AWS stage.
 - **Isolation.** Owned and private only. AWS endpoints stay inside the isolated VPC under `*.quotashift.internal`.
 
-## 9. Preflight and smoke (per platform and model, before calibration)
+## 9. Preflight and smoke (per platform and model)
 
-### 9.1 Preflight checks (new in rev 3; thresholds preregistered, identical on all platforms)
+### 9.1 Preflight, split into two phases (resolves the ordering dependency)
 
-| Check | How measured | Fail (platform not admissible) | Flag |
-|---|---|---|---|
-| **Model-loading success** | Server reaches "Application startup complete" with no ERROR/Traceback lines; `/v1/models` lists the pinned revision; the snapshot weight hash equals the pinned SHA-256; load wall-time recorded | any ERROR or Traceback, hash mismatch, or no startup within 30 min | load time > 2× G0's for the same model |
-| **GPU KV capacity** | `vllm:cache_config_info` (num_gpu_blocks × block_size) and the "GPU KV cache size" log line | KV tokens < **20,480**, i.e. 2 × (C = 32 × largest X1 request of 320 tokens) | KV tokens < 4 × the observed direct-path peak demand in calibration A |
-| **Available system RAM** | `/proc/meminfo` `MemAvailable` after model load, and its minimum during the smoke mini-block; `/proc/vmstat` `oom_kill` and `pswpin` deltas | any OOM kill; MemAvailable < 1.0 GiB at any sample | MemAvailable < 2.0 GiB; any swap-in |
-| **CPU utilisation** | 1 s samples during the smoke mini-block at the **high** operating point: host total from `/proc/stat`; API-server and EngineCore CPU time from `/proc/<pid>/stat` | host total ≥ 95% for ≥ 10% of samples | API server ≥ 85% of one core for ≥ 5% of samples; host total ≥ 80% for ≥ 10% |
-| **Tokenization throughput** | `POST /tokenize` burst (CPU only): the frozen prompt templates of every shape, 1,000 requests at concurrency 8; p50/p99 latency and requests/s | throughput < 10 × the platform's peak offered request rate at the high operating point, or p99 > 50 ms | p99 > 20 ms |
-| **Idle TTFT floor** (descriptive) | One request per shape on an idle server, repeated 20 times | — | recorded for the cross-platform comparison |
+The rev 3 CPU check ran "at the **high** operating point", and the tokenization rule used "the peak offered request
+rate at the high operating point". Both exist only **after** calibration A. Rev 4 therefore splits preflight in two:
 
-- **Where results go.** Preflight results go in the platform's P1 record (`HOST_VERIFICATION_<platform>.json`) and are frozen with it.
-- **Tokenization throughput is a request to the server.** It is CPU-only and generates no tokens, but it still runs only within an approved stage.
+- **Phase 1:** after the server starts, before any calibration.
+- **Phase 2:** after calibration A has chosen the platform's low and high rates, and before calibration B. Phase 2 uses those rates.
 
-### 9.2 Per-arm host telemetry and flag gates (during calibration and the main stage)
+Both phases must pass, or flag, before calibration B. A fail in either phase makes the platform **not admissible**:
+it is reported, never replaced. Calibration-A arms carry the §9.2 telemetry, so an overloaded host is visible before
+Phase 2.
+
+**Thresholds** are module constants in `src/quotashift/x1/preflight.py`, unit-tested, and frozen at X1-G. They are
+identical on all platforms.
+
+| Phase | Check | Measurement | Fail (not admissible) | Flag (reported) |
+|---|---|---|---|---|
+| 1 | **Model loading** (§9.1.1) | `/health`; "Application startup complete"; `/v1/models`; snapshot weight SHA-256; argv vs template; one fixed-length smoke generation per shape; load wall-time | **Observable** failure only: not healthy; startup not completed; pinned revision not listed; hash mismatch; argv ≠ template; smoke generation wrong length, non-finite logprobs or empty; no healthy server within 30 min | ERROR/CRITICAL/Traceback lines on an otherwise healthy server (owner review); load time > 2 × G0 for the same model |
+| 1 | **GPU KV capacity** (preserved) | `vllm:cache_config_info` num_gpu_blocks × block_size | KV < **20,480** tokens | — (Phase 2: KV < 4 × the direct-path peak KV demand seen in calibration A) |
+| 1 | **System RAM, idle** (preserved) | `MemAvailable` after load; `oom_kill`; `pswpin` | any OOM kill; MemAvailable < **1 GiB** | < 2 GiB; any swap-in |
+| 1 | **Isolated tokenization latency** | 200 sequential `/tokenize` requests over the frozen prompt templates, one in flight (no queueing) | p99 > **25 ms** | p99 > 2 × G0's p99 for the same model (with a 1 ms floor) |
+| 1 | **Idle TTFT floor** (descriptive) | 20 single requests per shape, idle server | — | — (recorded) |
+| 1 | **Sampler on/off equivalence** (§9.2) | the idle TTFT floor, measured twice: sampler running vs stopped | difference in median > 1 ms **and** > 2% | — |
+| 2 | **CPU under the high load** | §9.2 sampler during a 2-seed smoke mini-block at the calibrated **high** rate | host CPU ≥ 95% for ≥ 10% of samples | API server ≥ 85% of a core for ≥ 5% of samples; host ≥ 80% for ≥ 10% |
+| 2 | **RAM under load** (preserved) | the same mini-block | any OOM kill; MemAvailable < 1 GiB | < 2 GiB; any swap-in |
+| 2 | **Tokenization capacity** | utilisation ρ = (peak offered request rate at the high rate) × (mean isolated latency from Phase 1); then an open-loop `/tokenize` burst at **10 × peak** for 30 s | ρ > **0.10**; burst sustains < 95% of the offered rate; burst p99 − isolated p99 > **10 ms** | burst p99 − isolated p99 > 5 ms |
+
+#### 9.1.1 Model loading: what can and cannot fail a platform
+
+A serving instance is judged on **observable behaviour**, never on log text alone.
+
+- **Never relevant:** WARNING lines. Examples seen on the real hosts:
+  - `Casting torch.bfloat16 to torch.float16`;
+  - the 131 per-weight dtype warnings of vLLM 0.34.0;
+  - `FlashInfer kernels are disabled`;
+  - torch deprecation notices;
+  - "unauthenticated requests to the HF Hub".
+- **Flag only:** ERROR, CRITICAL or Traceback lines on a server that is otherwise healthy and passes the smoke generation. They are recorded for owner review before calibration. A crash that matters always shows up in one of the observable fail conditions.
+- **Fail:** the conditions in the table above.
+
+#### 9.1.2 Tokenization thresholds: rationale (isolated latency vs burst queueing)
+
+The two measurements answer different questions and are evaluated separately (`tokenization_check`).
+
+1. **Isolated latency** is the per-request CPU cost of tokenizing one prompt, plus HTTP overhead, with nothing
+   queued. It is an upper bound on what tokenization adds to **every** request's TTFT.
+   - In D vs S both arms send 64-token prompts, so a constant tokenization cost largely cancels in the attack/control ratio. The isolated check therefore guards against a *pathologically slow* platform: for example a slow tokenizer fallback, or the wrong tokenizer mode.
+   - **Fail at p99 > 25 ms.** That is about 30% of the about 82 ms idle victim TTFT in v5. Beyond it, user-facing TTFT on that platform would be dominated by CPU-side work, so it would no longer be the system under study.
+   - **Flag at > 2 × G0's value.** This makes a host-induced slowdown visible even when the absolute threshold is met.
+   - Rev 3's single "p99 > 50 ms during a concurrency-8 burst" mixed this cost with queueing. Under a closed-loop burst, latency includes waiting behind up to 7 other requests, so a 50 ms burst p99 could hide a 6 ms service time or a 45 ms one. It is therefore replaced.
+2. **Burst queueing** asks whether the API server has enough tokenization *capacity* at the platform's peak load.
+   - **Capacity rule:** utilisation ρ = λ_peak × E[S] ≤ 0.10. This is the rev 3 "10× headroom", now stated as a utilisation. For an M/G/1 queue the mean wait is W = ρ/(1−ρ) · E[S²]/(2E[S]). At ρ = 0.10 that is 0.056 E[S] for deterministic and 0.111 E[S] for exponential service times. Tokenization queueing is then a small fraction of one tokenization, which is itself bounded by part 1.
+   - **Validating test:** the queueing model is an assumption, so it is checked empirically. An **open-loop** burst at 10 × λ_peak, at fixed arrival times, must be **sustained** (≥ 95% of the offered rate completed) and must not raise p99 by more than 10 ms over the isolated p99 (flag above 5 ms).
+   - The burst must be open-loop. A closed-loop burst slows its own arrivals when the server slows, and so hides saturation.
+   - **Limit:** `/tokenize` exercises the API server's tokenizer path but not the generation scheduler. The per-arm §9.2 telemetry covers the generation path.
+
+### 9.2 Per-arm host telemetry and flag gates; sampler distortion check
+
+- **Sampler.** `scripts/x1_host_sampler.py`: standard library, read-only `/proc`, 1 Hz, `nice 19`, output to stdout. It identifies the API server by its Python executable plus `vllm … serve` argv, which excludes the `bash -c` wrapper, and EngineCore by name.
 - **`host_cpu_headroom` (flag):** API server ≥ 85% of one core for ≥ 5% of the arm's samples, **or** host total ≥ 80% for ≥ 10%.
-- **`host_ram_headroom` (flag):** MemAvailable < 2.0 GiB at any sample, or any swap-in during the arm.
-- **Fail severity:** an OOM kill during an arm → that block fails (v5 rerun rule applies).
-- **Sampler cost.** The sampler runs on the GPU host at 1 Hz, standard library only, and its own CPU use is recorded.
+- **`host_ram_headroom` (flag):** MemAvailable < 2 GiB at any sample, or any swap-in.
+- **Fail severity:** an OOM kill during an arm → the block fails (v5 rerun rule).
+- **Sampler cost:** a sampler using ≥ 1% of one core during an arm → that arm's host telemetry is invalid (`sampler_overhead_check`). It reports its own CPU in every run.
+
+**Measured distortion** (2026-11-24, 20:06–20:07; gpu-node-2, the X1 G0 host; idle Mistral 0.34.0 server; 60 s; read-only):
+
+| Quantity | Value |
+|---|---|
+| Sampler CPU | **0.0278 s in 60.0 s = 0.046% of one core** (≈ 0.012% of host capacity on a 4-vCPU g6.xlarge) |
+| Sampler memory | 12.6 MiB max RSS |
+| Tick spacing | 1.000 s (max 1.000 s) |
+| Processes found | API server and EngineCore found; the wrapper was excluded |
+
+- **Why it cannot distort materially:**
+  - Every tick reads about six small `/proc` files. It does not ptrace, signal or lock the vLLM processes.
+  - It writes no files on the host and uses no GPU or network beyond the ssh stdout stream.
+- **Still to check under load:** load-dependent effects are covered by the Phase 1 sampler on/off TTFT equivalence check, which runs during the approved X1-D stage.
 
 ### 9.3 Smoke (unchanged)
 1. Verified prefix-cache reset probe.
@@ -216,17 +293,17 @@ instance can run at a time. The plan needs only one.
 | Stage | What happens | Touches | Cost (g6.xlarge) | Approval token |
 |---|---|---|---|---|
 | X0 | P0 research | read-only | $0 | done |
-| **X1-A** | Owner review of rev 3; ADR-X1 | docs | $0 | review |
-| **X1-B** | Replace the root access keys with a least-privilege IAM identity | AWS IAM | $0 | owner action |
+| **X1-A** | Owner review of rev 4 (conditionally approved for final revisions); ADR-X1 | docs | $0 | review |
+| **X1-B** | Least-privilege, temporary-credential migration per `docs/X1_IAM_MIGRATION_CHECKLIST.md`. **Every create, deactivate or rotate step is performed by the owner**, with explicit confirmation. `aws_ops.sh` already refuses root credentials | AWS IAM | $0 | owner action, step by step |
 | **X1-C** | gpu-node-2: create the 0.17.1 environment; download both models (≈ 30 GB) | local host | $0 | `x1_local_env` |
-| **X1-D** | gpu-node-2: restart with the template; P1 and §9.1 preflight per model | local host | $0 | `x1_local_restart` |
+| **X1-D** | gpu-node-2: restart with the template; P1 and **preflight Phase 1** per model (incl. the sampler on/off check); smoke | local host | $0 | `x1_local_restart` |
 | **X1-E** | AWS prep in the repo: Terraform variables (`g6.xlarge`, AMI pinned, image digest 0.17.1, host-telemetry sampler, exporter, private target profile, AWS identifiers in the export gate); `terraform fmt`/`validate`/`test`/read-only `plan` | repo + read-only AWS | $0 | review |
 | ~~X1-F~~ | ~~quota increase~~: **not requested** (owner decision) | — | — | — |
 | **X1-G** | Freeze Commit 1 (protocol, analysis code, schedule generator, preflight thresholds) | repo | $0 | `x1_freeze1` |
 | **X1-H** | P2 tokenizer trace freeze for both models on gpu-node-2 → Freeze Commit 2 | local host | $0 | `x1_p2` |
-| **X1-I** | G0 calibration A + B, both models | local GPU | $0 | `x1_g0_calibration` |
+| **X1-I** | G0, per model: calibration A → **preflight Phase 2** at the chosen high rate → calibration B. Stop if Phase 2 fails | local GPU | $0 | `x1_g0_calibration` |
 | **X1-J** | `aws_ops.sh deploy` (reviewed plan only) | AWS | NAT ≈ $1.08/day plus storage while applied | `deploy` |
-| **X1-K** | `start-gpu`: P1 and §9.1 preflight for both models, smoke, calibration A + B → `stop-gpu` | AWS GPU | ≈ 6.5 GPU-h ≈ **$5.23** | `start-gpu` (x1_g1_calibration) |
+| **X1-K** | `start-gpu`, per model: P1 + **Phase 1** + smoke → calibration A → **Phase 2** → calibration B → `stop-gpu`. Stop at any fail | AWS GPU | ≈ 6.5 GPU-h ≈ **$5.23** | `start-gpu` (x1_g1_calibration) |
 | **X1-L** | Freeze Commit 3 (rates, pools, predictions, tolerances for all 4 platforms) | repo | $0 | `x1_freeze3` |
 | **X1-M** | G0 main: P0-anchor, then P-M (≈ 7.3 h each) | local GPU | $0 | `x1_g0_main` (per platform) |
 | **X1-N** | G1 main: P-G, then P-MG (14.7 h of blocks; ≈ 19.1 GPU-h with the 1.3 budget rule) → `stop-gpu` | AWS GPU | ≈ **$15.35** | `start-gpu` (x1_g1_main) |
@@ -251,6 +328,6 @@ mode, the stack existing 120 h, 60 GB through the NAT, 120 GB EBS and 2 GB of lo
 Cost Explorer is not used; its calls are billed and gated.
 
 ## 11. Open items for the owner
-1. Approve stage X1-A (this revision) and the IAM change X1-B before any AWS stage.
-2. Confirm the preflight thresholds in §9.1. They are proposals and are frozen at X1-G.
-3. Confirm the host-only diagnostic (§2.2, item 4) stays optional and needs separate approval.
+1. Review the rev 4 resolutions in §9.1–9.2, including the replacement of the rev 3 "p99 > 50 ms during a concurrency-8 burst" check by isolated p99 > 25 ms, plus ρ ≤ 0.10, plus an open-loop burst excess ≤ 10 ms.
+2. Carry out X1-B step by step, following the checklist. No credential is created, deactivated or rotated automatically.
+3. Final approval of X1-A, after which X1-G (Freeze Commit 1) can be requested.

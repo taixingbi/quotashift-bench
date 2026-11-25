@@ -1,0 +1,115 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "ReadOnlyPreflightAndPlan",
+      "Effect": "Allow",
+      "Action": [
+        "sts:GetCallerIdentity",
+        "ec2:Describe*",
+        "autoscaling:Describe*",
+        "ecs:Describe*",
+        "ecs:List*",
+        "ecr:Describe*",
+        "ecr:List*",
+        "logs:Describe*",
+        "servicediscovery:Get*",
+        "servicediscovery:List*",
+        "budgets:ViewBudget",
+        "pricing:GetProducts",
+        "pricing:DescribeServices",
+        "servicequotas:GetServiceQuota",
+        "servicequotas:ListServiceQuotas",
+        "servicequotas:ListRequestedServiceQuotaChangeHistoryByQuota",
+        "access-analyzer:ValidatePolicy"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "PublicAmiParameters",
+      "Effect": "Allow",
+      "Action": [
+        "ssm:GetParameter",
+        "ssm:GetParameters"
+      ],
+      "Resource": "arn:aws:ssm:us-east-1::parameter/aws/service/ecs/optimized-ami/*"
+    },
+    {
+      "Sid": "ReadProjectIam",
+      "Effect": "Allow",
+      "Action": [
+        "iam:GetRole",
+        "iam:GetRolePolicy",
+        "iam:ListRolePolicies",
+        "iam:ListAttachedRolePolicies",
+        "iam:GetInstanceProfile",
+        "iam:ListInstanceProfilesForRole"
+      ],
+      "Resource": [
+        "arn:aws:iam::*:role/quotashift-*",
+        "arn:aws:iam::*:instance-profile/quotashift-*"
+      ]
+    },
+    {
+      "Sid": "ReadProjectBucketsAndState",
+      "Effect": "Allow",
+      "Action": [
+        "s3:ListBucket",
+        "s3:GetObject",
+        "s3:GetBucketLocation",
+        "s3:GetBucketPolicy",
+        "s3:GetBucketPublicAccessBlock",
+        "s3:GetBucketOwnershipControls",
+        "s3:GetBucketTagging",
+        "s3:GetEncryptionConfiguration",
+        "s3:GetBucketVersioning",
+        "s3:GetLifecycleConfiguration"
+      ],
+      "Resource": "arn:aws:s3:::quotashift-*"
+    },
+    {
+      "Sid": "TerraformStateLock",
+      "Effect": "Allow",
+      "Action": [
+        "s3:PutObject",
+        "s3:DeleteObject"
+      ],
+      "Resource": "arn:aws:s3:::quotashift-tfstate-*/*.tflock"
+    },
+    {
+      "Sid": "DenyOutsideUsEast1",
+      "Effect": "Deny",
+      "NotAction": [
+        "sts:GetCallerIdentity",
+        "pricing:GetProducts",
+        "pricing:DescribeServices",
+        "budgets:ViewBudget",
+        "iam:Get*",
+        "iam:List*",
+        "access-analyzer:ValidatePolicy",
+        "s3:GetBucketLocation"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "StringNotEquals": {
+          "aws:RequestedRegion": "us-east-1"
+        }
+      }
+    },
+    {
+      "Sid": "DenyCostExplorerAndCredentialChanges",
+      "Effect": "Deny",
+      "Action": [
+        "ce:*",
+        "iam:CreateUser",
+        "iam:CreateAccessKey",
+        "iam:UpdateAccessKey",
+        "iam:DeleteAccessKey",
+        "iam:CreateLoginProfile",
+        "organizations:*",
+        "account:*"
+      ],
+      "Resource": "*"
+    }
+  ]
+}
