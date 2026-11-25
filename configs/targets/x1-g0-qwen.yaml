@@ -1,0 +1,10 @@
+# X1 G0 target (g0m0): owner-operated RTX 3090 host gpu-node-2 on the private LAN (same practice as selfhost.yaml).
+# Served by scripts/x1_g0_server.sh under the X1 launch template (vLLM 0.17.1, dev mode for the verified cache reset).
+name: x1-g0-qwen
+kind: selfhost
+backend_url: http://192.168.86.176:8000
+model: Qwen/Qwen2.5-7B-Instruct
+model_revision: a09a35458c702b33eeacc393d103063234e8bc28
+max_model_len: 4096
+gpu_type: NVIDIA GeForce RTX 3090
+gpu_type_source: measured
