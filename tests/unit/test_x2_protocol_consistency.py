@@ -19,9 +19,14 @@ DOC = (REPO / "docs" / "PROTOCOL_X2_DRAFT.md").read_text()
 SPEC = (REPO / "docs" / "X2_INSTRUMENTATION_SPEC.md").read_text()
 
 
-def test_status_is_candidate_not_frozen():
-    assert "rev 2, FREEZE CANDIDATE" in DOC and "Not frozen" in DOC
-    assert not (REPO / "experiments" / "x2" / "FROZEN_SHA256.json").exists()
+def test_x2_freeze1_pins_exactly_the_reviewed_candidate():
+    """X2 Freeze Commit 1 (owner approval x2_freeze1, 2026-11-25) pinned the 6fc5707 candidate unchanged; the protocol
+    text keeps its rev 2 candidate header (the reviewed bytes are what is frozen)."""
+    assert "rev 2, FREEZE CANDIDATE" in DOC
+    m = json.loads((REPO / "experiments" / "x2" / "FROZEN_SHA256.json").read_text())
+    c = json.loads((REPO / "reports" / "x2" / "FREEZE_CANDIDATE_SHA256.json").read_text())
+    assert m["kind"] == "X2 Freeze Commit 1" and m["files"] == c["files"] and len(m["files"]) == 24
+    assert pin_x2.check() == []
 
 
 def test_platforms_and_revisions():
