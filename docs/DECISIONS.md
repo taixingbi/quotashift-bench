@@ -465,3 +465,13 @@ Written **before** the re-run, from the read-only forensic review of attempt 1 (
 - **Comparator.** Strict 95% would need K = 40 × 60.
 - **Status.** Explicitly post hoc. Both FAIL attempts stand and are never reclassified.
 - **Nothing frozen modified.** On approval, A1 is pinned in a separate manifest (`AMENDMENT_A1_SHA256.json`, token `x1_amend_a1`). One amended g0m0 run needs `x1_preflight_a1_g0m0`; a fail stops the platform with no retry.
+
+## ADR-X1-A1-RESULT — the single amended g0m0 Phase 1 run: FAIL under Amendment A1; stopped (2026-11-25)
+- **Run.** 07:32:00–07:54:40 EST on the same Qwen server (process start 1795583406.76, no restart), under A1 pinned at `a5543f2` (manifest `d99bdbae…`), approval `x1_preflight_a1_g0m0`.
+- **Measurements.** 48 segments × 80 measured requests (3,840 measured + 144 warm-ups), 0 errors; every reset and every sampler state verified.
+- **A1 sampler_equivalence: FAIL.**
+  - Mean pair difference ON − OFF = +0.853 ms (sd 1.691, SE 0.345, df 23).
+  - 90% CI **[+0.262, +1.445] ms** vs δ = 1.048 ms (2% of the 52.40 ms OFF median). The 95% CI [+0.139, +1.567] is reported only.
+- **Every other Phase 1 gate passes,** including `sampler_overhead` (0.055% of a core) and the smoke block (all 14 gates).
+- **Legacy rev 4 rule** (pooled, reported only, non-gating): would have passed (+0.58 ms).
+- **Consequence.** Per A1.6 the result is final. g0m0 is not admissible; no further attempt. Recorded as produced in `HOST_VERIFICATION.json`; attempts 1 and 2 unchanged.

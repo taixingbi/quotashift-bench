@@ -36,12 +36,12 @@
   },
   "kv_tokens": 65936,
   "launch_startup_s": 40.4,
-  "verified_by": "Claude under owner batch approval x1_local_restart (experiments/x1/approvals/)",
-  "verified_utc": "2026-11-25T11:50:07.632575+00:00"
+  "verified_by": "Claude under owner approval x1_preflight_a1_g0m0 (Amendment A1); server started under x1_local_restart",
+  "verified_utc": "2026-11-25T12:54:40.802995+00:00"
  },
  "preflight": {
   "phase1": {
-   "started_utc": "2026-11-25T11:43:42.778038+00:00",
+   "started_utc": "2026-11-25T12:32:00.228632+00:00",
    "status": "fail",
    "checks": {
     "server_version": {
@@ -99,62 +99,86 @@
     "ram_idle": {
      "status": "pass",
      "reasons": [],
-     "min_mem_available": 27854733312,
+     "min_mem_available": 27842060288,
      "oom_kills": 0,
      "swap_in": 0
     },
     "tokenization_isolated": {
      "status": "pass",
      "reasons": [],
-     "isolated_p50_ms": 12.45612499769777,
-     "isolated_p99_ms": 22.00866607017815,
-     "isolated_mean_ms": 12.93808726943098,
+     "isolated_p50_ms": 12.410374940373003,
+     "isolated_p99_ms": 17.05725002102554,
+     "isolated_mean_ms": 12.726026675081812,
      "rho_at_peak": 0.0,
      "peak_request_rps": 0.0
     },
     "sampler_overhead": {
      "status": "pass",
      "reasons": [],
-     "overhead_core_frac": 0.000546
+     "overhead_core_frac": 0.000554,
+     "sampler_exited_by_itself": true
     },
     "sampler_equivalence": {
      "status": "fail",
      "reasons": [
-      "sampler shifts idle TTFT median by +1.23 ms"
+      "90% CI [+0.262, +1.445] ms not inside (-1.048, +1.048) ms"
      ],
-     "median_on_ms": 59.151708032004535,
-     "median_off_ms": 57.91974999010563,
-     "diff_ms": 1.2319580418989062
-    },
-    "ttft_passes_cache_cold": {
-     "status": "pass",
-     "reasons": [],
-     "reset_before_off": {
-      "endpoint": "/reset_prefix_cache",
-      "verified": true,
-      "reset_http_status": 200,
-      "probe_hits_before_reset": 96.0,
-      "probe_hits_after_reset": 0.0
-     },
-     "reset_before_on": {
-      "endpoint": "/reset_prefix_cache",
-      "verified": true,
-      "reset_http_status": 200,
-      "probe_hits_before_reset": 96.0,
-      "probe_hits_after_reset": 0.0
-     },
-     "sampler_exited_by_itself": true
+     "rule": "X1-A1 paired-segment TOST",
+     "alpha": 0.05,
+     "k_pairs": 24,
+     "m_per_segment": 80,
+     "pair_diffs_ms": [
+      3.60812502913177,
+      4.611541051417589,
+      -0.12200104538351297,
+      0.3346250159665942,
+      -0.19987591076642275,
+      0.3102089976891875,
+      0.24445902090519667,
+      -0.06612506695091724,
+      0.17508305609226227,
+      0.08816597983241081,
+      -0.436166999861598,
+      0.19995891489088535,
+      3.2698330469429493,
+      -0.7992909522727132,
+      -0.1871250569820404,
+      0.0010830117389559746,
+      -0.0551670091226697,
+      -0.5054998910054564,
+      0.9725830750539899,
+      0.20954199135303497,
+      0.5552079528570175,
+      0.13395794667303562,
+      2.9927919385954738,
+      5.142249981872737
+     ],
+     "mean_diff_ms": 0.8532568366111567,
+     "sd_pair_diff_ms": 1.6907342944913244,
+     "se_ms": 0.3451196926773544,
+     "off_baseline_p50_ms": 52.40012495778501,
+     "delta_ms": 1.0480024991557002,
+     "ci90_ms": [
+      0.2617660216674329,
+      1.4447476515548805
+     ],
+     "ci95_ms_reported": [
+      0.13932235784869262,
+      1.5671913153736208
+     ],
+     "strict95_would_pass": false,
+     "amendment": "A1"
     },
     "clock_offset": {
      "status": "pass",
      "reasons": [],
-     "offset_s": -0.4204920530319214,
-     "bound_s": 0.05014598369598389
+     "offset_s": -0.5555003881454468,
+     "bound_s": 0.03421342372894287
     },
     "smoke_mini_block": {
      "rc": 0,
-     "t0": 1795607153.997261,
-     "t1": 1795607407.6324348,
+     "t0": 1795611030.054317,
+     "t1": 1795611280.802591,
      "rate": 200,
      "reps": 2,
      "runtime_s": 60,
@@ -180,68 +204,958 @@
      "stderr_tail": ""
     }
    },
-   "decode_tps_D": 50.86872774432933,
+   "decode_tps_D": 50.88898991212655,
    "decode_tps_samples": [
-    50.7928030863217,
-    50.995897380280915,
-    50.76374030348843,
-    50.91628810314044,
-    50.86872774432933
+    50.7298494964735,
+    50.92850360209721,
+    50.71162569184122,
+    50.88898991212655,
+    50.89120393920967
    ],
    "speed_factor": 1.0,
-   "anchor_decode_tps": 50.86872774432933,
-   "clock_offset_s": -0.4204920530319214,
-   "clock_bound_s": 0.05014598369598389,
+   "anchor_decode_tps": 50.88898991212655,
+   "clock_offset_s": -0.5555003881454468,
+   "clock_bound_s": 0.03421342372894287,
    "ttft_floor_ms": {
-    "median_rule": "nearest-rank p50 (frozen pf.pctl, as the equivalence check)",
-    "sampler_off_median": 57.91974999010563,
-    "sampler_on_median": 59.151708032004535,
-    "sampler_off_ms": [
-     105.47287506051362,
-     63.05245799012482,
-     61.54362496454269,
-     53.479709080420434,
-     62.54241697024554,
-     60.80345902591944,
-     66.77579099778086,
-     58.61295899376273,
-     57.91974999010563,
-     56.040416937321424,
-     58.28766606282443,
-     55.33112492412329,
-     57.447792030870914,
-     54.74437493830919,
-     65.46345795504749,
-     55.87504094000906,
-     56.022124947048724,
-     55.10104191489518,
-     60.34975009970367,
-     55.76045892667025
-    ],
-    "sampler_on_ms": [
-     108.72087499592453,
-     62.0230829808861,
-     73.5640829661861,
-     60.76191703323275,
-     60.963166994042695,
-     57.2610420640558,
-     62.16620793566108,
-     61.9447500212118,
-     59.151708032004535,
-     57.03433393500745,
-     58.219792088493705,
-     61.09791703056544,
-     54.412500001490116,
-     60.96037500537932,
-     57.5387499993667,
-     58.63216705620289,
-     61.839791014790535,
-     57.24620900582522,
-     50.06112495902926,
-     53.26383304782212
-    ]
+    "median_rule": "nearest-rank p50 (frozen pf.pctl) of all measured A1 OFF requests",
+    "sampler_off_median": 52.40012495778501,
+    "sampler_on_median": 52.979832980781794,
+    "n_off": 1920,
+    "n_on": 1920,
+    "per_request_file": "reports/x1/<plat>/preflight/a1_requests.json (git-ignored)"
    },
-   "finished_utc": "2026-11-25T11:50:07.632562+00:00"
+   "legacy_rev4_point_rule": {
+    "status": "pass",
+    "reasons": [],
+    "median_on_ms": 52.979832980781794,
+    "median_off_ms": 52.40012495778501,
+    "diff_ms": 0.5797080229967833,
+    "gating": false,
+    "note": "frozen rev 4 rule on the pooled A1 requests; reported only (A1.4)"
+   },
+   "a1_segments": [
+    {
+     "pair": 0,
+     "arm": "off",
+     "position": 0,
+     "reset_verified": true,
+     "sampler_state_ok": true,
+     "sampler_running_before": false,
+     "sampler_running_after": false,
+     "sampler_stopped_after": null,
+     "telemetry_samples_in_window": null,
+     "errors": 0,
+     "t_start": 1795609972.00087,
+     "t_end": 1795609987.9601338,
+     "server_ttft_hist": {
+      "requests": 86.0,
+      "mean_ms": 32.76072269262269,
+      "note": "includes reset-probe and warm-up requests; recorded only"
+     }
+    },
+    {
+     "pair": 0,
+     "arm": "on",
+     "position": 1,
+     "reset_verified": true,
+     "sampler_state_ok": true,
+     "sampler_running_before": true,
+     "sampler_running_after": true,
+     "sampler_stopped_after": true,
+     "telemetry_samples_in_window": 21,
+     "errors": 0,
+     "t_start": 1795609992.601368,
+     "t_end": 1795610008.734773,
+     "server_ttft_hist": {
+      "requests": 86.0,
+      "mean_ms": 32.95145755590394,
+      "note": "includes reset-probe and warm-up requests; recorded only"
+     }
+    },
+    {
+     "pair": 1,
+     "arm": "on",
+     "position": 2,
+     "reset_verified": true,
+     "sampler_state_ok": true,
+     "sampler_running_before": true,
+     "sampler_running_after": true,
+     "sampler_stopped_after": true,
+     "telemetry_samples_in_window": 25,
+     "errors": 0,
+     "t_start": 1795610015.9039721,
+     "t_end": 1795610035.245026,
+     "server_ttft_hist": {
+      "requests": 86.0,
+      "mean_ms": 33.130277034848234,
+      "note": "includes reset-probe and warm-up requests; recorded only"
+     }
+    },
+    {
+     "pair": 1,
+     "arm": "off",
+     "position": 3,
+     "reset_verified": true,
+     "sampler_state_ok": true,
+     "sampler_running_before": false,
+     "sampler_running_after": false,
+     "sampler_stopped_after": null,
+     "telemetry_samples_in_window": null,
+     "errors": 0,
+     "t_start": 1795610038.8822248,
+     "t_end": 1795610054.660963,
+     "server_ttft_hist": {
+      "requests": 86.0,
+      "mean_ms": 32.78261838957321,
+      "note": "includes reset-probe and warm-up requests; recorded only"
+     }
+    },
+    {
+     "pair": 2,
+     "arm": "off",
+     "position": 4,
+     "reset_verified": true,
+     "sampler_state_ok": true,
+     "sampler_running_before": false,
+     "sampler_running_after": false,
+     "sampler_stopped_after": null,
+     "telemetry_samples_in_window": null,
+     "errors": 0,
+     "t_start": 1795610056.466182,
+     "t_end": 1795610072.320051,
+     "server_ttft_hist": {
+      "requests": 86.0,
+      "mean_ms": 32.726698143537654,
+      "note": "includes reset-probe and warm-up requests; recorded only"
+     }
+    },
+    {
+     "pair": 2,
+     "arm": "on",
+     "position": 5,
+     "reset_verified": true,
+     "sampler_state_ok": true,
+     "sampler_running_before": true,
+     "sampler_running_after": true,
+     "sampler_stopped_after": true,
+     "telemetry_samples_in_window": 21,
+     "errors": 0,
+     "t_start": 1795610077.024818,
+     "t_end": 1795610092.835318,
+     "server_ttft_hist": {
+      "requests": 86.0,
+      "mean_ms": 32.914577528487804,
+      "note": "includes reset-probe and warm-up requests; recorded only"
+     }
+    },
+    {
+     "pair": 3,
+     "arm": "on",
+     "position": 6,
+     "reset_verified": true,
+     "sampler_state_ok": true,
+     "sampler_running_before": true,
+     "sampler_running_after": true,
+     "sampler_stopped_after": true,
+     "telemetry_samples_in_window": 21,
+     "errors": 0,
+     "t_start": 1795610099.856899,
+     "t_end": 1795610115.7619982,
+     "server_ttft_hist": {
+      "requests": 86.0,
+      "mean_ms": 32.87268793860147,
+      "note": "includes reset-probe and warm-up requests; recorded only"
+     }
+    },
+    {
+     "pair": 3,
+     "arm": "off",
+     "position": 7,
+     "reset_verified": true,
+     "sampler_state_ok": true,
+     "sampler_running_before": false,
+     "sampler_running_after": false,
+     "sampler_stopped_after": null,
+     "telemetry_samples_in_window": null,
+     "errors": 0,
+     "t_start": 1795610119.701474,
+     "t_end": 1795610135.5360909,
+     "server_ttft_hist": {
+      "requests": 86.0,
+      "mean_ms": 32.914832580921264,
+      "note": "includes reset-probe and warm-up requests; recorded only"
+     }
+    },
+    {
+     "pair": 4,
+     "arm": "off",
+     "position": 8,
+     "reset_verified": true,
+     "sampler_state_ok": true,
+     "sampler_running_before": false,
+     "sampler_running_after": false,
+     "sampler_stopped_after": null,
+     "telemetry_samples_in_window": null,
+     "errors": 0,
+     "t_start": 1795610137.316871,
+     "t_end": 1795610153.215639,
+     "server_ttft_hist": {
+      "requests": 86.0,
+      "mean_ms": 32.77613673099252,
+      "note": "includes reset-probe and warm-up requests; recorded only"
+     }
+    },
+    {
+     "pair": 4,
+     "arm": "on",
+     "position": 9,
+     "reset_verified": true,
+     "sampler_state_ok": true,
+     "sampler_running_before": true,
+     "sampler_running_after": true,
+     "sampler_stopped_after": true,
+     "telemetry_samples_in_window": 21,
+     "errors": 0,
+     "t_start": 1795610157.846101,
+     "t_end": 1795610173.689282,
+     "server_ttft_hist": {
+      "requests": 86.0,
+      "mean_ms": 32.97761151956957,
+      "note": "includes reset-probe and warm-up requests; recorded only"
+     }
+    },
+    {
+     "pair": 5,
+     "arm": "on",
+     "position": 10,
+     "reset_verified": true,
+     "sampler_state_ok": true,
+     "sampler_running_before": true,
+     "sampler_running_after": true,
+     "sampler_stopped_after": true,
+     "telemetry_samples_in_window": 21,
+     "errors": 0,
+     "t_start": 1795610180.4131572,
+     "t_end": 1795610196.42332,
+     "server_ttft_hist": {
+      "requests": 86.0,
+      "mean_ms": 33.12011929445489,
+      "note": "includes reset-probe and warm-up requests; recorded only"
+     }
+    },
+    {
+     "pair": 5,
+     "arm": "off",
+     "position": 11,
+     "reset_verified": true,
+     "sampler_state_ok": true,
+     "sampler_running_before": false,
+     "sampler_running_after": false,
+     "sampler_stopped_after": null,
+     "telemetry_samples_in_window": null,
+     "errors": 0,
+     "t_start": 1795610200.138947,
+     "t_end": 1795610216.1389692,
+     "server_ttft_hist": {
+      "requests": 86.0,
+      "mean_ms": 33.20519037024919,
+      "note": "includes reset-probe and warm-up requests; recorded only"
+     }
+    },
+    {
+     "pair": 6,
+     "arm": "off",
+     "position": 12,
+     "reset_verified": true,
+     "sampler_state_ok": true,
+     "sampler_running_before": false,
+     "sampler_running_after": false,
+     "sampler_stopped_after": null,
+     "telemetry_samples_in_window": null,
+     "errors": 0,
+     "t_start": 1795610217.70184,
+     "t_end": 1795610233.688274,
+     "server_ttft_hist": {
+      "requests": 86.0,
+      "mean_ms": 32.8829288482666,
+      "note": "includes reset-probe and warm-up requests; recorded only"
+     }
+    },
+    {
+     "pair": 6,
+     "arm": "on",
+     "position": 13,
+     "reset_verified": true,
+     "sampler_state_ok": true,
+     "sampler_running_before": true,
+     "sampler_running_after": true,
+     "sampler_stopped_after": true,
+     "telemetry_samples_in_window": 21,
+     "errors": 0,
+     "t_start": 1795610238.418298,
+     "t_end": 1795610254.418794,
+     "server_ttft_hist": {
+      "requests": 86.0,
+      "mean_ms": 33.0308897550716,
+      "note": "includes reset-probe and warm-up requests; recorded only"
+     }
+    },
+    {
+     "pair": 7,
+     "arm": "on",
+     "position": 14,
+     "reset_verified": true,
+     "sampler_state_ok": true,
+     "sampler_running_before": true,
+     "sampler_running_after": true,
+     "sampler_stopped_after": true,
+     "telemetry_samples_in_window": 21,
+     "errors": 0,
+     "t_start": 1795610261.310457,
+     "t_end": 1795610277.281643,
+     "server_ttft_hist": {
+      "requests": 86.0,
+      "mean_ms": 32.959053682726484,
+      "note": "includes reset-probe and warm-up requests; recorded only"
+     }
+    },
+    {
+     "pair": 7,
+     "arm": "off",
+     "position": 15,
+     "reset_verified": true,
+     "sampler_state_ok": true,
+     "sampler_running_before": false,
+     "sampler_running_after": false,
+     "sampler_stopped_after": null,
+     "telemetry_samples_in_window": null,
+     "errors": 0,
+     "t_start": 1795610281.2422662,
+     "t_end": 1795610297.25658,
+     "server_ttft_hist": {
+      "requests": 86.0,
+      "mean_ms": 33.19773285887962,
+      "note": "includes reset-probe and warm-up requests; recorded only"
+     }
+    },
+    {
+     "pair": 8,
+     "arm": "off",
+     "position": 16,
+     "reset_verified": true,
+     "sampler_state_ok": true,
+     "sampler_running_before": false,
+     "sampler_running_after": false,
+     "sampler_stopped_after": null,
+     "telemetry_samples_in_window": null,
+     "errors": 0,
+     "t_start": 1795610299.018334,
+     "t_end": 1795610314.987007,
+     "server_ttft_hist": {
+      "requests": 86.0,
+      "mean_ms": 32.976264177366744,
+      "note": "includes reset-probe and warm-up requests; recorded only"
+     }
+    },
+    {
+     "pair": 8,
+     "arm": "on",
+     "position": 17,
+     "reset_verified": true,
+     "sampler_state_ok": true,
+     "sampler_running_before": true,
+     "sampler_running_after": true,
+     "sampler_stopped_after": true,
+     "telemetry_samples_in_window": 22,
+     "errors": 0,
+     "t_start": 1795610319.723447,
+     "t_end": 1795610335.787665,
+     "server_ttft_hist": {
+      "requests": 86.0,
+      "mean_ms": 33.10035273086193,
+      "note": "includes reset-probe and warm-up requests; recorded only"
+     }
+    },
+    {
+     "pair": 9,
+     "arm": "on",
+     "position": 18,
+     "reset_verified": true,
+     "sampler_state_ok": true,
+     "sampler_running_before": true,
+     "sampler_running_after": true,
+     "sampler_stopped_after": true,
+     "telemetry_samples_in_window": 24,
+     "errors": 0,
+     "t_start": 1795610346.718274,
+     "t_end": 1795610363.6024299,
+     "server_ttft_hist": {
+      "requests": 86.0,
+      "mean_ms": 33.134931741758834,
+      "note": "includes reset-probe and warm-up requests; recorded only"
+     }
+    },
+    {
+     "pair": 9,
+     "arm": "off",
+     "position": 19,
+     "reset_verified": true,
+     "sampler_state_ok": true,
+     "sampler_running_before": false,
+     "sampler_running_after": false,
+     "sampler_stopped_after": null,
+     "telemetry_samples_in_window": null,
+     "errors": 0,
+     "t_start": 1795610367.263273,
+     "t_end": 1795610383.2278981,
+     "server_ttft_hist": {
+      "requests": 86.0,
+      "mean_ms": 33.11509864274846,
+      "note": "includes reset-probe and warm-up requests; recorded only"
+     }
+    },
+    {
+     "pair": 10,
+     "arm": "off",
+     "position": 20,
+     "reset_verified": true,
+     "sampler_state_ok": true,
+     "sampler_running_before": false,
+     "sampler_running_after": false,
+     "sampler_stopped_after": null,
+     "telemetry_samples_in_window": null,
+     "errors": 0,
+     "t_start": 1795610384.86572,
+     "t_end": 1795610400.815774,
+     "server_ttft_hist": {
+      "requests": 86.0,
+      "mean_ms": 33.00552589948787,
+      "note": "includes reset-probe and warm-up requests; recorded only"
+     }
+    },
+    {
+     "pair": 10,
+     "arm": "on",
+     "position": 21,
+     "reset_verified": true,
+     "sampler_state_ok": true,
+     "sampler_running_before": true,
+     "sampler_running_after": true,
+     "sampler_stopped_after": true,
+     "telemetry_samples_in_window": 21,
+     "errors": 0,
+     "t_start": 1795610405.492794,
+     "t_end": 1795610421.42715,
+     "server_ttft_hist": {
+      "requests": 86.0,
+      "mean_ms": 32.994747161865234,
+      "note": "includes reset-probe and warm-up requests; recorded only"
+     }
+    },
+    {
+     "pair": 11,
+     "arm": "on",
+     "position": 22,
+     "reset_verified": true,
+     "sampler_state_ok": true,
+     "sampler_running_before": true,
+     "sampler_running_after": true,
+     "sampler_stopped_after": true,
+     "telemetry_samples_in_window": 21,
+     "errors": 0,
+     "t_start": 1795610428.3609972,
+     "t_end": 1795610444.263665,
+     "server_ttft_hist": {
+      "requests": 86.0,
+      "mean_ms": 33.08418185211892,
+      "note": "includes reset-probe and warm-up requests; recorded only"
+     }
+    },
+    {
+     "pair": 11,
+     "arm": "off",
+     "position": 23,
+     "reset_verified": true,
+     "sampler_state_ok": true,
+     "sampler_running_before": false,
+     "sampler_running_after": false,
+     "sampler_stopped_after": null,
+     "telemetry_samples_in_window": null,
+     "errors": 0,
+     "t_start": 1795610447.990499,
+     "t_end": 1795610463.877009,
+     "server_ttft_hist": {
+      "requests": 86.0,
+      "mean_ms": 33.23129720466081,
+      "note": "includes reset-probe and warm-up requests; recorded only"
+     }
+    },
+    {
+     "pair": 12,
+     "arm": "off",
+     "position": 24,
+     "reset_verified": true,
+     "sampler_state_ok": true,
+     "sampler_running_before": false,
+     "sampler_running_after": false,
+     "sampler_stopped_after": null,
+     "telemetry_samples_in_window": null,
+     "errors": 0,
+     "t_start": 1795610465.412595,
+     "t_end": 1795610481.362559,
+     "server_ttft_hist": {
+      "requests": 86.0,
+      "mean_ms": 33.016082852385765,
+      "note": "includes reset-probe and warm-up requests; recorded only"
+     }
+    },
+    {
+     "pair": 12,
+     "arm": "on",
+     "position": 25,
+     "reset_verified": true,
+     "sampler_state_ok": true,
+     "sampler_running_before": true,
+     "sampler_running_after": true,
+     "sampler_stopped_after": true,
+     "telemetry_samples_in_window": 21,
+     "errors": 0,
+     "t_start": 1795610485.9705,
+     "t_end": 1795610502.315663,
+     "server_ttft_hist": {
+      "requests": 86.0,
+      "mean_ms": 33.32040753475455,
+      "note": "includes reset-probe and warm-up requests; recorded only"
+     }
+    },
+    {
+     "pair": 13,
+     "arm": "on",
+     "position": 26,
+     "reset_verified": true,
+     "sampler_state_ok": true,
+     "sampler_running_before": true,
+     "sampler_running_after": true,
+     "sampler_stopped_after": true,
+     "telemetry_samples_in_window": 21,
+     "errors": 0,
+     "t_start": 1795610509.196564,
+     "t_end": 1795610525.041491,
+     "server_ttft_hist": {
+      "requests": 86.0,
+      "mean_ms": 33.22328245917032,
+      "note": "includes reset-probe and warm-up requests; recorded only"
+     }
+    },
+    {
+     "pair": 13,
+     "arm": "off",
+     "position": 27,
+     "reset_verified": true,
+     "sampler_state_ok": true,
+     "sampler_running_before": false,
+     "sampler_running_after": false,
+     "sampler_stopped_after": null,
+     "telemetry_samples_in_window": null,
+     "errors": 0,
+     "t_start": 1795610528.9220328,
+     "t_end": 1795610544.8473449,
+     "server_ttft_hist": {
+      "requests": 86.0,
+      "mean_ms": 33.309620480204735,
+      "note": "includes reset-probe and warm-up requests; recorded only"
+     }
+    },
+    {
+     "pair": 14,
+     "arm": "off",
+     "position": 28,
+     "reset_verified": true,
+     "sampler_state_ok": true,
+     "sampler_running_before": false,
+     "sampler_running_after": false,
+     "sampler_stopped_after": null,
+     "telemetry_samples_in_window": null,
+     "errors": 0,
+     "t_start": 1795610546.37867,
+     "t_end": 1795610562.349534,
+     "server_ttft_hist": {
+      "requests": 86.0,
+      "mean_ms": 33.17532982937125,
+      "note": "includes reset-probe and warm-up requests; recorded only"
+     }
+    },
+    {
+     "pair": 14,
+     "arm": "on",
+     "position": 29,
+     "reset_verified": true,
+     "sampler_state_ok": true,
+     "sampler_running_before": true,
+     "sampler_running_after": true,
+     "sampler_stopped_after": true,
+     "telemetry_samples_in_window": 21,
+     "errors": 0,
+     "t_start": 1795610567.235511,
+     "t_end": 1795610583.18016,
+     "server_ttft_hist": {
+      "requests": 86.0,
+      "mean_ms": 33.0710910087408,
+      "note": "includes reset-probe and warm-up requests; recorded only"
+     }
+    },
+    {
+     "pair": 15,
+     "arm": "on",
+     "position": 30,
+     "reset_verified": true,
+     "sampler_state_ok": true,
+     "sampler_running_before": true,
+     "sampler_running_after": true,
+     "sampler_stopped_after": true,
+     "telemetry_samples_in_window": 21,
+     "errors": 0,
+     "t_start": 1795610590.1510668,
+     "t_end": 1795610606.016302,
+     "server_ttft_hist": {
+      "requests": 86.0,
+      "mean_ms": 33.21091241614763,
+      "note": "includes reset-probe and warm-up requests; recorded only"
+     }
+    },
+    {
+     "pair": 15,
+     "arm": "off",
+     "position": 31,
+     "reset_verified": true,
+     "sampler_state_ok": true,
+     "sampler_running_before": false,
+     "sampler_running_after": false,
+     "sampler_stopped_after": null,
+     "telemetry_samples_in_window": null,
+     "errors": 0,
+     "t_start": 1795610609.6966982,
+     "t_end": 1795610625.619627,
+     "server_ttft_hist": {
+      "requests": 86.0,
+      "mean_ms": 33.15971618474916,
+      "note": "includes reset-probe and warm-up requests; recorded only"
+     }
+    },
+    {
+     "pair": 16,
+     "arm": "off",
+     "position": 32,
+     "reset_verified": true,
+     "sampler_state_ok": true,
+     "sampler_running_before": false,
+     "sampler_running_after": false,
+     "sampler_stopped_after": null,
+     "telemetry_samples_in_window": null,
+     "errors": 0,
+     "t_start": 1795610627.721369,
+     "t_end": 1795610643.6961632,
+     "server_ttft_hist": {
+      "requests": 86.0,
+      "mean_ms": 33.01046060961346,
+      "note": "includes reset-probe and warm-up requests; recorded only"
+     }
+    },
+    {
+     "pair": 16,
+     "arm": "on",
+     "position": 33,
+     "reset_verified": true,
+     "sampler_state_ok": true,
+     "sampler_running_before": true,
+     "sampler_running_after": true,
+     "sampler_stopped_after": true,
+     "telemetry_samples_in_window": 24,
+     "errors": 0,
+     "t_start": 1795610648.382967,
+     "t_end": 1795610666.6690571,
+     "server_ttft_hist": {
+      "requests": 86.0,
+      "mean_ms": 33.4935465524363,
+      "note": "includes reset-probe and warm-up requests; recorded only"
+     }
+    },
+    {
+     "pair": 17,
+     "arm": "on",
+     "position": 34,
+     "reset_verified": true,
+     "sampler_state_ok": true,
+     "sampler_running_before": true,
+     "sampler_running_after": true,
+     "sampler_stopped_after": true,
+     "telemetry_samples_in_window": 21,
+     "errors": 0,
+     "t_start": 1795610675.751916,
+     "t_end": 1795610691.6482172,
+     "server_ttft_hist": {
+      "requests": 86.0,
+      "mean_ms": 33.323570739391236,
+      "note": "includes reset-probe and warm-up requests; recorded only"
+     }
+    },
+    {
+     "pair": 17,
+     "arm": "off",
+     "position": 35,
+     "reset_verified": true,
+     "sampler_state_ok": true,
+     "sampler_running_before": false,
+     "sampler_running_after": false,
+     "sampler_stopped_after": null,
+     "telemetry_samples_in_window": null,
+     "errors": 0,
+     "t_start": 1795610695.5171,
+     "t_end": 1795610711.478625,
+     "server_ttft_hist": {
+      "requests": 86.0,
+      "mean_ms": 33.45589582310166,
+      "note": "includes reset-probe and warm-up requests; recorded only"
+     }
+    },
+    {
+     "pair": 18,
+     "arm": "off",
+     "position": 36,
+     "reset_verified": true,
+     "sampler_state_ok": true,
+     "sampler_running_before": false,
+     "sampler_running_after": false,
+     "sampler_stopped_after": null,
+     "telemetry_samples_in_window": null,
+     "errors": 0,
+     "t_start": 1795610713.284394,
+     "t_end": 1795610729.264083,
+     "server_ttft_hist": {
+      "requests": 86.0,
+      "mean_ms": 33.35715726364491,
+      "note": "includes reset-probe and warm-up requests; recorded only"
+     }
+    },
+    {
+     "pair": 18,
+     "arm": "on",
+     "position": 37,
+     "reset_verified": true,
+     "sampler_state_ok": true,
+     "sampler_running_before": true,
+     "sampler_running_after": true,
+     "sampler_stopped_after": true,
+     "telemetry_samples_in_window": 21,
+     "errors": 0,
+     "t_start": 1795610733.956885,
+     "t_end": 1795610750.0276859,
+     "server_ttft_hist": {
+      "requests": 86.0,
+      "mean_ms": 33.37082474730735,
+      "note": "includes reset-probe and warm-up requests; recorded only"
+     }
+    },
+    {
+     "pair": 19,
+     "arm": "on",
+     "position": 38,
+     "reset_verified": true,
+     "sampler_state_ok": true,
+     "sampler_running_before": true,
+     "sampler_running_after": true,
+     "sampler_stopped_after": true,
+     "telemetry_samples_in_window": 21,
+     "errors": 0,
+     "t_start": 1795610756.8505652,
+     "t_end": 1795610772.848049,
+     "server_ttft_hist": {
+      "requests": 86.0,
+      "mean_ms": 33.418630444726276,
+      "note": "includes reset-probe and warm-up requests; recorded only"
+     }
+    },
+    {
+     "pair": 19,
+     "arm": "off",
+     "position": 39,
+     "reset_verified": true,
+     "sampler_state_ok": true,
+     "sampler_running_before": false,
+     "sampler_running_after": false,
+     "sampler_stopped_after": null,
+     "telemetry_samples_in_window": null,
+     "errors": 0,
+     "t_start": 1795610776.568361,
+     "t_end": 1795610792.5367732,
+     "server_ttft_hist": {
+      "requests": 86.0,
+      "mean_ms": 33.22215135707412,
+      "note": "includes reset-probe and warm-up requests; recorded only"
+     }
+    },
+    {
+     "pair": 20,
+     "arm": "off",
+     "position": 40,
+     "reset_verified": true,
+     "sampler_state_ok": true,
+     "sampler_running_before": false,
+     "sampler_running_after": false,
+     "sampler_stopped_after": null,
+     "telemetry_samples_in_window": null,
+     "errors": 0,
+     "t_start": 1795610794.334442,
+     "t_end": 1795610810.2801752,
+     "server_ttft_hist": {
+      "requests": 86.0,
+      "mean_ms": 33.05449042209359,
+      "note": "includes reset-probe and warm-up requests; recorded only"
+     }
+    },
+    {
+     "pair": 20,
+     "arm": "on",
+     "position": 41,
+     "reset_verified": true,
+     "sampler_state_ok": true,
+     "sampler_running_before": true,
+     "sampler_running_after": true,
+     "sampler_stopped_after": true,
+     "telemetry_samples_in_window": 21,
+     "errors": 0,
+     "t_start": 1795610815.0083451,
+     "t_end": 1795610831.047873,
+     "server_ttft_hist": {
+      "requests": 86.0,
+      "mean_ms": 33.27116855355196,
+      "note": "includes reset-probe and warm-up requests; recorded only"
+     }
+    },
+    {
+     "pair": 21,
+     "arm": "on",
+     "position": 42,
+     "reset_verified": true,
+     "sampler_state_ok": true,
+     "sampler_running_before": true,
+     "sampler_running_after": true,
+     "sampler_stopped_after": true,
+     "telemetry_samples_in_window": 21,
+     "errors": 0,
+     "t_start": 1795610838.0947359,
+     "t_end": 1795610854.118727,
+     "server_ttft_hist": {
+      "requests": 86.0,
+      "mean_ms": 33.28032271806584,
+      "note": "includes reset-probe and warm-up requests; recorded only"
+     }
+    },
+    {
+     "pair": 21,
+     "arm": "off",
+     "position": 43,
+     "reset_verified": true,
+     "sampler_state_ok": true,
+     "sampler_running_before": false,
+     "sampler_running_after": false,
+     "sampler_stopped_after": null,
+     "telemetry_samples_in_window": null,
+     "errors": 0,
+     "t_start": 1795610858.071718,
+     "t_end": 1795610874.076998,
+     "server_ttft_hist": {
+      "requests": 86.0,
+      "mean_ms": 33.28047796737316,
+      "note": "includes reset-probe and warm-up requests; recorded only"
+     }
+    },
+    {
+     "pair": 22,
+     "arm": "off",
+     "position": 44,
+     "reset_verified": true,
+     "sampler_state_ok": true,
+     "sampler_running_before": false,
+     "sampler_running_after": false,
+     "sampler_stopped_after": null,
+     "telemetry_samples_in_window": null,
+     "errors": 0,
+     "t_start": 1795610875.665174,
+     "t_end": 1795610891.801831,
+     "server_ttft_hist": {
+      "requests": 86.0,
+      "mean_ms": 33.230479373488315,
+      "note": "includes reset-probe and warm-up requests; recorded only"
+     }
+    },
+    {
+     "pair": 22,
+     "arm": "on",
+     "position": 45,
+     "reset_verified": true,
+     "sampler_state_ok": true,
+     "sampler_running_before": true,
+     "sampler_running_after": true,
+     "sampler_stopped_after": true,
+     "telemetry_samples_in_window": 21,
+     "errors": 0,
+     "t_start": 1795610896.5987751,
+     "t_end": 1795610913.0336058,
+     "server_ttft_hist": {
+      "requests": 86.0,
+      "mean_ms": 33.27234124028406,
+      "note": "includes reset-probe and warm-up requests; recorded only"
+     }
+    },
+    {
+     "pair": 23,
+     "arm": "on",
+     "position": 46,
+     "reset_verified": true,
+     "sampler_state_ok": true,
+     "sampler_running_before": true,
+     "sampler_running_after": true,
+     "sampler_stopped_after": true,
+     "telemetry_samples_in_window": 22,
+     "errors": 0,
+     "t_start": 1795610920.078506,
+     "t_end": 1795610936.79081,
+     "server_ttft_hist": {
+      "requests": 86.0,
+      "mean_ms": 33.24576588564141,
+      "note": "includes reset-probe and warm-up requests; recorded only"
+     }
+    },
+    {
+     "pair": 23,
+     "arm": "off",
+     "position": 47,
+     "reset_verified": true,
+     "sampler_state_ok": true,
+     "sampler_running_before": false,
+     "sampler_running_after": false,
+     "sampler_stopped_after": null,
+     "telemetry_samples_in_window": null,
+     "errors": 0,
+     "t_start": 1795610940.79872,
+     "t_end": 1795610956.815959,
+     "server_ttft_hist": {
+      "requests": 86.0,
+      "mean_ms": 33.387843952622525,
+      "note": "includes reset-probe and warm-up requests; recorded only"
+     }
+    }
+   ],
+   "finished_utc": "2026-11-25T12:54:40.802969+00:00",
+   "amendment": {
+    "id": "A1",
+    "document": "docs/PROTOCOL_X1_AMENDMENT_A1.md",
+    "manifest": "experiments/x1/AMENDMENT_A1_SHA256.json",
+    "manifest_sha256": "d99bdbae58b24a3ef53523d07021bcd50d847aec45de741d1ab68b5bdce2a032",
+    "approval": "x1_preflight_a1_g0m0",
+    "rule": "A1 paired-segment TOST decides sampler_equivalence; rev 4 point rule reported only"
+   }
   }
  }
 }
