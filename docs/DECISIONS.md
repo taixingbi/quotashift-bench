@@ -271,3 +271,27 @@ A1–A9 results and controls are unchanged. No v4 GPU run is made before owner a
 - **Proposed, not adopted.** `docs/PROTOCOL_X1_CROSS_PLATFORM_DRAFT.md` would promote the control-arm slot demand at
   C = 8 to a *preregistered* load-calibration variable for cross-platform work. That needs owner approval and a freeze
   of its own.
+
+## ADR-X1-P0 — X1 planning decisions and P0 outcome (2026-11-24; owner decisions; P0 read-only)
+- **Owner decisions.**
+  - M1 = mistralai/Mistral-7B-Instruct-v0.3.
+  - G1 = NVIDIA L4 24 GB (AWS g6 family).
+  - Full 2 × 2 design, in separately approved stages.
+  - n = 16 for X-a and X-d, n = 10 elsewhere, subject to joint power.
+  - P vs S excluded from core X1 and kept as optional extension X1-E1.
+  - Only P0 (read-only) approved. No provisioning, downloads, GPU runs or freeze.
+- **P0 outcome** (`docs/X1_P0_REPORT.md`):
+  - revision `c170c708…`, Apache-2.0, supported by vLLM 0.17.1;
+  - fp16 fits on both GPUs;
+  - L4 offered in all us-east-1 AZs; on-demand G/VT quota is 4 vCPU (enough for g6.xlarge only);
+  - g6.xlarge $0.8048/h, g6.2xlarge $0.9776/h; AWS total ≈ $32–52.
+- **Draft rev 2** (`docs/PROTOCOL_X1_CROSS_PLATFORM_DRAFT.md`):
+  - one serving template on vLLM 0.17.1 for all platforms;
+  - both models per GPU on one host;
+  - X1-H5 pools from dedicated calibration seeds 7003–7007, frozen before the main stage;
+  - staged approval plan X0–X1-O.
+- **Open, owner to decide before freeze:**
+  - power option (a) n = 24, (b) H1 null log 1, or (c) accept;
+  - g6.xlarge vs g6.2xlarge;
+  - fp16 vs bf16.
+- **Security finding.** The workstation's AWS credentials are the root user. Replace them with a least-privilege identity before any AWS stage (stage X1-B).
