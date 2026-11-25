@@ -172,7 +172,10 @@ def test_pin_x2_refusals_and_candidate(tmp_path, monkeypatch):
     r = subprocess.run([sys.executable, str(REPO / "scripts" / "pin_x2.py"), "--write"], env=env, capture_output=True,
                        text=True, cwd=REPO)
     assert r.returncode == 3 and "x2_freeze1" in r.stderr
-    assert not pin_x2.MANIFEST.exists()                    # X2 Freeze Commit 1 is never executed by tests
+    before = pin_x2.MANIFEST.read_bytes()                  # Freeze Commit 1 exists (x2_freeze1); tests never rewrite it
+    r = subprocess.run([sys.executable, str(REPO / "scripts" / "pin_x2.py"), "--write"],
+                       env={**env, "QUOTASHIFT_APPROVED": "x2_freeze1"}, capture_output=True, text=True, cwd=REPO)
+    assert r.returncode == 3 and "never overwritten" in r.stderr and pin_x2.MANIFEST.read_bytes() == before
     r = subprocess.run([sys.executable, str(REPO / "scripts" / "pin_x2.py"), "--pin-phase", "g0m0", "calA"], env=env,
                        capture_output=True, text=True, cwd=REPO)
     assert r.returncode == 3 and "x2_freeze_calA_g0m0" in r.stderr
@@ -233,7 +236,7 @@ def test_stage_stop_rerun_and_infeasible(tmp_path, root):
 def test_live_refuses_without_freeze_and_token(monkeypatch, root):
     monkeypatch.delenv("QUOTASHIFT_APPROVED", raising=False)
     probs = xs.live_problems("g0m0", "calA", interactive_ok=False, root=root)
-    assert any("x2_cal_g0m0" in x for x in probs) and any("Freeze Commit 1" in x for x in probs)
+    assert any("x2_cal_g0m0" in x for x in probs) and not any("Freeze Commit 1" in x for x in probs)  # frozen now
     assert any("interactively" in x for x in probs) and any("not pinned" in x for x in probs)
 
 
