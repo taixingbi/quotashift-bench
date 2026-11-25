@@ -128,7 +128,7 @@ def overrides(kind: str, plat: str, bucket: str, extra: list[str], env: dict) ->
     if kind == "qual":
         if extra:
             raise Refused("qualification takes no extra arguments (one run, no retry)")
-        cmd = [*entry, "hold", "--max-s", "10800"]
+        cmd = [*entry, "qualify"]
     elif kind.startswith("freeze_"):
         if extra:
             raise Refused("trace freeze takes no extra arguments")
@@ -145,6 +145,36 @@ def overrides(kind: str, plat: str, bucket: str, extra: list[str], env: dict) ->
         {"name": "runner", "command": cmd, "environment": envs},
         {"name": "inputs-download", "command": ["s3", "cp", f"s3://{bucket}/inputs/{sha}.tar.gz", "/app/inputs/inputs.tar.gz",
                                                 "--only-show-errors"]}]}
+
+
+def qualify_cmd(plat: str) -> list[str]:
+    """The FROZEN qualification driver, unchanged, under util-linux `script` (Debian image), which gives it the TTY its
+    operator check requires. The runner's main process answers the frozen "yes" prompt (owner-approved pseudo-terminal
+    answer; experiments/x2/approvals/). Replaces ECS Exec, whose sessions kill every process they started when they end."""
+    return ["script", "-qfec", f"python scripts/x2_qualify.py --platform {plat} --live", "/dev/null"]
+
+
+def run_qualify(plat: str, *, cmd: list[str] | None = None, log: Path | None = None, cwd: Path = APP) -> int:
+    if os.environ.get("QUOTASHIFT_APPROVED") != f"x2_qual_{plat}":
+        raise Refused(f"QUOTASHIFT_APPROVED must be x2_qual_{plat}")
+    if (cwd / "experiments" / "x2" / plat / "QUALIFICATION.json").exists():
+        raise Refused(f"{plat}: a qualification record already exists (one run per platform; no retry)")
+    log = log or (RESULTS / f"x2_qual_{plat}.log")
+    log.parent.mkdir(parents=True, exist_ok=True)
+    proc = subprocess.Popen(cmd or qualify_cmd(plat), cwd=cwd, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                            stderr=subprocess.STDOUT)
+    assert proc.stdin is not None and proc.stdout is not None
+    proc.stdin.write(b"yes\n")               # the frozen prompt's answer; stdin stays open until the driver exits
+    proc.stdin.flush()
+    with log.open("ab") as f:
+        for line in iter(proc.stdout.readline, b""):
+            f.write(line)
+            f.flush()
+            sys.stdout.buffer.write(line)
+            sys.stdout.flush()
+    rc = proc.wait()
+    proc.stdin.close()
+    return rc
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -170,6 +200,7 @@ def main(argv: list[str] | None = None) -> int:
     r.add_argument("cmd", nargs=argparse.REMAINDER)
     h = sub.add_parser("hold")
     h.add_argument("--max-s", type=int, default=10800)
+    sub.add_parser("qualify")
     a = ap.parse_args(argv)
     plat = os.environ.get("QUOTASHIFT_X2_PLATFORM", "")
     if plat not in PLATFORMS:
@@ -188,6 +219,8 @@ def main(argv: list[str] | None = None) -> int:
             if not cmd or not any(c.endswith(("x2_stage.py", "freeze_x2_traces.py")) for c in cmd):
                 raise Refused("run accepts only the frozen X2 stage driver or trace freeze")
             rc = subprocess.run(cmd, cwd=APP).returncode
+        elif a.mode == "qualify":
+            rc = run_qualify(plat)
         else:
             t_end = time.time() + a.max_s
             print(f"holding for ECS Exec (until {DONE} exists or {a.max_s} s)", flush=True)

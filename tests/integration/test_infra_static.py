@@ -26,10 +26,11 @@ def test_terraform_fmt():
 @needs_tf
 @pytest.mark.slow
 def test_terraform_validate_and_mock_plan_tests():
-    assert tf("init", "-backend=false", "-input=false").returncode == 0
-    v = tf("validate")
-    assert v.returncode == 0, v.stdout + v.stderr
-    t = tf("test")
+    """On a CLEAN copy (scripts/tf_test_clean.sh): local deployment files (*.auto.tfvars, backend.hcl, state) must
+    neither leak into the mock tests nor be re-initialised by them."""
+    env = os.environ | {"AWS_ACCESS_KEY_ID": "", "AWS_SECRET_ACCESS_KEY": "", "AWS_PROFILE": "", "TF_IN_AUTOMATION": "1"}
+    t = subprocess.run([str(TF.parents[1] / "scripts" / "tf_test_clean.sh")], capture_output=True, text=True,
+                       timeout=900, env=env)
     assert t.returncode == 0 and "0 failed" in t.stdout, t.stdout + t.stderr
 
 

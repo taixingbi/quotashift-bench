@@ -53,3 +53,6 @@ infra/state-bootstrap/*.tfplan
 infra/terraform/*.tfplan
 infra/terraform/backend.hcl
 .local-archive/
+
+# local mirror of the AWS results bucket (raw evidence; never committed)
+results/aws/

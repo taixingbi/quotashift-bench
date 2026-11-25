@@ -58,7 +58,7 @@ QUOTASHIFT_APPROVED=run-stage QUOTASHIFT_STAGE_APPROVAL=<token> QUOTASHIFT_X2_IN
 
 | Token | What runs in the runner (frozen driver) |
 |---|---|
-| `x2_qual_<p>` | hold for ECS Exec. The operator runs `python scripts/x2_qualify.py --platform <p> --live` interactively, then `touch /app/results/.x2_done` |
+| `x2_qual_<p>` | `x2_runner_entry.py qualify`: the runner's main process runs the frozen `x2_qualify.py` under `script` (TTY) and answers the frozen "yes"; log `/app/results/x2_qual_<p>.log` + CloudWatch. (ECS Exec was tried on 2026-11-25 and is unusable: keystrokes are not forwarded and sessions kill their processes on exit.) |
 | `x2_freeze_calA_<p>` / `x2_freeze_main_<p>` | `freeze_x2_traces.py --live` (the platform's own tokenizer). The pin is then made locally with the same token |
 | `x2_cal_<p>` / `x2_main_<p>` | `x2_stage.py --live --out-root /app/results/reports/x2` (boundary snapshots over HTTP to the G1 daemon) |
 

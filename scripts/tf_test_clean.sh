@@ -9,4 +9,4 @@ mkdir -p "$T/infra" "$T/scripts"
 rsync -a --exclude .terraform --exclude '*.auto.tfvars' --exclude backend.hcl --exclude '*.tfplan' --exclude local-state \
   --exclude '*.tfstate*' infra/terraform "$T/infra/"
 cp scripts/x1_host_sampler.py scripts/x2_host_snapshot.py "$T/scripts/"
-cd "$T/infra/terraform" && terraform init -backend=false -input=false >/dev/null && terraform test
+cd "$T/infra/terraform" && terraform init -backend=false -input=false >/dev/null && terraform validate >/dev/null && terraform test

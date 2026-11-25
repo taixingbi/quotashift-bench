@@ -118,14 +118,36 @@ def test_run_stage_x2_cal_routes_to_the_frozen_stage_driver(tmp_path):
     assert "--enable-execute-command" not in next(x for x in log if x.startswith("aws ecs run-task"))
 
 
-def test_run_stage_x2_qual_uses_ecs_exec_and_prints_the_interactive_command(tmp_path):
+def test_run_stage_x2_qual_runs_in_the_task_without_ecs_exec(tmp_path):
     r, log = _run(_bins(tmp_path), "run-stage", "research", QUOTASHIFT_APPROVED="run-stage",
                   QUOTASHIFT_STAGE_APPROVAL="x2_qual_g1m1", QUOTASHIFT_X2_INPUTS_SHA256=SHA)
     assert r.returncode == 0, r.stderr
-    assert "--enable-execute-command" in next(x for x in log if x.startswith("aws ecs run-task"))
+    assert "--enable-execute-command" not in next(x for x in log if x.startswith("aws ecs run-task"))
     run = next(c for c in _overrides(log)["containerOverrides"] if c["name"] == "runner")
-    assert run["command"][2] == "hold" and {e["name"]: e["value"] for e in run["environment"]}["QUOTASHIFT_TARGET"] == "x2-g1-mistral"
-    assert "x2_qualify.py --platform g1m1 --live" in r.stdout and "execute-command" in r.stdout
+    assert run["command"] == ["python", "scripts/x2_runner_entry.py", "qualify"]
+    env = {e["name"]: e["value"] for e in run["environment"]}
+    assert env["QUOTASHIFT_TARGET"] == "x2-g1-mistral" and env["QUOTASHIFT_APPROVED"] == "x2_qual_g1m1"
+
+
+def test_qualify_cmd_wraps_the_frozen_driver_unchanged():
+    assert ent.qualify_cmd("g1m0") == ["script", "-qfec", "python scripts/x2_qualify.py --platform g1m0 --live", "/dev/null"]
+
+
+def test_run_qualify_answers_yes_logs_and_refuses_reruns(tmp_path, monkeypatch):
+    fake = [sys.executable, "-c", "import sys; a=input('Type yes: '); print('GOT', a); print('phase 1: pass'); sys.exit(0 if a == 'yes' else 3)"]
+    monkeypatch.setenv("QUOTASHIFT_APPROVED", "x2_qual_g1m0")
+    log = tmp_path / "results" / "x2_qual_g1m0.log"
+    assert ent.run_qualify("g1m0", cmd=fake, log=log, cwd=tmp_path) == 0
+    assert "GOT yes" in log.read_text() and "phase 1: pass" in log.read_text()
+    monkeypatch.setenv("QUOTASHIFT_APPROVED", "x2_cal_g1m0")
+    with pytest.raises(SystemExit):
+        ent.run_qualify("g1m0", cmd=fake, log=log, cwd=tmp_path)
+    monkeypatch.setenv("QUOTASHIFT_APPROVED", "x2_qual_g1m0")
+    rec = tmp_path / "experiments" / "x2" / "g1m0" / "QUALIFICATION.json"
+    rec.parent.mkdir(parents=True)
+    rec.write_text("{}")
+    with pytest.raises(SystemExit):                      # one run per platform; no retry
+        ent.run_qualify("g1m0", cmd=fake, log=log, cwd=tmp_path)
 
 
 @pytest.mark.parametrize(("token", "sha", "why"), [
@@ -154,7 +176,7 @@ def test_x2_inputs_refusals(tmp_path):
     r, log = _run(_bins(tmp_path), "x2-inputs", "research", "g0m0", QUOTASHIFT_APPROVED="x2-inputs")
     assert r.returncode == 3 and "G1 platforms only" in r.stderr
     r, log = _run(_bins(tmp_path / "b" if (tmp_path / "b").mkdir() is None else tmp_path), "x2-inputs", "research",
-                  "g1m0", QUOTASHIFT_APPROVED="x2-inputs")
+                  "g1m1", QUOTASHIFT_APPROVED="x2-inputs")      # experiments/x2/g1m1 does not exist yet
     assert r.returncode == 3 and not any(x.startswith("aws s3 cp") for x in log)
     r, _ = _run(_bins(tmp_path / "c" if (tmp_path / "c").mkdir() is None else tmp_path), "x2-inputs", "research", "g1m0")
     assert r.returncode == 3 and "approval-gated" in r.stderr

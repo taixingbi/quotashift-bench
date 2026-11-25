@@ -102,17 +102,12 @@ case "$ACTION" in
       [[ "${QUOTASHIFT_X2_INPUTS_SHA256:-}" =~ ^[0-9a-f]{64}$ ]] \
         || { echo "REFUSED: set QUOTASHIFT_X2_INPUTS_SHA256 (printed by aws_ops.sh x2-inputs for this platform)" >&2; exit 3; }
       OVR=$(KIND="$KIND" PLAT="$PLAT" BUCKET="$(out results_bucket)" python3 scripts/x2_runner_entry.py overrides -- "$@")
-      EXEC=(); [[ "$KIND" == qual ]] && EXEC=(--enable-execute-command)
+      EXEC=()   # X2 qualification runs as the runner's main process (x2_runner_entry qualify); ECS Exec is not needed
       TASK=$(aws ecs run-task --cluster "$(out cluster_name)" --task-definition "$(out runner_task_definition_family)" --launch-type FARGATE \
         ${EXEC[@]+"${EXEC[@]}"} --network-configuration "awsvpcConfiguration={subnets=[$(out private_subnet_ids_csv)],securityGroups=[$(out runner_security_group_id)],assignPublicIp=DISABLED}" \
         --overrides "$OVR" --query 'tasks[0].taskArn' --output text)
       echo "$TASK"
-      if [[ "$KIND" == qual ]]; then
-        echo "X2 qualification: when the task is RUNNING, the operator runs (interactive; the frozen driver asks for 'yes'):"
-        echo "  aws ecs execute-command --cluster $(out cluster_name) --task $TASK --container runner --interactive \\"
-        echo "    --command \"python scripts/x2_qualify.py --platform $PLAT --live\""
-        echo "  then: aws ecs execute-command ... --command \"touch /app/results/.x2_done\"  (exports outputs; the task exits)"
-      fi
+      [[ "$KIND" == qual ]] && echo "X2 qualification runs in the task itself; follow it in CloudWatch (runner log group) and collect with: aws_ops.sh collect"
       exit 0
     fi
     [[ $# -gt 0 ]] || { echo "run-stage needs stage-driver arguments" >&2; exit 2; }
