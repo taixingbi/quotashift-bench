@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 # Approval-gated AWS operations. NOTHING here runs automatically from tests or CI.
-#   scripts/aws_ops.sh <plan|plan-destroy|deploy|healthcheck|start-gpu|stop-gpu|collect|destroy|cost-report|state-backup|run-stage> <dev|research> [stage args]
+#   scripts/aws_ops.sh <plan|plan-destroy|deploy|healthcheck|start-gpu|stop-gpu|collect|destroy|cost-report|state-backup|run-stage|x2-inputs> <dev|research> [stage args]
+#   X2 (G1 only): docs/X2_CAMPAIGN_RUNBOOK.md. x2-inputs <env> <g1m0|g1m1> uploads the platform's per-phase inputs; run-stage
+#   with QUOTASHIFT_STAGE_APPROVAL=x2_<qual|cal|main>_<p> or x2_freeze_<calA|main>_<p> and QUOTASHIFT_X2_INPUTS_SHA256.
 # Gated actions require BOTH env QUOTASHIFT_APPROVED=<action> and an interactive "yes".
 set -euo pipefail
 ACTION="${1:?action}"; ENVIRONMENT="${2:?env (dev|research)}"
@@ -70,7 +72,19 @@ case "$ACTION" in
     D="${QUOTASHIFT_STATE_BACKUP_DIR:-$HOME/QuotaShift-backups/tfstate}"; mkdir -p "$D"; chmod 700 "$D"
     F="$D/${ENVIRONMENT}-$(date -u +%Y%m%dT%H%M%SZ).tfstate"
     $TF state pull > "$F"; chmod 600 "$F"; shasum -a 256 "$F" ;;
-  run-stage)   # X1: one approved stage on the in-VPC runner (Fargate run-task); args after <env> go to the stage driver
+  x2-inputs)   # X2: pack the platform's COMMITTED experiments/x2/<p>/ + its local stage reports, hash, upload to inputs/
+    gate x2-inputs
+    PLAT="${3:?platform g1m0|g1m1}"
+    [[ "$PLAT" =~ ^g1m[01]$ ]] || { echo "REFUSED: x2-inputs is for G1 platforms only (G0 runs locally)" >&2; exit 3; }
+    [[ -d "experiments/x2/$PLAT" ]] || { echo "REFUSED: experiments/x2/$PLAT missing" >&2; exit 3; }
+    [[ -z "$(git status --porcelain -- "experiments/x2/$PLAT" experiments/x2/FROZEN_SHA256.json)" ]] \
+      || { echo "REFUSED: experiments/x2/$PLAT has uncommitted changes (inputs must be a commit)" >&2; exit 3; }
+    mkdir -p .x2_inputs
+    TB=".x2_inputs/${PLAT}.tar.gz"
+    SHA="$(python3 scripts/x2_runner_entry.py pack --platform "$PLAT" --out "$TB")"
+    aws s3 cp "$TB" "s3://$(out results_bucket)/inputs/${SHA}.tar.gz" --only-show-errors
+    echo "QUOTASHIFT_X2_INPUTS_SHA256=${SHA}   (commit $(git rev-parse --short HEAD))" ;;
+  run-stage)   # one approved stage on the in-VPC runner (Fargate run-task); X1: args after <env> go to the stage driver
     gate run-stage
     shift 2
     # dependencies: runner task definition exists (runner_image set) and exactly one vLLM task is RUNNING
@@ -78,6 +92,24 @@ case "$ACTION" in
     [[ -n "$RF" && "$RF" != "null" ]] || { echo "REFUSED: no runner task definition (set runner_image, re-plan, deploy)" >&2; exit 3; }
     RUN="$(aws ecs describe-services --cluster "$(out cluster_name)" --services "$(out vllm_service_name)" --query 'services[0].runningCount' --output text)"
     [[ "$RUN" == "1" ]] || { echo "REFUSED: vLLM service runningCount=$RUN (start-gpu first; exactly one vLLM task)" >&2; exit 3; }
+    if [[ "${QUOTASHIFT_STAGE_APPROVAL:-}" =~ ^x2_(qual|cal|main|freeze_calA|freeze_main)_(g1m[01])$ ]]; then
+      KIND="${BASH_REMATCH[1]}"; PLAT="${BASH_REMATCH[2]}"
+      [[ "${QUOTASHIFT_X2_INPUTS_SHA256:-}" =~ ^[0-9a-f]{64}$ ]] \
+        || { echo "REFUSED: set QUOTASHIFT_X2_INPUTS_SHA256 (printed by aws_ops.sh x2-inputs for this platform)" >&2; exit 3; }
+      OVR=$(KIND="$KIND" PLAT="$PLAT" BUCKET="$(out results_bucket)" python3 scripts/x2_runner_entry.py overrides -- "$@")
+      EXEC=(); [[ "$KIND" == qual ]] && EXEC=(--enable-execute-command)
+      TASK=$(aws ecs run-task --cluster "$(out cluster_name)" --task-definition "$(out runner_task_definition_family)" --launch-type FARGATE \
+        ${EXEC[@]+"${EXEC[@]}"} --network-configuration "awsvpcConfiguration={subnets=[$(out private_subnet_ids_csv)],securityGroups=[$(out runner_security_group_id)],assignPublicIp=DISABLED}" \
+        --overrides "$OVR" --query 'tasks[0].taskArn' --output text)
+      echo "$TASK"
+      if [[ "$KIND" == qual ]]; then
+        echo "X2 qualification: when the task is RUNNING, the operator runs (interactive; the frozen driver asks for 'yes'):"
+        echo "  aws ecs execute-command --cluster $(out cluster_name) --task $TASK --container runner --interactive \\"
+        echo "    --command \"python scripts/x2_qualify.py --platform $PLAT --live\""
+        echo "  then: aws ecs execute-command ... --command \"touch /app/results/.x2_done\"  (exports outputs; the task exits)"
+      fi
+      exit 0
+    fi
     [[ $# -gt 0 ]] || { echo "run-stage needs stage-driver arguments" >&2; exit 2; }
     # the per-stage approval token (x1_<calA|calB|main>_<g1m0|g1m1>) is forwarded to the in-VPC stage driver
     [[ "${QUOTASHIFT_STAGE_APPROVAL:-}" =~ ^x1_(calA|calB|main)_g1m[01]$ ]] \

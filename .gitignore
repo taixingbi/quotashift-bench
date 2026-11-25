@@ -39,3 +39,10 @@ reports/x1/g0m1/
 reports/x1/g1m0/
 reports/x1/g1m1/
 results/x1_*/
+# X2 raw per-platform reports (stage logs, cell reports, qualification segments) and inputs tarballs
+reports/x2/g0m0/
+reports/x2/g0m1/
+reports/x2/g1m0/
+reports/x2/g1m1/
+.x2_inputs/
+results/x2_*/

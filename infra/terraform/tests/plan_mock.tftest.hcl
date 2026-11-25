@@ -358,12 +358,28 @@ run "x1_runner_with_results_sidecar_qwen" {
     model_sync_image = "amazon/aws-cli@sha256:eccdb3ec77e159d43ca6a750a70738c546883138be7f094498294a1477ec7e42"
   }
   assert {
-    condition     = length(jsondecode(aws_ecs_task_definition.runner[0].container_definitions)) == 2 && jsondecode(aws_ecs_task_definition.runner[0].container_definitions)[1].dependsOn[0].condition == "COMPLETE"
+    condition     = length(jsondecode(aws_ecs_task_definition.runner[0].container_definitions)) == 3 && one([for c in jsondecode(aws_ecs_task_definition.runner[0].container_definitions) : c.dependsOn[0].condition if c.name == "results-upload"]) == "COMPLETE"
     error_message = "Results upload sidecar must run after the runner completes."
   }
   assert {
-    condition     = contains([for e in jsondecode(aws_ecs_task_definition.runner[0].container_definitions)[0].environment : "${e.name}=${e.value}"], "QUOTASHIFT_IN_VPC_RUNNER=1") && contains([for e in jsondecode(aws_ecs_task_definition.runner[0].container_definitions)[0].environment : "${e.name}=${e.value}"], "QUOTASHIFT_TARGET=x1-g1-qwen")
+    condition     = contains([for e in one([for c in jsondecode(aws_ecs_task_definition.runner[0].container_definitions) : c if c.name == "runner"]).environment : "${e.name}=${e.value}"], "QUOTASHIFT_IN_VPC_RUNNER=1") && contains([for e in one([for c in jsondecode(aws_ecs_task_definition.runner[0].container_definitions) : c if c.name == "runner"]).environment : "${e.name}=${e.value}"], "QUOTASHIFT_TARGET=x1-g1-qwen")
     error_message = "Runner must carry the in-VPC flag and the model's private target."
+  }
+  assert {
+    condition     = one([for c in jsondecode(aws_ecs_task_definition.runner[0].container_definitions) : c.dependsOn[0] if c.name == "runner"]).containerName == "inputs-download" && one([for c in jsondecode(aws_ecs_task_definition.runner[0].container_definitions) : c.command if c.name == "inputs-download"]) == ["--version"]
+    error_message = "X2: the runner waits for the inputs-download init container, whose default (X1) command is harmless."
+  }
+  assert {
+    condition     = one([for c in jsondecode(aws_ecs_task_definition.runner[0].container_definitions) : c.entryPoint if c.name == "runner"]) == ["/usr/bin/env"]
+    error_message = "run-task overrides replace only the command: the runner entryPoint must not be the image's quotashift.cli."
+  }
+  assert {
+    condition     = one([for c in jsondecode(aws_ecs_task_definition.runner[0].container_definitions) : c.linuxParameters.initProcessEnabled if c.name == "runner"]) == true && length(regexall("ssmmessages:OpenDataChannel", aws_iam_role_policy.runner_exec.policy)) == 1
+    error_message = "X2: ECS Exec needs initProcessEnabled and the four ssmmessages channels on the task role."
+  }
+  assert {
+    condition     = length(regexall("/inputs/\\*", aws_iam_role_policy.runner_s3.policy)) == 1 && length(regexall("s3:PutObject[^]]*inputs", aws_iam_role_policy.runner_s3.policy)) == 0
+    error_message = "X2: the runner may only READ the inputs prefix."
   }
 }
 

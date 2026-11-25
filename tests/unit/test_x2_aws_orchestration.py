@@ -1,0 +1,247 @@
+"""X2 G1 orchestration, offline: runner image contents vs every pinned file, aws_ops.sh X2 routing / refusals (fake
+`aws` and `terraform`; nothing reaches AWS), and the in-VPC entry wrapper's integrity checks."""
+
+from __future__ import annotations
+
+import fnmatch
+import io
+import json
+import os
+import stat
+import subprocess
+import sys
+import tarfile
+from pathlib import Path
+
+import pytest
+
+REPO = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(REPO / "scripts"))
+import pin_x1  # noqa: E402
+import pin_x1_amendment  # noqa: E402
+import pin_x2  # noqa: E402
+import x2_runner_entry as ent  # noqa: E402
+
+ROLE = "arn:aws:sts::111122223333:assumed-role/quotashift-x1-operator/s"
+SHA = "a" * 64
+
+
+# ------------------------------------------------------------------------------------------------ image contents
+def _copy_sources() -> list[str]:
+    srcs: list[str] = []
+    for ln in (REPO / "docker" / "Dockerfile").read_text().splitlines():
+        if ln.startswith("COPY ") and "--from=" not in ln:
+            parts = ln.split()[1:]
+            srcs += [p.rstrip("/") for p in parts[:-1]]
+    return srcs
+
+
+def _ignored(rel: str) -> bool:
+    pats = [x.strip() for x in (REPO / ".dockerignore").read_text().splitlines() if x.strip() and not x.startswith("#")]
+    return any(rel == p or rel.startswith(p.rstrip("/") + "/") or fnmatch.fnmatch(rel, p) for p in pats)
+
+
+def _in_image(rel: str) -> bool:
+    return any(rel == s or rel.startswith(s + "/") for s in _copy_sources()) and not _ignored(rel)
+
+
+def test_image_contains_every_pinned_file_and_no_raw_evidence():
+    pinned = {*pin_x2.FILES, *pin_x1.FILES, *pin_x1_amendment.FILES, *pin_x1.V5_DEPENDENCIES, *pin_x2.V5_DEPENDENCIES,
+              "experiments/x2/FROZEN_SHA256.json", "experiments/x1/FROZEN_SHA256.json",
+              "experiments/x1/AMENDMENT_A1_SHA256.json", "experiments/v5/FROZEN_SHA256.json"}
+    missing = sorted(f for f in pinned if not _in_image(f))
+    assert missing == [], missing
+    for raw in ("reports/x1/g0m0/preflight/a1_requests.json", "reports/x2/g1m0/calA/STAGE_LOG.json",
+                "results/x2_g1m0_X2a/requests.parquet", ".x2_inputs/g1m0.tar.gz", "reports/backup/BACKUP_MANIFEST.json"):
+        assert not _in_image(raw), raw
+
+
+def test_runner_task_entrypoint_and_image_user_dirs():
+    tf = (REPO / "infra" / "terraform" / "compute.tf").read_text()
+    assert 'entryPoint      = ["/usr/bin/env"]' in tf
+    df = (REPO / "docker" / "Dockerfile").read_text()
+    assert "chown -R quotashift /app/results /app/reports /app/experiments" in df and "install -y --no-install-recommends git" in df
+
+
+# ------------------------------------------------------------------------------------------------ aws_ops.sh
+def _bins(tmp: Path) -> dict:
+    b = tmp / "bin"
+    b.mkdir()
+    log = tmp / "calls.log"
+    files = {
+        "aws": f'''printf '%s\\n' "aws $*" >> {log}
+case "$1 $2" in
+  "sts get-caller-identity") echo "{ROLE}";;
+  "ecs describe-services") echo "1";;
+  "ecs run-task") echo "arn:task/x2";;
+esac''',
+        "terraform": f'''echo "terraform $*" >> {log}
+if [[ "$*" == *"output -raw runner_task_definition_family"* ]]; then echo "quotashift-research-runner"; exit 0; fi
+if [[ "$*" == *"output -raw results_bucket"* ]]; then echo "qs-results"; exit 0; fi
+if [[ "$*" == *"output -raw"* ]]; then echo fake-output; exit 0; fi''',
+    }
+    for name, body in files.items():
+        p = b / name
+        p.write_text("#!/usr/bin/env bash\n" + body + "\n")
+        p.chmod(p.stat().st_mode | stat.S_IEXEC)
+    return {**os.environ, "PATH": f"{b}:{os.environ['PATH']}", "CALLS": str(log)}
+
+
+def _run(env: dict, *args: str, **extra: str) -> tuple[subprocess.CompletedProcess, list[str]]:
+    e = {k: v for k, v in env.items() if not k.startswith(("QUOTASHIFT_STAGE", "QUOTASHIFT_X2", "QUOTASHIFT_APPROVED"))}
+    e.update(extra)
+    r = subprocess.run(["bash", str(REPO / "scripts" / "aws_ops.sh"), *args], cwd=REPO, env=e, capture_output=True,
+                       text=True, input="yes\n")
+    p = Path(env["CALLS"])
+    return r, (p.read_text().splitlines() if p.exists() else [])
+
+
+def _overrides(log: list[str]) -> dict:
+    line = next(x for x in log if x.startswith("aws ecs run-task"))
+    return json.loads(line[line.index("--overrides ") + len("--overrides "):].split(" --query")[0])
+
+
+def test_run_stage_x2_cal_routes_to_the_frozen_stage_driver(tmp_path):
+    r, log = _run(_bins(tmp_path), "run-stage", "research", QUOTASHIFT_APPROVED="run-stage",
+                  QUOTASHIFT_STAGE_APPROVAL="x2_cal_g1m0", QUOTASHIFT_X2_INPUTS_SHA256=SHA)
+    assert r.returncode == 0, r.stderr
+    o = _overrides(log)
+    run = next(c for c in o["containerOverrides"] if c["name"] == "runner")
+    assert run["command"][:4] == ["python", "scripts/x2_runner_entry.py", "run", "--"]
+    assert "scripts/x2_stage.py" in run["command"] and "--live" in run["command"] and "calA" in run["command"]
+    env = {e["name"]: e["value"] for e in run["environment"]}
+    assert env == {"QUOTASHIFT_APPROVED": "x2_cal_g1m0", "QUOTASHIFT_X2_PLATFORM": "g1m0",
+                   "QUOTASHIFT_TARGET": "x2-g1-qwen", "QUOTASHIFT_X2_INPUTS_SHA256": SHA}
+    dl = next(c for c in o["containerOverrides"] if c["name"] == "inputs-download")
+    assert dl["command"][:3] == ["s3", "cp", f"s3://qs-results/inputs/{SHA}.tar.gz"]
+    assert "assignPublicIp=DISABLED" in next(x for x in log if x.startswith("aws ecs run-task"))
+    assert "--enable-execute-command" not in next(x for x in log if x.startswith("aws ecs run-task"))
+
+
+def test_run_stage_x2_qual_uses_ecs_exec_and_prints_the_interactive_command(tmp_path):
+    r, log = _run(_bins(tmp_path), "run-stage", "research", QUOTASHIFT_APPROVED="run-stage",
+                  QUOTASHIFT_STAGE_APPROVAL="x2_qual_g1m1", QUOTASHIFT_X2_INPUTS_SHA256=SHA)
+    assert r.returncode == 0, r.stderr
+    assert "--enable-execute-command" in next(x for x in log if x.startswith("aws ecs run-task"))
+    run = next(c for c in _overrides(log)["containerOverrides"] if c["name"] == "runner")
+    assert run["command"][2] == "hold" and {e["name"]: e["value"] for e in run["environment"]}["QUOTASHIFT_TARGET"] == "x2-g1-mistral"
+    assert "x2_qualify.py --platform g1m1 --live" in r.stdout and "execute-command" in r.stdout
+
+
+@pytest.mark.parametrize(("token", "sha", "why"), [
+    ("x2_cal_g0m0", SHA, "G0 never runs on AWS"), ("x2_cal_g1m0", "", "inputs sha required"),
+    ("x2_calA_g1m0", SHA, "not an X2 token"), ("x2_qual_g1m0", "XYZ", "malformed sha")])
+def test_run_stage_x2_refusals(tmp_path, token, sha, why):
+    r, log = _run(_bins(tmp_path), "run-stage", "research", QUOTASHIFT_APPROVED="run-stage",
+                  QUOTASHIFT_STAGE_APPROVAL=token, QUOTASHIFT_X2_INPUTS_SHA256=sha)
+    assert r.returncode in (2, 3), (why, r.stdout, r.stderr)
+    assert not any(x.startswith("aws ecs run-task") for x in log), why
+
+
+def test_run_stage_x2_rejects_arbitrary_extra_arguments(tmp_path):
+    r, log = _run(_bins(tmp_path), "run-stage", "research", "--path", "direct", QUOTASHIFT_APPROVED="run-stage",
+                  QUOTASHIFT_STAGE_APPROVAL="x2_main_g1m0", QUOTASHIFT_X2_INPUTS_SHA256=SHA)
+    assert r.returncode == 3 and not any(x.startswith("aws ecs run-task") for x in log)
+
+
+def test_run_stage_x1_path_unchanged(tmp_path):
+    r, log = _run(_bins(tmp_path), "run-stage", "research", "--platform", "g1m0", "--phase", "calA", "--live",
+                  QUOTASHIFT_APPROVED="run-stage", QUOTASHIFT_STAGE_APPROVAL="x1_calA_g1m0")
+    assert r.returncode == 0 and "scripts/x1_stage.py" in next(x for x in log if x.startswith("aws ecs run-task"))
+
+
+def test_x2_inputs_refusals(tmp_path):
+    r, log = _run(_bins(tmp_path), "x2-inputs", "research", "g0m0", QUOTASHIFT_APPROVED="x2-inputs")
+    assert r.returncode == 3 and "G1 platforms only" in r.stderr
+    r, log = _run(_bins(tmp_path / "b" if (tmp_path / "b").mkdir() is None else tmp_path), "x2-inputs", "research",
+                  "g1m0", QUOTASHIFT_APPROVED="x2-inputs")
+    assert r.returncode == 3 and not any(x.startswith("aws s3 cp") for x in log)
+    r, _ = _run(_bins(tmp_path / "c" if (tmp_path / "c").mkdir() is None else tmp_path), "x2-inputs", "research", "g1m0")
+    assert r.returncode == 3 and "approval-gated" in r.stderr
+
+
+# ------------------------------------------------------------------------------------------------ entry wrapper
+def _tree(root: Path, plat: str = "g1m0") -> None:
+    for rel, body in ((f"experiments/x2/{plat}/QUALIFICATION.json", '{"status": "pass"}'),
+                      (f"experiments/x2/{plat}/calA/x2_{plat}_calA_aa_ind_L110_C8.yaml", "a: 1\n"),
+                      (f"reports/x2/{plat}/calA/STAGE_LOG.json", '{"status": "completed"}')):
+        p = root / rel
+        p.parent.mkdir(parents=True, exist_ok=True)
+        p.write_text(body)
+
+
+def test_pack_is_deterministic_and_extract_verifies(tmp_path):
+    _tree(tmp_path / "repo")
+    a = ent.pack("g1m0", tmp_path / "a.tgz", tmp_path / "repo")
+    b = ent.pack("g1m0", tmp_path / "b.tgz", tmp_path / "repo")
+    assert a == b
+    files = ent.extract("g1m0", inputs=tmp_path / "a.tgz", want_sha=a, root=tmp_path / "app")
+    assert sorted(files) == sorted(["experiments/x2/g1m0/QUALIFICATION.json",
+                                    "experiments/x2/g1m0/calA/x2_g1m0_calA_aa_ind_L110_C8.yaml",
+                                    "reports/x2/g1m0/calA/STAGE_LOG.json"])
+    with pytest.raises(SystemExit):
+        ent.extract("g1m0", inputs=tmp_path / "a.tgz", want_sha="0" * 64, root=tmp_path / "app2")
+    with pytest.raises(SystemExit):                              # inputs of another platform
+        ent.extract("g1m1", inputs=tmp_path / "a.tgz", want_sha=a, root=tmp_path / "app3")
+
+
+@pytest.mark.parametrize("name", ["../evil", "/etc/passwd", "experiments/x2/g1m0/../../x", "scripts/x2_stage.py",
+                                  "experiments/x2/FROZEN_SHA256.json"])
+def test_extract_rejects_unsafe_or_foreign_members(tmp_path, name):
+    tgz = tmp_path / "bad.tgz"
+    with tarfile.open(tgz, "w:gz") as tf:
+        ti = tarfile.TarInfo(name)
+        ti.size = 1
+        tf.addfile(ti, io.BytesIO(b"x"))
+    with pytest.raises(SystemExit):
+        ent.extract("g1m0", inputs=tgz, want_sha=ent.sha256(tgz), root=tmp_path / "app")
+
+
+def test_overrides_validation():
+    env = {"QUOTASHIFT_X2_INPUTS_SHA256": SHA, "QUOTASHIFT_STAGE_APPROVAL": "x2_main_g1m0"}
+    o = ent.overrides("main", "g1m0", "b", ["--rerun", "x2_g1m0_X2a", "--reason", "harness fix"], env)
+    assert o["containerOverrides"][0]["command"][-4:] == ["--rerun", "x2_g1m0_X2a", "--reason", "harness fix"]
+    for kind, plat, extra, e in (("main", "g1m1", [], env), ("main", "g1m0", ["--path", "direct"], env),
+                                 ("qual", "g1m0", [], {**env, "QUOTASHIFT_STAGE_APPROVAL": "x2_qual_g1m0", "QUOTASHIFT_X2_INPUTS_SHA256": ""}),
+                                 ("qual", "g1m0", ["--k", "4"], {**env, "QUOTASHIFT_STAGE_APPROVAL": "x2_qual_g1m0"}),
+                                 ("cal", "g0m0", [], {**env, "QUOTASHIFT_STAGE_APPROVAL": "x2_cal_g0m0"})):
+        with pytest.raises(SystemExit):
+            ent.overrides(kind, plat, "b", extra, e)
+
+
+def test_entry_refuses_outside_vpc_for_g0_and_for_non_x2_commands(tmp_path, monkeypatch):
+    for k in ("QUOTASHIFT_IN_VPC_RUNNER", "QUOTASHIFT_X2_PLATFORM", "QUOTASHIFT_TARGET"):
+        monkeypatch.delenv(k, raising=False)
+    monkeypatch.setenv("QUOTASHIFT_X2_PLATFORM", "g0m0")
+    with pytest.raises(SystemExit):
+        ent.main(["run", "--", "python", "scripts/x2_stage.py"])
+    monkeypatch.setenv("QUOTASHIFT_X2_PLATFORM", "g1m0")
+    with pytest.raises(SystemExit):
+        ent.main(["run", "--", "python", "scripts/x2_stage.py"])          # not in the VPC runner
+    _tree(tmp_path / "repo")
+    sha = ent.pack("g1m0", tmp_path / "app" / "inputs" / "inputs.tar.gz", tmp_path / "repo")
+    monkeypatch.setattr(ent, "APP", tmp_path / "app")
+    monkeypatch.setattr(ent, "INPUTS", tmp_path / "app" / "inputs" / "inputs.tar.gz")
+    for k, v in (("QUOTASHIFT_IN_VPC_RUNNER", "1"), ("QUOTASHIFT_TARGET", "x2-g1-qwen"), ("QUOTASHIFT_X2_INPUTS_SHA256", sha)):
+        monkeypatch.setenv(k, v)
+    with pytest.raises(SystemExit):
+        ent.main(["run", "--", "bash", "-c", "echo hi"])                  # only the frozen X2 drivers
+
+
+# ------------------------------------------------------------------------------------------------ IAM proposal / readiness
+def test_x2_operator_iam_addition_is_scoped():
+    pol = json.loads((REPO / "infra" / "iam" / "x2-operator-additions.json").read_text())
+    (st,) = pol["Statement"]
+    assert st["Effect"] == "Allow" and st["Action"] == "ecs:ExecuteCommand"
+    assert all(r.startswith("arn:aws:ecs:us-east-1:*:") and "quotashift-" in r for r in st["Resource"])
+    assert st["Condition"]["StringEquals"] == {"aws:RequestedRegion": "us-east-1", "ecs:container-name": "runner"}
+
+
+def test_readiness_stats_and_no_address_leak():
+    import x2_network_readiness as nr
+    s = nr.rtt_stats([1.0, 2.0, 3.0, 4.0, 100.0], 6)
+    assert s["n"] == 5 and abs(s["loss"] - 1 / 6) < 1e-9 and s["median_ms"] == 3.0 and s["p95_ms"] == 100.0
+    assert nr.rtt_stats([], 10)["loss"] == 1.0
+    assert nr.IPV4.search("10.0.0.1") and not nr.IPV4.search("x2-g0-qwen")
+    for f in (REPO / "reports" / "x2" / "readiness").glob("*.json"):
+        assert not nr.IPV4.search(f.read_text()), f

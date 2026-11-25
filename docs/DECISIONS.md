@@ -529,3 +529,18 @@ Written **before** the re-run, from the read-only forensic review of attempt 1 (
   
   `pin_x2.py` re-verifies the v5 pins and the X1 manifests at every check.
 - **Not done:** X2 Freeze Commit 1, any live qualification, calibration or main run, any AWS action, any server restart.
+
+## ADR-X2-F1 — X2 Freeze Commit 1 and G1 orchestration (2026-11-25)
+- **Freeze 1** (`x2_freeze1`, the owner's autonomous plan): pinned the reviewed `6fc5707` candidate unchanged (24 files). Manifest sha256 `b5033468…`; every freeze check matches.
+- **G1 orchestration** (`aws_ops.sh x2-inputs` plus the X2 `run-stage` branch, `scripts/x2_runner_entry.py`):
+  - SHA-256-pinned per-phase inputs;
+  - only the frozen X2 drivers run;
+  - qualification uses ECS Exec, because the frozen driver needs an interactive "yes".
+- **Defects fixed, all outside the frozen set:**
+  - runner `entryPoint` (overrides were prefixed by the image ENTRYPOINT);
+  - the image now carries every pinned file, selectively, and no raw evidence;
+  - `git` in the image;
+  - runner-writable directories;
+  - bash 3.2 empty-array expansion.
+- **Proposed, not applied:** operator IAM `ecs:ExecuteCommand`, runner container only.
+- **Readiness baseline:** Wi-Fi at both ends (ICMP sd 33.2 ms); `network_ready: false`.

@@ -79,9 +79,23 @@ resource "aws_iam_role_policy" "runner_s3" {
     Statement = [
       { Effect = "Allow", Action = ["s3:PutObject", "s3:GetObject"], Resource = "${aws_s3_bucket.results.arn}/results/*" },
       { Effect = "Allow", Action = ["s3:GetObject"], Resource = "${aws_s3_bucket.results.arn}/configs/*" },
+      { Effect = "Allow", Action = ["s3:GetObject"], Resource = "${aws_s3_bucket.results.arn}/inputs/*" }, # X2 per-phase inputs (read-only)
       { Effect = "Allow", Action = ["s3:ListBucket"], Resource = aws_s3_bucket.results.arn,
-      Condition = { StringLike = { "s3:prefix" = ["results/*", "configs/*"] } } },
+      Condition = { StringLike = { "s3:prefix" = ["results/*", "configs/*", "inputs/*"] } } },
     ]
+  })
+}
+
+# X2: ECS Exec into the runner (qualification on G1: the frozen driver asks the operator for an interactive "yes").
+# These are the four channel actions ECS Exec requires on the TASK role; the operator additionally needs
+# ecs:ExecuteCommand (proposed in infra/iam/x2-operator-additions.json, not applied).
+resource "aws_iam_role_policy" "runner_exec" {
+  name = "ecs-exec-channels"
+  role = aws_iam_role.runner_task.id
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{ Effect = "Allow", Action = ["ssmmessages:CreateControlChannel", "ssmmessages:CreateDataChannel",
+    "ssmmessages:OpenControlChannel", "ssmmessages:OpenDataChannel"], Resource = "*" }]
   })
 }
 

@@ -337,11 +337,28 @@ resource "aws_ecs_task_definition" "runner" {
   volume {
     name = "results"
   }
-  container_definitions = jsonencode(concat([{
-    name        = "runner"
-    image       = var.runner_image
-    essential   = var.model_sync_image == ""
-    mountPoints = [{ sourceVolume = "results", containerPath = "/app/results" }]
+  # X2: per-phase inputs (docs/X2_CAMPAIGN_RUNBOOK.md) are fetched by the digest-pinned AWS CLI image into this volume before
+  # the runner starts; the runner verifies their SHA-256 (scripts/x2_runner_entry.py). X1 runs: the init container only
+  # prints its version (default command) and the volume stays empty.
+  volume {
+    name = "inputs"
+  }
+  container_definitions = jsonencode(concat(var.model_sync_image == "" ? [] : [{
+    name             = "inputs-download"
+    image            = var.model_sync_image
+    essential        = false
+    command          = ["--version"]
+    mountPoints      = [{ sourceVolume = "inputs", containerPath = "/app/inputs" }]
+    logConfiguration = { logDriver = "awslogs", options = { awslogs-group = aws_cloudwatch_log_group.runner.name, awslogs-region = var.region, awslogs-stream-prefix = "inputs-download" } }
+    }], [{
+    name            = "runner"
+    image           = var.runner_image
+    entryPoint      = ["/usr/bin/env"] # overrides replace only `command`; the image ENTRYPOINT (quotashift.cli) would prefix it
+    essential       = var.model_sync_image == ""
+    dependsOn       = var.model_sync_image == "" ? [] : [{ containerName = "inputs-download", condition = "SUCCESS" }]
+    linuxParameters = { initProcessEnabled = true } # ECS Exec (X2 qualification on G1 needs an interactive "yes")
+    mountPoints = concat([{ sourceVolume = "results", containerPath = "/app/results" }],
+    var.model_sync_image == "" ? [] : [{ sourceVolume = "inputs", containerPath = "/app/inputs", readOnly = true }])
     environment = [
       { name = "QUOTASHIFT_RESULTS_S3", value = "s3://${aws_s3_bucket.results.bucket}/results/" },
       { name = "QUOTASHIFT_IN_VPC_RUNNER", value = "1" },

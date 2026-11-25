@@ -116,3 +116,21 @@ Recorded in the commit message and the session report:
 - `pin_x1_amendment.py --check`;
 - `pin_v5.py --check`;
 - Terraform tests.
+
+## 8. Update 2026-11-25, after X2 Freeze Commit 1 (Phase A of the owner's autonomous plan)
+
+| Item | Result |
+|---|---|
+| **X2 Freeze Commit 1** | executed with `x2_freeze1` (`4704eb3`). The re-generated candidate was identical to `6fc5707` (24 files, v5 dependencies, X1 manifest hashes). `experiments/x2/FROZEN_SHA256.json` sha256 `b5033468…`. `pin_x2`, `pin_x1`, `pin_x1_amendment` and `pin_v5` checks: match |
+| G1 orchestration | `aws_ops.sh` gains `x2-inputs` (gated; packs the committed `experiments/x2/<p>/` plus local stage reports into a deterministic, SHA-256-named tarball under `s3://<results>/inputs/`) and an X2 branch of `run-stage`. That branch accepts only `x2_<qual\|cal\|main>_<g1m0\|g1m1>` / `x2_freeze_<calA\|main>_<g1m*>`, requires the inputs SHA-256, and routes to the frozen drivers through `scripts/x2_runner_entry.py`, which verifies, extracts safely, runs and exports. Qualification goes through ECS Exec (the frozen driver needs an interactive "yes"). The X1 branch is unchanged |
+| Defects found and fixed (non-frozen) | **(1)** the runner container inherited the image ENTRYPOINT `python -m quotashift.cli`, so every run-task command override (X1 and X2) would have been run as `quotashift.cli python …`. Task-definition `entryPoint = ["/usr/bin/env"]` (Terraform-tested). **(2)** the runner image lacked the files the frozen pin checks hash (X2 documents, `reports/x2/*.json`, X1 A1 files, the X2 tfvars); every in-VPC X2 run would have refused. Copied selectively; a test checks every pinned file is in the image and no raw evidence is. **(3)** the image had no `git` (the frozen `x2_qualify` calls `git status`). **(4)** `/app/experiments` and `/app/reports` were not writable by the runner user. **(5)** `aws_ops.sh` empty-array expansion under `set -u` on macOS bash 3.2 |
+| Terraform | runner: `inputs` volume plus an `inputs-download` init container (pinned aws-cli; default command `--version`, harmless for X1); runner depends on it; `initProcessEnabled`; runner task role may **read** `inputs/*` and has the four ssmmessages channels for ECS Exec. Tests **21 of 21**; state-bootstrap 2 of 2; validate OK |
+| IAM (proposed, not applied) | `infra/iam/x2-operator-additions.json`: `ecs:ExecuteCommand` on `quotashift-*` tasks, container `runner` only, us-east-1 |
+| Readiness baseline (read-only, 10:46) | runner **Wi-Fi**, host **wireless** (`network_ready: false`). ICMP (200): median 12.9, p95 108.6, sd 33.2 ms, 0% loss. HTTP `/health` (50): median 25.5, p95 31.0, sd 4.7 ms. Host: k3s agent still restart-looping, unattended-upgrades and apt timers active, sysstat active, GDM active, driver 595.99.02, vLLM (Qwen, X1 template) up since 00:10, no sampler |
+| Security | no secrets in tracked files (the only match is the synthetic `AKIAABCD…` fixture of the X1 export-gate test); `.dockerignore` excludes all raw evidence and inputs tarballs; `.gitignore` covers `reports/x2/<platform>/`, `results/x2_*`, `.x2_inputs/` |
+
+**Blockers now** (§5 updated):
+- **Done:** B-X2-3 (Freeze 1).
+- **Unchanged:** B-X2-1 Ethernet; B-X2-2 host hygiene; B-X2-5 runner image build and push; B-X2-6 tfvars and state; B-X2-7 off-machine backup; B-X2-8 G0 server per platform.
+- **Replaced:** B-X2-4 is now **B-X2-4′**. Apply the proposed operator IAM addition and install the Session Manager plugin, both needed only for G1 qualification.
+- **New, B-X2-9:** first-boot check on G1 that the runner (uid 10001) can write the Fargate `results` volume. This applies to X1 and X2 alike, and the image's directory ownership doesn't carry over to a volume mount.

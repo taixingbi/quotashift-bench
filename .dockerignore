@@ -3,3 +3,15 @@ results
 infra/terraform/.terraform
 **/__pycache__
 .git
+# raw / private evidence never enters an image
+reports/x1/g0m0
+reports/x1/g0m1
+reports/x1/g1m0
+reports/x1/g1m1
+reports/x2/g0m0
+reports/x2/g0m1
+reports/x2/g1m0
+reports/x2/g1m1
+reports/backup
+.x2_inputs
+results

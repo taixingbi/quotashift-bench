@@ -1,0 +1,20 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "X2EcsExecIntoRunnerOnly",
+      "Effect": "Allow",
+      "Action": "ecs:ExecuteCommand",
+      "Resource": [
+        "arn:aws:ecs:us-east-1:*:cluster/quotashift-*",
+        "arn:aws:ecs:us-east-1:*:task/quotashift-*/*"
+      ],
+      "Condition": {
+        "StringEquals": {
+          "aws:RequestedRegion": "us-east-1",
+          "ecs:container-name": "runner"
+        }
+      }
+    }
+  ]
+}
