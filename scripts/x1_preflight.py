@@ -185,12 +185,12 @@ def tokenizer_parity(host: str, base: str, plat: str, n: int = 60) -> dict:
 # ------------------------------------------------------------------------------------------------ host sampler
 def sampler_start(host: str, tag: str) -> None:
     ssh(host, "cat > $HOME/x1/x1_host_sampler.py", stdin=(REPO / "scripts" / "x1_host_sampler.py").read_text())
-    ssh(host, f"pkill -f 'x1_host_sampler.py' || true; nohup python3 $HOME/x1/x1_host_sampler.py --duration 0 "
-              f"> $HOME/x1/telemetry_{tag}.jsonl 2>&1 < /dev/null & sleep 2; pgrep -f x1_host_sampler.py >/dev/null")
+    ssh(host, f"pkill -f '[x]1_host_sampler.py' || true; nohup python3 $HOME/x1/x1_host_sampler.py --duration 0 "
+              f"> $HOME/x1/telemetry_{tag}.jsonl 2>&1 < /dev/null & sleep 2; pgrep -f '[x]1_host_sampler.py' >/dev/null")
 
 
 def sampler_stop(host: str, tag: str, dst: Path) -> list[dict]:
-    ssh(host, "pkill -INT -f 'x1_host_sampler.py' || true; sleep 1; pkill -f 'x1_host_sampler.py' || true")
+    ssh(host, "pkill -INT -f '[x]1_host_sampler.py' || true; sleep 1; pkill -f '[x]1_host_sampler.py' || true")
     text = ssh(host, f"cat $HOME/x1/telemetry_{tag}.jsonl")
     dst.parent.mkdir(parents=True, exist_ok=True)
     dst.write_text(text)
