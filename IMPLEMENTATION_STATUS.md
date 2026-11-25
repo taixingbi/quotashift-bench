@@ -178,6 +178,7 @@ Design: `docs/PROTOCOL_V5.md` (FROZEN 2026-11-24). ADR-Q19 accepted. No v5 stage
 | X1 offline preparation | ✅ 2026-11-24: infra complete offline (Cloud Map vLLM DNS, in-process gateway, runner + results sidecar, state bootstrap, budget/stop/destroy tests; tf 19/19 + 2/2; plans 62/62/65/7 add, 0 change); X1-G candidate (generator, predictor, analysis, stage driver, pinning; Freeze 1 NOT executed); reports docs/X1_FREEZE_CANDIDATE.md, docs/X1_AWS_DEPLOYMENT_READINESS.md. Blockers B1–B7 |
 | X1 B1 + Freeze 1 preparation | ✅ 2026-11-24: B1 applied + verified (live = reviewed 9727889; trust unchanged; simulator 23/23 + 54/54); per-phase trace-freeze ordering implemented + tested; H5 params locked; clock alignment + platform identity gates; owner/budget config git-ignored; deploy/stop/run-stage guards; Freeze 1 manifest in docs/X1_FREEZE1_REQUEST.md (NOT executed) |
 | X1 closeout | ✅ 2026-11-25: X1 closed at G0 preflight (g0m0 not admissible: A1 FAIL `fb81bef`, equivalence not established; no confirmatory X1 data). `docs/X1_CLOSEOUT.md`; X2 draft proposal `docs/PROTOCOL_X2_DRAFT.md` (not approved, not frozen) |
+| X2 offline preparation | ✅ 2026-11-25: protocol rev 2 (freeze candidate), instrumentation spec + host audit, Q1 sizing (T1s, K 64 x M 40), generator/stage/qualify/analysis/freeze/pins + tests, G1 snapshot daemon (TF, off by default), backup manifest. X2 Freeze 1 NOT executed; nothing live |
 
 ## Verification (this pass)
 `uv run pytest -q` → see Phase 9 report; `ruff` + `mypy` clean;

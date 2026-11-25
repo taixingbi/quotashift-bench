@@ -1,0 +1,11 @@
+# X2 target (x2-g1-mistral): docs/X2_INSTRUMENTATION_SPEC.md. Same server/model as x1-g1-mistral; NO GPU telemetry polling during arms
+# (gpu_telemetry: none) and no DCGM exporter scrape (X2 measured-window policy). Not frozen until X2 Freeze Commit 1.
+name: x2-g1-mistral
+kind: aws
+backend_url: http://vllm.quotashift.internal:8000
+model: mistralai/Mistral-7B-Instruct-v0.3
+model_revision: c170c708c41dac9275d15a8fff4eca08d52bab71
+max_model_len: 4096
+gpu_type: NVIDIA L4
+gpu_type_source: owner_stated
+gpu_telemetry: none

@@ -1,0 +1,42 @@
+{
+ "kind": "X2 freeze CANDIDATE (not a freeze; X2 Freeze Commit 1 not executed)",
+ "created_utc": "2026-11-25T14:24:50.775444+00:00",
+ "files": {
+  "docs/PROTOCOL_X2_DRAFT.md": "424bba95804e40cdd92f95504560081c44f4ceea0d445e09acfb96c365d3ce1e",
+  "docs/X2_INSTRUMENTATION_SPEC.md": "8ff33ee0b21c5944b1ed7504f079e0847d6fabed3b5adaafca61bce44c209ba8",
+  "docs/X2_HOST_AUDIT.md": "6b0fc611d1468990d1c72e754b704fca1408b8a7a5e4a23098b0898aae921ee0",
+  "scripts/build_x2.py": "3c62db334e238c9f8758d5cf80e0972ab29096017713b4ae0762dc52f106e96d",
+  "scripts/x2_stage.py": "e6742805391945776a4e93c96bbb1c2914d5cf731d478a6d9ef9780805162eab",
+  "scripts/x2_qualify.py": "8f416b5170879a122651428da5af85b16166b6dc8079456f25f00c0626781047",
+  "scripts/x2_select_rates.py": "10a76f3c3efa18b2658e22131a90ff09939df2635ab1b883f7f1289ec709e9d8",
+  "scripts/x2_analysis.py": "ef5a0c328f0b6e6e5fc11068bd4515700392a5000fc093d0a84dcb1c0dd07213",
+  "scripts/freeze_x2_traces.py": "93b97a1edfff21987599df877d86b39b3042ca6560a0bb0609815cc581d71ec3",
+  "scripts/pin_x2.py": "c2a370ed0f4f8d4ff9147431efaa81f18de9546bacbfcb264c69885694a229b0",
+  "scripts/x2_host_snapshot.py": "2694c40a45350a9faa27d39e4bb32bd41f534e734b2471121410c8a6808a3320",
+  "scripts/x2_q1_power.py": "7253418d6f43c1c6c0f5a8e00755f6bd27fa7a2fd2d5d4c2ebcab565cf8f58ca",
+  "reports/x2/Q1_POWER.json": "f0c1c295b0a079a70dbdbf9664577a841c0f9d05bd3c476a923aab55b745841d",
+  "scripts/x2_verdict_power.py": "efc3361b9e7311fcf0d4f7fa2b1a5f7cf1566b591237e1f3f8201a6d0108853f",
+  "reports/x2/VERDICT_POWER.json": "c1b753d01defdd6a7a3f56828af16b49c4d365ea4da36e033be36f587fe21933",
+  "src/quotashift/x2/__init__.py": "0a9d1b54acb475fc54510513d31c37b6ec8d8e36b6eaea2fadb7052a11e446e8",
+  "src/quotashift/x2/snapshot.py": "bbb693667d70cb53e86f8b51c14d191e7f611781d43e3667024b0108c45b5571",
+  "src/quotashift/x2/qualification.py": "f3548dca1af282366368d64b863948c449e0910330814d661fc069498e5b45cc",
+  "src/quotashift/local.py": "efcc9565a3de105b0f02780800f62bfe1549612adf80ec33be7ccd68d9ac977c",
+  "configs/targets/x2-g0-qwen.yaml": "e20f5e4d0c318aac253bea8f70b4aa58c67f23352b2df2b35df6b464b4cc4144",
+  "configs/targets/x2-g0-mistral.yaml": "0cbb88dc23b0455f02f290ea12546e9340111d5699ac65b41802449e90faee03",
+  "configs/targets/x2-g1-qwen.yaml": "697e5f73711d8d5a169893b2c63af803fcd8f05fd025d842ea59de8cd3dd9665",
+  "configs/targets/x2-g1-mistral.yaml": "3c42072db77c05879eaaa9564d8d2202ee390acacb6c871af7fb7d6bed1448b8",
+  "infra/terraform/envs/research.x2.tfvars": "ce549e54a615e27dd96057991f5b4d234cc7e1dfdbd01b0ef5a104a7062336f5"
+ },
+ "v5_dependencies": {
+  "scripts/v5_analysis.py": "d894baae9f50d74c1c5105aedb4f32ddf03438e0980ee248ff8f64e00d7d98bf",
+  "scripts/build_v5.py": "fd36b1e186fc3a3395e0a739c179aee0f0d0a29a62bbba7daca821cee0010926",
+  "scripts/v5_stage.py": "532dbfca4730c9db080e6dd411fcb2cbdada9b66cd8c1a3aff42f0fc55f113a0",
+  "scripts/freeze_v5.py": "f753abaf9147ccacb3b523f0a5f2e68df939e1668688a264a7c2d36d20c43c3f",
+  "scripts/freeze_v4.py": "cdc0d26881aedb5791c3b306371b2d360b963a7290f9fdae9614b3ef11f2666b"
+ },
+ "v5_manifest_sha256": "e8aa80835c2f99a5b9ccec028fef2dba44196c176c0794329612510f7c3ceca2",
+ "x1_manifests_sha256": {
+  "experiments/x1/FROZEN_SHA256.json": "39ae158cb36389fb6e1e9a0fa1b59d2990267be04800a031b504f86e7aa216f9",
+  "experiments/x1/AMENDMENT_A1_SHA256.json": "d99bdbae58b24a3ef53523d07021bcd50d847aec45de741d1ab68b5bdce2a032"
+ }
+}

@@ -491,3 +491,41 @@ Written **before** the re-run, from the read-only forensic review of attempt 1 (
 - **The remaining three platforms** could reach GENERALISES only with 3 of 3. They cannot be run as frozen; none was tested.
 - **X2** (`docs/PROTOCOL_X2_DRAFT.md`): a separate draft. It has no in-band GPU-host instrumentation, boundary-snapshot accounting, a pre-registered instrumentation-invariance gate sized for heavy tails, platform-local self-calibration with no anchor, a focused hypothesis set (H1 effect, H2/H3 cap-dependence, H4 localisation), new seeds (20990–23023) and new `x2_*` approvals.
 - **Unchanged.** No X1 or v5 frozen file changed; nothing was run.
+
+## ADR-X2-OFFLINE — X2 offline preparation: instrumentation, Q1 sizing, implementation, freeze candidate (2026-11-25)
+- **Owner review of rev 1 (`dbca42a`):**
+  - full 2 × 2, with gpu-node-2 kept;
+  - offline Q1 sizing approved;
+  - before/after snapshots accepted on condition (no intra-arm bursts);
+  - C = 32 and direct kept;
+  - 1.25× and the new seeds kept.
+  
+  Protocol rev 2 is `docs/PROTOCOL_X2_DRAFT.md`, a freeze candidate.
+- **Host audit** (`docs/X2_HOST_AUDIT.md`; read-only):
+  - **G0:**
+    - the runner ↔ gpu-node-2 path is **Wi-Fi at both ends** (RTT sd 22.5 ms);
+    - a k3s agent (server unreachable, no pods), a desktop session and package / sysstat timers are resident;
+    - no telemetry exporters.
+  - **G1 under X1 targets:** DCGM was scraped on the GPU host during arms, and the X1 sampler daemon ran.
+  - **Harness:** the frozen v5 harness scrapes `/metrics` every 0.5 s inside arms (kept; included in qualification).
+- **Instrumentation** (`docs/X2_INSTRUMENTATION_SPEC.md`):
+  - no harness host action and no GPU polling inside measured windows;
+  - boundary snapshots: before → 15 s guard → arm → after;
+  - G0 transport ssh; G1 an idle HTTP snapshot daemon (Terraform, off by default; X2 overlay disables the sampler and DCGM);
+  - opt-in `QUOTASHIFT_X2_BOUNDARY` hook in `src/quotashift/local.py` (not v5-pinned; inert when unset, tested);
+  - `gpu_telemetry: none` target option (default unchanged).
+- **Q1 sizing** (`scripts/x2_q1_power.py`, three runs, all kept):
+  - **run 1:** boundary error;
+  - **run 2:** no valid candidate. T1 is liberal under X1-shaped intermittent effects (0.071); bootstrap-t 0.083; trimmed mean 0.44;
+  - **run 3:** size checked at each design's own K, and a strict 95% interval added (declared before the run).
+  - **Chosen:** **T1s, K = 64, M = 40** — worst size 0.039, power 1.00 base / 0.806 pessimistic, about 58 min on G0.
+  - **Power collapses** to 0.01–0.20 when 20–30% of segments are up to 10 ms slow in both arms.
+- **Implementation (not frozen):**
+  - `scripts/build_x2.py` (self-calibrated grid, no anchor);
+  - `x2_stage.py`, `x2_qualify.py`, `x2_select_rates.py`, `x2_analysis.py` (frozen v5 rules), `freeze_x2_traces.py`, `pin_x2.py`;
+  - `x2_host_snapshot.py`; `src/quotashift/x2/{snapshot,qualification}.py`;
+  - X2 targets and `envs/research.x2.tfvars`;
+  - tests for each.
+  
+  `pin_x2.py` re-verifies the v5 pins and the X1 manifests at every check.
+- **Not done:** X2 Freeze Commit 1, any live qualification, calibration or main run, any AWS action, any server restart.

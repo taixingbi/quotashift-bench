@@ -29,8 +29,9 @@ def backend_for(scenario: ScenarioConfig, target: TargetProfile | None) -> Backe
                          f"max_model_len={target.max_model_len}")
     return BackendConfig(kind="vllm", base_url=target.backend_url, model=target.model, ignore_eos=scenario.ignore_eos,
                          model_revision=target.model_revision,
-                         gpu_source="exporter" if target.gpu_exporter_url else "nvidia-smi",
-                         gpu_exporter_url=target.gpu_exporter_url,
+                         gpu_source=("none" if target.gpu_telemetry == "none" else
+                                     "exporter" if target.gpu_exporter_url else "nvidia-smi"),
+                         gpu_exporter_url=None if target.gpu_telemetry == "none" else target.gpu_exporter_url,
                          gpu_type=(f"{target.gpu_type} ({target.gpu_type_source})" if target.gpu_type else None))
 
 
@@ -182,6 +183,12 @@ def run_matched_pairs(
                 f"or cache_reset: vllm_endpoint. First: {prior[0]}")
     label: str = scenario.comparison.primary_control
     v2 = scenario.protocol_version >= 2
+    # X2 boundary snapshots (docs/X2_INSTRUMENTATION_SPEC.md): opt-in via QUOTASHIFT_X2_BOUNDARY, set only by X2 drivers.
+    # Unset (v4/v5/X1 and every other caller): None, and nothing below changes behaviour.
+    from quotashift.x2.snapshot import from_env as _x2_boundary_from_env
+
+    boundary = _x2_boundary_from_env()
+    boundary_log: dict[int, dict] = {}
     for i, s in enumerate(seeds):
         atk_trace, ctl_trace, label = paired_traces(scenario, s, count)
         # budget gate is evaluated on exactly the traces that will be sent (post-nonce in v2)
@@ -204,9 +211,14 @@ def run_matched_pairs(
                 from quotashift.workload.lifecycle import lifecycle_plans
 
                 plans = lifecycle_plans(scenario, atk_trace, s)
+            pre = boundary.before(f"{scenario.scenario_id}/{s}/{arm}") if boundary is not None else None
             out = run_scenario_local(
                 scenario, results_root, target=target, trace=atk_trace if arm == "attack" else ctl_trace,
                 experiment_id=f"{scenario.scenario_id}__{arm}", seed=s, path=path, lifecycle_plans=plans)
+            if boundary is not None and pre is not None:
+                rec = boundary.after(pre, out)
+                boundary_log.setdefault(s, {})[arm] = {"flags": rec["flags"], "metrics": rec["metrics"],
+                                                       "transport": rec["transport"], "guard_s": rec["guard_s"]}
             (attack if arm == "attack" else control)[s] = out
             summ = json.loads((out / "metrics_summary.json").read_text())
             st = ((summ.get("engine_counters") or {}).get("engine_state_at_start") or {}).get("process_start_time_seconds")
@@ -218,9 +230,12 @@ def run_matched_pairs(
             chk = summ.get("cleanup_checks") or {}
             if chk.get("leak_detected"):  # stop the stress experiment; record the defect
                 raise LifecycleLeak(f"cleanup check failed after {arm} seed {s}: {chk} (run dir {out})")
-    return {"seeds": seeds, "attack": attack, "control": control, "control_label": label, "budgets": budgets,
-            "arm_order": order, "protocol_version": scenario.protocol_version, "path": path,
-            "cache_resets": resets, "tokenization": tokenization}
+    res = {"seeds": seeds, "attack": attack, "control": control, "control_label": label, "budgets": budgets,
+           "arm_order": order, "protocol_version": scenario.protocol_version, "path": path,
+           "cache_resets": resets, "tokenization": tokenization}
+    if boundary is not None:
+        res["x2_host_snapshots"] = boundary_log
+    return res
 
 
 def budget_view(scenario: ScenarioConfig, atk: list, seed: int) -> list:

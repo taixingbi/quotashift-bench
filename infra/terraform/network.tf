@@ -181,6 +181,16 @@ resource "aws_vpc_security_group_ingress_rule" "dcgm_from_runner" {
   description                  = "DCGM exporter metrics from the generators' collector only"
 }
 
+resource "aws_vpc_security_group_ingress_rule" "x2_snapshotd_from_runner" {
+  count                        = var.enable_x2_snapshotd ? 1 : 0
+  security_group_id            = aws_security_group.gpu_host.id
+  referenced_security_group_id = aws_security_group.runner.id
+  ip_protocol                  = "tcp"
+  from_port                    = var.x2_snapshotd_port
+  to_port                      = var.x2_snapshotd_port
+  description                  = "X2 boundary-snapshot daemon from the runner only"
+}
+
 resource "aws_vpc_security_group_egress_rule" "gpu_host_all" {
   security_group_id = aws_security_group.gpu_host.id
   ip_protocol       = "-1"

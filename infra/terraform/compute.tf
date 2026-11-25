@@ -284,6 +284,40 @@ resource "aws_ecs_service" "host_sampler" {
   scheduling_strategy = "DAEMON" # runs only while a GPU instance exists
 }
 
+# ---------------------------------------------------------------- X2 boundary-snapshot daemon (GPU host; X2 only)
+# docs/X2_INSTRUMENTATION_SPEC.md: one read-only /proc snapshot per HTTP GET, requested by the runner only OUTSIDE measured
+# windows (before the 15 s guard and after the arm). No periodic work, no logging, no writes; shipped base64 + SHA-256.
+resource "aws_ecs_task_definition" "x2_snapshotd" {
+  count                    = var.enable_x2_snapshotd ? 1 : 0
+  family                   = "${local.name}-x2-snapshotd"
+  requires_compatibilities = ["EC2"]
+  network_mode             = "host"
+  pid_mode                 = "host"
+  execution_role_arn       = aws_iam_role.task_execution.arn
+  container_definitions = jsonencode([{
+    name                   = "x2-snapshotd"
+    image                  = var.host_sampler_image
+    essential              = true
+    memoryReservation      = 64
+    readonlyRootFilesystem = true
+    entryPoint             = ["python3", "-c", "import base64,os,sys;sys.argv=['x2_host_snapshot.py','--serve',os.environ['X2_PORT']];exec(compile(base64.b64decode(os.environ['X2_SNAPSHOT_B64']),'x2_host_snapshot.py','exec'))"]
+    environment = [
+      { name = "X2_SNAPSHOT_B64", value = filebase64("${path.module}/../../scripts/x2_host_snapshot.py") },
+      { name = "X2_SNAPSHOT_SHA256", value = filesha256("${path.module}/../../scripts/x2_host_snapshot.py") },
+      { name = "X2_PORT", value = tostring(var.x2_snapshotd_port) },
+    ]
+  }])
+}
+
+resource "aws_ecs_service" "x2_snapshotd" {
+  count               = var.enable_x2_snapshotd ? 1 : 0
+  name                = "${local.name}-x2-snapshotd"
+  cluster             = aws_ecs_cluster.this.id
+  task_definition     = aws_ecs_task_definition.x2_snapshotd[0].arn
+  launch_type         = "EC2"
+  scheduling_strategy = "DAEMON" # runs only while a GPU instance exists
+}
+
 # ---------------------------------------------------------------- runner (gateway + load generator) on Fargate
 resource "aws_ecs_task_definition" "runner" {
   count                    = var.runner_image == "" ? 0 : 1

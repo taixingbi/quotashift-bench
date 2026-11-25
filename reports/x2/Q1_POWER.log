@@ -1,0 +1,35 @@
+K=32 M=40  28.9 min | base T1 1.000 T1s 1.000 | pess T1 0.499 T1s 0.269 T3 0.673
+K=32 M=80  38.7 min | base T1 1.000 T1s 1.000 | pess T1 0.534 T1s 0.310 T3 0.696
+K=48 M=40  43.3 min | base T1 1.000 T1s 1.000 | pess T1 0.764 T1s 0.603 T3 0.843
+K=48 M=80  58.1 min | base T1 1.000 T1s 1.000 | pess T1 0.803 T1s 0.660 T3 0.872
+K=56 M=40  50.6 min | base T1 1.000 T1s 1.000 | pess T1 0.846 T1s 0.728 T3 0.927
+K=56 M=80  67.7 min | base T1 1.000 T1s 1.000 | pess T1 0.880 T1s 0.768 T3 0.939
+K=64 M=40  57.8 min | base T1 1.000 T1s 1.000 | pess T1 0.904 T1s 0.806 T3 0.937
+K=64 M=80  77.4 min | base T1 1.000 T1s 1.000 | pess T1 0.926 T1s 0.844 T3 0.951
+K=72 M=40  65.0 min | base T1 1.000 T1s 1.000 | pess T1 0.933 T1s 0.869 T3 0.967
+K=72 M=80  87.1 min | base T1 1.000 T1s 1.000 | pess T1 0.948 T1s 0.894 T3 0.979
+K=80 M=40  72.2 min | base T1 1.000 T1s 1.000 | pess T1 0.958 T1s 0.908 T3 0.985
+K=80 M=80  96.8 min | base T1 1.000 T1s 1.000 | pess T1 0.971 T1s 0.936 T3 0.990
+K=96 M=40  86.7 min | base T1 1.000 T1s 1.000 | pess T1 0.981 T1s 0.959 T3 0.993
+K=96 M=80 116.1 min | base T1 1.000 T1s 1.000 | pess T1 0.992 T1s 0.976 T3 0.998
+K=112 M=40 101.1 min | base T1 1.000 T1s 1.000 | pess T1 0.993 T1s 0.983 T3 0.998
+K=112 M=80 135.5 min | base T1 1.000 T1s 1.000 | pess T1 0.995 T1s 0.988 T3 0.998
+K=128 M=40 115.6 min | base T1 1.000 T1s 1.000 | pess T1 0.998 T1s 0.993 T3 0.999
+K=128 M=80 154.8 min | base T1 1.000 T1s 1.000 | pess T1 0.999 T1s 0.995 T3 1.000
+size K=48 M=80: worst {'T1': 0.0723} R1 {'T1': False}
+size K=56 M=40: worst {'T1': 0.06985} R1 {'T1': False}
+size K=56 M=80: worst {'T1': 0.0699} R1 {'T1': False}
+size K=64 M=40: worst {'T1': 0.06655, 'T1s': 0.03875} R1 {'T1': False, 'T1s': True}
+size K=64 M=80: worst {'T1': 0.071, 'T1s': 0.0421} R1 {'T1': False, 'T1s': True}
+size K=72 M=40: worst {'T1': 0.067, 'T1s': 0.03775} R1 {'T1': False, 'T1s': True}
+size K=72 M=80: worst {'T1': 0.06835, 'T1s': 0.03915} R1 {'T1': False, 'T1s': True}
+size K=80 M=40: worst {'T1': 0.0655, 'T1s': 0.03795} R1 {'T1': False, 'T1s': True}
+size K=80 M=80: worst {'T1': 0.067, 'T1s': 0.0386} R1 {'T1': False, 'T1s': True}
+size K=96 M=40: worst {'T1': 0.06225, 'T1s': 0.0357} R1 {'T1': False, 'T1s': True}
+size K=96 M=80: worst {'T1': 0.06685, 'T1s': 0.03905} R1 {'T1': False, 'T1s': True}
+size K=112 M=40: worst {'T1': 0.0633, 'T1s': 0.03735} R1 {'T1': False, 'T1s': True}
+size K=112 M=80: worst {'T1': 0.0642, 'T1s': 0.03655} R1 {'T1': False, 'T1s': True}
+size K=128 M=40: worst {'T1': 0.0622, 'T1s': 0.0337} R1 {'T1': False, 'T1s': True}
+size K=128 M=80: worst {'T1': 0.0656, 'T1s': 0.0368} R1 {'T1': False, 'T1s': True}
+chosen: {'test': 'T1s', 'K': 64, 'M': 40, 'q1_min_G0': 57.8, 'base': 1.0, 'pess': 0.80575, 'worst_size': 0.03875}
+rc 0

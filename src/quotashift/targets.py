@@ -41,6 +41,9 @@ class TargetProfile(BaseModel):
     gpu_type: str | None = None
     gpu_type_source: Literal["owner_stated", "measured"] | None = None
     gpu_exporter_url: str | None = None
+    # "none": no GPU telemetry polling at all during arms (X2 measured-window policy; docs/X2_INSTRUMENTATION_SPEC.md).
+    # Default "auto" keeps the historical behaviour (exporter if configured, else local nvidia-smi).
+    gpu_telemetry: Literal["auto", "none"] = "auto"
 
     @model_validator(mode="after")
     def _check(self) -> TargetProfile:

@@ -269,3 +269,10 @@
 - **What the failure means.** Equivalence was not established. There is no evidence that the effect exceeds δ.
 - **Effect shape.** The ON-procedure shift is intermittent (5 of 24 pairs at +3–5 ms) and its cause is unidentified.
 - **Follow-on.** Any cross-platform claim now requires the separate X2 protocol (draft).
+
+## X2 (preparation, 2026-11-25)
+- **G0 measurement path is wireless at both ends.** RTT sd 22.5 ms in the audit; it applies to all earlier G0 runs too. X2 requires wired Ethernet before G0 qualification (blocker B-X2-1).
+- **Boundary snapshots give arm means only.** Intra-arm CPU bursts are not observable (owner condition).
+- **Q1 can fail for lack of power on a noisy host or path.** Power is 0.01–0.20 when 20–30% of segments are up to 10 ms slow. Such a failure is reported as "equivalence not established".
+- **G0 resident processes are tracked, not controlled.** The desktop session, k3s agent and package timers are flagged by the inventory; disabling them is an owner action.
+- **The X1 A1 qualification rule (90% t-interval) is liberal under X1-shaped intermittent effects.** Simulated size is about 0.07 at K = 24–48. X2 uses the 95% interval. This does not change the X1 A1 verdict, which was FAIL.

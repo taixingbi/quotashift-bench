@@ -1,0 +1,11 @@
+# X2 target (x2-g0-qwen): docs/X2_INSTRUMENTATION_SPEC.md. Same server/model as x1-g0-qwen; NO GPU telemetry polling during arms
+# (gpu_telemetry: none) and no DCGM exporter scrape (X2 measured-window policy). Not frozen until X2 Freeze Commit 1.
+name: x2-g0-qwen
+kind: selfhost
+backend_url: http://192.168.86.176:8000
+model: Qwen/Qwen2.5-7B-Instruct
+model_revision: a09a35458c702b33eeacc393d103063234e8bc28
+max_model_len: 4096
+gpu_type: NVIDIA GeForce RTX 3090
+gpu_type_source: measured
+gpu_telemetry: none

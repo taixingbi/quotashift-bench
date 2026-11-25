@@ -164,6 +164,17 @@ variable "enable_host_sampler" {
   description = "X1 host-telemetry sampler (scripts/x1_host_sampler.py) as an ECS daemon with host PID namespace; read-only /proc, output to CloudWatch."
 }
 
+variable "enable_x2_snapshotd" {
+  type        = bool
+  default     = false
+  description = "X2 boundary-snapshot daemon (scripts/x2_host_snapshot.py --serve) on the GPU host: host PID namespace, read-only /proc, no logging, idle in accept() between requests; reachable from the runner only. X1 stacks leave it off."
+}
+
+variable "x2_snapshotd_port" {
+  type    = number
+  default = 9500
+}
+
 variable "host_sampler_image" {
   type    = string
   default = "python@sha256:229a2c5bfa27522db7815ea81f9bed70af17ccb9de9fc7ad142b1877b5830d36" # = python 3.12.13-slim (Docker Hub index digest, 2026-11-24)

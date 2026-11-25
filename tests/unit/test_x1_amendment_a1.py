@@ -68,10 +68,15 @@ def test_incomplete_or_unverified_segments_fail_closed():
 
 def test_failed_attempts_are_not_reclassified():
     """Attempts 1 and 2 were judged by the frozen rev 4 rule and stay FAIL; A1 cannot evaluate their 20 + 20 design."""
-    for f, diff in (("HOST_VERIFICATION.attempt1.json", -9.342750010546297), ("HOST_VERIFICATION.json", 1.2319580418989062)):
+    # attempt 2 has lived in HOST_VERIFICATION.attempt2.json since 0bc1aad; HOST_VERIFICATION.json is the A1 run (fb81bef)
+    for f, diff in (("HOST_VERIFICATION.attempt1.json", -9.342750010546297),
+                    ("HOST_VERIFICATION.attempt2.json", 1.2319580418989062)):
         rec = json.loads((REPO / "experiments" / "x1" / "g0m0" / f).read_text())["preflight"]["phase1"]
         se = rec["checks"]["sampler_equivalence"]
         assert rec["status"] == "fail" and se["status"] == "fail" and se["diff_ms"] == pytest.approx(diff)
+    a1run = json.loads((REPO / "experiments" / "x1" / "g0m0" / "HOST_VERIFICATION.json").read_text())["preflight"]["phase1"]
+    assert a1run["amendment"]["id"] == "A1" and a1run["status"] == "fail"
+    assert a1run["checks"]["sampler_equivalence"]["ci90_ms"] == pytest.approx([0.2617660216674329, 1.4447476515548805])
     legacy = [{"pair": 0, "arm": a, "ttft_ms": [58.0] * 20, "reset_verified": True, "sampler_state_ok": True}
               for a in ("off", "on")]
     assert a1.equivalence_a1(legacy)["status"] == "fail"

@@ -1,0 +1,849 @@
+{
+ "created_utc": "2026-11-25T14:01:31.623250+00:00",
+ "note": "names, sizes and SHA-256 only; no contents",
+ "sets": {
+  "x1_raw_evidence": {
+   "files": [
+    {
+     "path": "reports/x1/g0m0/preflight/A1_RUN_SHA256SUMS",
+     "bytes": 2746,
+     "sha256": "1360b62cf95bbbd8e1315ebb54b5435b69136811e3ec0e42c65b48dce0e4c134"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/a1_driver.log",
+     "bytes": 4281,
+     "sha256": "1a0d1c29af61f7d2aa093016fab3dfe72e5c424d79b4e0f03532845bccb17be3"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/a1_requests.json",
+     "bytes": 762493,
+     "sha256": "f25cb942f1e51ced47fd2ac355b3c424040b5d899f329657cfa791b996dfce83"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/a1_segments.json",
+     "bytes": 106276,
+     "sha256": "409cdf9d05438eb3326dedf7b6f03de0371e40a44958c41a0132585f4c38337d"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/a1_telemetry/g0m0_a1_p00.jsonl",
+     "bytes": 4293,
+     "sha256": "8a0d832802f6e493f528b6080a4a5eadd7db6125a17381f2cc9bcc3d1491da6a"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/a1_telemetry/g0m0_a1_p01.jsonl",
+     "bytes": 5093,
+     "sha256": "ba09679ab1695f36183c1beb492f527e4517c3db69193b76c0e2021af8bb3ebe"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/a1_telemetry/g0m0_a1_p02.jsonl",
+     "bytes": 4274,
+     "sha256": "5b03d79ea861bf792395edd9d07d3dc1c2c8c87644fe36cb141b17923beb5c8e"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/a1_telemetry/g0m0_a1_p03.jsonl",
+     "bytes": 4286,
+     "sha256": "0ec4de7de8b11e3ae47bac8aca8fa5e84adf522b0eeb8bf707b1cf48c6aa469f"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/a1_telemetry/g0m0_a1_p04.jsonl",
+     "bytes": 4245,
+     "sha256": "1931d49f413efb427764c4c41a13c2d17c204695ccc418cb09de8b873eb27855"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/a1_telemetry/g0m0_a1_p05.jsonl",
+     "bytes": 4285,
+     "sha256": "2f5de16ecc9dcbc64d02422441961ecff4371901b524300d56d4dcf94d4390de"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/a1_telemetry/g0m0_a1_p06.jsonl",
+     "bytes": 4279,
+     "sha256": "54bfc0a3a5cf3e0cb10f8e94fe001b53c547498ced60e317e0b4547711ea13b1"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/a1_telemetry/g0m0_a1_p07.jsonl",
+     "bytes": 4272,
+     "sha256": "2e0d9c9b63f21f14387b049c61d087187c098f4b69ed4a67127dccba1d9b719e"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/a1_telemetry/g0m0_a1_p08.jsonl",
+     "bytes": 4478,
+     "sha256": "88f7186b1639b6ec9b425d881f975bc75807a7c65dab1b11887cc324c3df6d01"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/a1_telemetry/g0m0_a1_p09.jsonl",
+     "bytes": 4879,
+     "sha256": "3283018b0bb1292730a7028ffd0f6d3267ed3d9b12aee250be1fb7f3ed941322"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/a1_telemetry/g0m0_a1_p10.jsonl",
+     "bytes": 4244,
+     "sha256": "ae5a8926d0a7b08882c7565ce9a26d87de9a659a3033c97535151da8f4c9a9e5"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/a1_telemetry/g0m0_a1_p11.jsonl",
+     "bytes": 4269,
+     "sha256": "f2bd37ab6a5867a7aed875aa8d29cae7496f036fe678b44ff33d13785982f65d"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/a1_telemetry/g0m0_a1_p12.jsonl",
+     "bytes": 4292,
+     "sha256": "3a5b4ccc780fac19947f3934fe26c30cc22e36eb7c23189cdcfcc46ab0d40576"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/a1_telemetry/g0m0_a1_p13.jsonl",
+     "bytes": 4267,
+     "sha256": "e00a99cfdc5d6dd5a5977eed4c74ebae4113d2599dafb23ef34b841455ed68e2"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/a1_telemetry/g0m0_a1_p14.jsonl",
+     "bytes": 4299,
+     "sha256": "d74927b68bcfc8d9208978f71618ba74d2146a11795dedc6cea1fe99414743bd"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/a1_telemetry/g0m0_a1_p15.jsonl",
+     "bytes": 4258,
+     "sha256": "d570382cc55fe1f938e3842b97ba754aac41c6008633c9b3cde871c10c85030b"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/a1_telemetry/g0m0_a1_p16.jsonl",
+     "bytes": 4892,
+     "sha256": "7e13226bad35b09401b350fbdafcd141ff3c6934aeb10b1b001a740f80edf6d1"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/a1_telemetry/g0m0_a1_p17.jsonl",
+     "bytes": 4308,
+     "sha256": "1342fd99840a79c42322bf940f9cfdc843830bcb3a95e3b88849df906ccf9172"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/a1_telemetry/g0m0_a1_p18.jsonl",
+     "bytes": 4269,
+     "sha256": "f1633ac8d77b61bd2b62c637f17eba853ac5bb1d480d1be7c60293f885a4f49b"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/a1_telemetry/g0m0_a1_p19.jsonl",
+     "bytes": 4285,
+     "sha256": "8cf24eec7794104a4f7cf39e6762888410ee12cde6c9d7876630a36fbe7a849c"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/a1_telemetry/g0m0_a1_p20.jsonl",
+     "bytes": 4282,
+     "sha256": "23fa1ef6f2288e84f521fdd863abdf18076d1a4fd151a56cfa1fedf1f1bd3403"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/a1_telemetry/g0m0_a1_p21.jsonl",
+     "bytes": 4271,
+     "sha256": "49b3f1f2734b3d99381171bd60de9c0461eff6f25fba54ff71807a20b51588de"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/a1_telemetry/g0m0_a1_p22.jsonl",
+     "bytes": 4298,
+     "sha256": "9eea542360313018987b09061f2c4139942a3b8bcf35e79e33461df8acef6a41"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/a1_telemetry/g0m0_a1_p23.jsonl",
+     "bytes": 4479,
+     "sha256": "78231b406c58909972dff3118f2cf38a90ea06a4df1f513418643303bc5ede10"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/attempt1/isolated_ms.json",
+     "bytes": 3965,
+     "sha256": "e6dd7b26def1a234bf8962b9c86e0325c76f1b8c4381777f66cd1093e2c25677"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/attempt1/results_x1_g0m0_smoke_decode_vs_short_C8__attack/20261125T051746Z_fcfs_4990/config.resolved.yaml",
+     "bytes": 4193,
+     "sha256": "ed3328c4271968d06dc7f9d541ad71deebebe9d810a171610976426bbd2b2802"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/attempt1/results_x1_g0m0_smoke_decode_vs_short_C8__attack/20261125T051746Z_fcfs_4990/events.parquet",
+     "bytes": 15450,
+     "sha256": "c96d2dbd9bbf82a5f945baee1f42aad5e2bf7b5025b304835af984d636e08df9"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/attempt1/results_x1_g0m0_smoke_decode_vs_short_C8__attack/20261125T051746Z_fcfs_4990/manifest.json",
+     "bytes": 4110,
+     "sha256": "e002dba94f2c7a1f79472c1f6237af19bf377fe5051ed40bf58791b27cc6e349"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/attempt1/results_x1_g0m0_smoke_decode_vs_short_C8__attack/20261125T051746Z_fcfs_4990/metrics_summary.json",
+     "bytes": 17148,
+     "sha256": "6e5521fa3cd4ee318b29c41594dbbbffd634097852b9473a970f63075463850a"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/attempt1/results_x1_g0m0_smoke_decode_vs_short_C8__attack/20261125T051746Z_fcfs_4990/metrics_timeseries.parquet",
+     "bytes": 18139,
+     "sha256": "2d3e7ffb192ef01c686cb5014f3b7d8b06ceba649a900fc285f296ec67dad728"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/attempt1/results_x1_g0m0_smoke_decode_vs_short_C8__attack/20261125T051746Z_fcfs_4990/requests.parquet",
+     "bytes": 23618,
+     "sha256": "62be22aa5fc74429503eab69aea44aa72c5e940d6e3bbebae4e41aa01c796b8e"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/attempt1/results_x1_g0m0_smoke_decode_vs_short_C8__attack/20261125T051746Z_fcfs_4990/trace.jsonl",
+     "bytes": 72584,
+     "sha256": "ca7239f0e560f9c388bddc91daf1f51ed372e386f9a1c3f50f7e6672445dec63"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/attempt1/results_x1_g0m0_smoke_decode_vs_short_C8__attack/20261125T052053Z_fcfs_4991/config.resolved.yaml",
+     "bytes": 4193,
+     "sha256": "ed3328c4271968d06dc7f9d541ad71deebebe9d810a171610976426bbd2b2802"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/attempt1/results_x1_g0m0_smoke_decode_vs_short_C8__attack/20261125T052053Z_fcfs_4991/events.parquet",
+     "bytes": 13720,
+     "sha256": "5acb0e73364c908c0f2503d937f4cb61ee63340feff33a11f4d2c5bf881a1de1"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/attempt1/results_x1_g0m0_smoke_decode_vs_short_C8__attack/20261125T052053Z_fcfs_4991/manifest.json",
+     "bytes": 4110,
+     "sha256": "31cd30705e9bec638d35b362214092cb04992783bfafd851e0f863ed43ebf7a6"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/attempt1/results_x1_g0m0_smoke_decode_vs_short_C8__attack/20261125T052053Z_fcfs_4991/metrics_summary.json",
+     "bytes": 17195,
+     "sha256": "6efa14ee61a23de68a89f56cd059c110d884c9046ded65de80cceb7efd20d0da"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/attempt1/results_x1_g0m0_smoke_decode_vs_short_C8__attack/20261125T052053Z_fcfs_4991/metrics_timeseries.parquet",
+     "bytes": 17965,
+     "sha256": "4731c15dcf7c92d346e4fe17042ae5c54f3c686e4082efbdcbf9f6808ef45b37"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/attempt1/results_x1_g0m0_smoke_decode_vs_short_C8__attack/20261125T052053Z_fcfs_4991/requests.parquet",
+     "bytes": 22052,
+     "sha256": "9212380dbfd9d0edc77c5f28e3d4d7d26f1cc7f7286b8e0879e698a090afdb44"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/attempt1/results_x1_g0m0_smoke_decode_vs_short_C8__attack/20261125T052053Z_fcfs_4991/trace.jsonl",
+     "bytes": 60334,
+     "sha256": "4c86c0d279f7eb488ea5ca5300399505e28397c46b4c7d9cb3d499aa661afe9a"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/attempt1/results_x1_g0m0_smoke_decode_vs_short_C8__control/20261125T051850Z_fcfs_4990/config.resolved.yaml",
+     "bytes": 4194,
+     "sha256": "c72d4e907460b38b323a70d52d256fbeba31116cf4315ba43660af35ff6cdcae"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/attempt1/results_x1_g0m0_smoke_decode_vs_short_C8__control/20261125T051850Z_fcfs_4990/events.parquet",
+     "bytes": 20811,
+     "sha256": "adc0a356d0dfc5858a9ff05dfc5bc7025497cb08bdaf061d65e39d5a2dd60f8a"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/attempt1/results_x1_g0m0_smoke_decode_vs_short_C8__control/20261125T051850Z_fcfs_4990/manifest.json",
+     "bytes": 4113,
+     "sha256": "89986b5c7974adeeae829fb599ba7af8bbbfde55e2f79f9b7adcfba26d8c32d0"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/attempt1/results_x1_g0m0_smoke_decode_vs_short_C8__control/20261125T051850Z_fcfs_4990/metrics_summary.json",
+     "bytes": 17275,
+     "sha256": "cfda47cd216f382d24e05831a6b57155dde932b3f9c0da19623fc0f4aeab8fce"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/attempt1/results_x1_g0m0_smoke_decode_vs_short_C8__control/20261125T051850Z_fcfs_4990/metrics_timeseries.parquet",
+     "bytes": 18131,
+     "sha256": "8a6036527d59d324f34ec7ba9e638dfa2bd97c8670de136c8ccae45b5d4ff4e1"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/attempt1/results_x1_g0m0_smoke_decode_vs_short_C8__control/20261125T051850Z_fcfs_4990/requests.parquet",
+     "bytes": 28025,
+     "sha256": "3b5cfa53a71daede7cd4c3f6b64d6fc9949dd22efac7f526855d9d6c769d3a02"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/attempt1/results_x1_g0m0_smoke_decode_vs_short_C8__control/20261125T051850Z_fcfs_4990/trace.jsonl",
+     "bytes": 114312,
+     "sha256": "a9df61dd8b6709fb1b7819e865b9df89571fcccc7175757a9b278e5b059aaabc"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/attempt1/results_x1_g0m0_smoke_decode_vs_short_C8__control/20261125T051951Z_fcfs_4991/config.resolved.yaml",
+     "bytes": 4194,
+     "sha256": "c72d4e907460b38b323a70d52d256fbeba31116cf4315ba43660af35ff6cdcae"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/attempt1/results_x1_g0m0_smoke_decode_vs_short_C8__control/20261125T051951Z_fcfs_4991/events.parquet",
+     "bytes": 19019,
+     "sha256": "e4a8a8e50f8dd63493d59a15b4c1bbffe102ce0ae25d20e075fe62b477c64be9"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/attempt1/results_x1_g0m0_smoke_decode_vs_short_C8__control/20261125T051951Z_fcfs_4991/manifest.json",
+     "bytes": 4111,
+     "sha256": "38553a631a8a9cf9e62d09f122c2a58fef370e8ad85a3ddb87e678aea6f15304"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/attempt1/results_x1_g0m0_smoke_decode_vs_short_C8__control/20261125T051951Z_fcfs_4991/metrics_summary.json",
+     "bytes": 17273,
+     "sha256": "c880255fe1dc9a22a77fecf6dbbd486c3886f5dc3fd39fad97d49e9be4145eb2"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/attempt1/results_x1_g0m0_smoke_decode_vs_short_C8__control/20261125T051951Z_fcfs_4991/metrics_timeseries.parquet",
+     "bytes": 17858,
+     "sha256": "ba39a3cdb265f28266f82ef09b36bde14b589ba1f8b31202875ca1caef322264"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/attempt1/results_x1_g0m0_smoke_decode_vs_short_C8__control/20261125T051951Z_fcfs_4991/requests.parquet",
+     "bytes": 26469,
+     "sha256": "168b685c5e363913e7343f6404b938d7d62cf2926a17163a270e009293597963"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/attempt1/results_x1_g0m0_smoke_decode_vs_short_C8__control/20261125T051951Z_fcfs_4991/trace.jsonl",
+     "bytes": 102062,
+     "sha256": "16f4cfbb647ff822325bb1e261722a865537b127784693d2db8a489855a79a81"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/attempt1/telemetry_phase1.jsonl",
+     "bytes": 7712,
+     "sha256": "865e850913b7341afdb06c5a027d251b3d1664c3ef8f5d77dcd80627b1a5f334"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/attempt1/x1_g0m0_smoke_decode_vs_short_C8/figure_degradation_ratio.png",
+     "bytes": 37572,
+     "sha256": "3a12af54c98eb2d159ad41d2227926832d7f1b6c73569b1258002535ec55dee0"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/attempt1/x1_g0m0_smoke_decode_vs_short_C8/figure_victim_latency.png",
+     "bytes": 25077,
+     "sha256": "51b680a484c3e3e00cda9f00f9a03e0ed5e77640d28168abcf40839954124545"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/attempt1/x1_g0m0_smoke_decode_vs_short_C8/manifest.json",
+     "bytes": 18293,
+     "sha256": "0168b4a4158fecf2d2766702eb4c7eabd314f24c9f6cc98d2c5b6db23f97a129"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/attempt1/x1_g0m0_smoke_decode_vs_short_C8/summary.csv",
+     "bytes": 6229,
+     "sha256": "861e826e05ac15a2c045ec420088fbe1d6bf6001009a96d1c2beb833388cf4c8"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/attempt1/x1_g0m0_smoke_decode_vs_short_C8/summary.md",
+     "bytes": 5748,
+     "sha256": "1df05e9d777286b40d6d900093da5544ae8813cd96cc46dc1548bd9d77ea91ba"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/attempt1/x1_g0m0_smoke_decode_vs_short_C8/target_snapshot/metrics_vllm.prom",
+     "bytes": 69512,
+     "sha256": "2685ef8f3a88cbbbe53753437a667a87468578787137b21a8480423fcf4b9f7b"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/attempt1/x1_g0m0_smoke_decode_vs_short_C8/target_snapshot/model_revision.json",
+     "bytes": 337,
+     "sha256": "ffbfa38a63b326c389f035bf230c48738bf19a41199dd39d41e1e0b332e293f1"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/attempt1/x1_g0m0_smoke_decode_vs_short_C8/target_snapshot/models.json",
+     "bytes": 482,
+     "sha256": "c472e680a49fe34ff2bb3c6a94d1fa9df879f63846e0a895736b499a99c0e39d"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/attempt1/x1_g0m0_smoke_decode_vs_short_C8/target_snapshot/target_check.json",
+     "bytes": 648,
+     "sha256": "4994ed9e9f82924b8c183466491a774dda81b4794826157556eed4b401de4b0e"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/attempt1/x1_g0m0_smoke_decode_vs_short_C8/target_snapshot/version.json",
+     "bytes": 20,
+     "sha256": "032f141c3b8d73536f0d2dce7cc98f78fdb1e86bfb3fdf134d81b9e121a3abf4"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/attempt1/x1_g0m0_smoke_decode_vs_short_C8.yaml",
+     "bytes": 1789,
+     "sha256": "689d296b0ec7cebbbf2fe447bb67cbefe42691cd4a5d9eb15a72cfeed533399f"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/attempt2/SHA256SUMS",
+     "bytes": 6553,
+     "sha256": "beda1bb89e50b538c551689b0457cdc2ff9b2ea52bd2d85ab3c83dfc7160877c"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/attempt2/attempt2_driver.log",
+     "bytes": 18,
+     "sha256": "d5844d23b8773458aad32efc7706966d6a200b06c51fe1ba0f2dcabfc5aacd6e"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/attempt2/isolated_ms.json",
+     "bytes": 3952,
+     "sha256": "9916bb1f216b2659961402b0e9f13693b9e0800faa25d2f0319c7ba23e2999f8"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/attempt2/remote_telemetry_g0m0_phase1.jsonl",
+     "bytes": 12904,
+     "sha256": "b2ebc8d0d2ac8bf3673022b0bedeec9f7e4d1d3c74d837f979e41c82dcc3653f"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/attempt2/results_x1_g0m0_smoke_decode_vs_short_C8__attack/20261125T114558Z_fcfs_4990/config.resolved.yaml",
+     "bytes": 4193,
+     "sha256": "ed3328c4271968d06dc7f9d541ad71deebebe9d810a171610976426bbd2b2802"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/attempt2/results_x1_g0m0_smoke_decode_vs_short_C8__attack/20261125T114558Z_fcfs_4990/events.parquet",
+     "bytes": 15469,
+     "sha256": "642f25a92f82a766a42ca8243ac54f8c62b2d69e671b93735a9319025efa256b"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/attempt2/results_x1_g0m0_smoke_decode_vs_short_C8__attack/20261125T114558Z_fcfs_4990/manifest.json",
+     "bytes": 4110,
+     "sha256": "1e98518d8df0fbf68dd6586c1af6839c20caf4e040b49d00135ca7a8be114175"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/attempt2/results_x1_g0m0_smoke_decode_vs_short_C8__attack/20261125T114558Z_fcfs_4990/metrics_summary.json",
+     "bytes": 17169,
+     "sha256": "b6d597897102aee34300430a9bc3c149ae86f1f3457937e5cf8bf0b0b9095130"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/attempt2/results_x1_g0m0_smoke_decode_vs_short_C8__attack/20261125T114558Z_fcfs_4990/metrics_timeseries.parquet",
+     "bytes": 18133,
+     "sha256": "27982671955f049ade6dc41405061e6225ff9c7337fd162310a613cb34f5a054"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/attempt2/results_x1_g0m0_smoke_decode_vs_short_C8__attack/20261125T114558Z_fcfs_4990/requests.parquet",
+     "bytes": 23578,
+     "sha256": "69cc3f8e2cf72c4192e79eaa253a8853cff8025fe051060eb01fa69acaf5a0f0"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/attempt2/results_x1_g0m0_smoke_decode_vs_short_C8__attack/20261125T114558Z_fcfs_4990/trace.jsonl",
+     "bytes": 72584,
+     "sha256": "ca7239f0e560f9c388bddc91daf1f51ed372e386f9a1c3f50f7e6672445dec63"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/attempt2/results_x1_g0m0_smoke_decode_vs_short_C8__attack/20261125T114905Z_fcfs_4991/config.resolved.yaml",
+     "bytes": 4193,
+     "sha256": "ed3328c4271968d06dc7f9d541ad71deebebe9d810a171610976426bbd2b2802"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/attempt2/results_x1_g0m0_smoke_decode_vs_short_C8__attack/20261125T114905Z_fcfs_4991/events.parquet",
+     "bytes": 13682,
+     "sha256": "3b66ee5e396ccefd49c852108b77c9daa128b21a4a2d21047eed0fcd683a41ab"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/attempt2/results_x1_g0m0_smoke_decode_vs_short_C8__attack/20261125T114905Z_fcfs_4991/manifest.json",
+     "bytes": 4110,
+     "sha256": "9be4cddfa1aaf56302eca9a197afe7a095f862ad1ef395ecf5c40fd7f06d9cba"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/attempt2/results_x1_g0m0_smoke_decode_vs_short_C8__attack/20261125T114905Z_fcfs_4991/metrics_summary.json",
+     "bytes": 17197,
+     "sha256": "409e52ab2bb27020af65ae5a91c790aa6fd4b79218978cec5bb1d5ea2ff3d9ba"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/attempt2/results_x1_g0m0_smoke_decode_vs_short_C8__attack/20261125T114905Z_fcfs_4991/metrics_timeseries.parquet",
+     "bytes": 17837,
+     "sha256": "ef91eb1089f3a87aeb25c0da6995c39e5f2d7406e8f99854376e205f1f2c9f93"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/attempt2/results_x1_g0m0_smoke_decode_vs_short_C8__attack/20261125T114905Z_fcfs_4991/requests.parquet",
+     "bytes": 22038,
+     "sha256": "0b7cd7183ed273eebf704c3ea52338951a79350069eaf48b948606faf5586105"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/attempt2/results_x1_g0m0_smoke_decode_vs_short_C8__attack/20261125T114905Z_fcfs_4991/trace.jsonl",
+     "bytes": 60334,
+     "sha256": "4c86c0d279f7eb488ea5ca5300399505e28397c46b4c7d9cb3d499aa661afe9a"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/attempt2/results_x1_g0m0_smoke_decode_vs_short_C8__control/20261125T114703Z_fcfs_4990/config.resolved.yaml",
+     "bytes": 4194,
+     "sha256": "c72d4e907460b38b323a70d52d256fbeba31116cf4315ba43660af35ff6cdcae"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/attempt2/results_x1_g0m0_smoke_decode_vs_short_C8__control/20261125T114703Z_fcfs_4990/events.parquet",
+     "bytes": 20616,
+     "sha256": "ceec894d332a5d3caab643571529374ff869526dbc716c502fc5b1e757ea51f1"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/attempt2/results_x1_g0m0_smoke_decode_vs_short_C8__control/20261125T114703Z_fcfs_4990/manifest.json",
+     "bytes": 4113,
+     "sha256": "ab06be83b8ba8f261e427d0a06c24d022c26daecd314ee2ab07f85f4c7c89ae9"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/attempt2/results_x1_g0m0_smoke_decode_vs_short_C8__control/20261125T114703Z_fcfs_4990/metrics_summary.json",
+     "bytes": 17275,
+     "sha256": "41cf9e1610c4327b41b1eb625387f70df3351a3235a34af42d06e4c5a6ae4d9b"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/attempt2/results_x1_g0m0_smoke_decode_vs_short_C8__control/20261125T114703Z_fcfs_4990/metrics_timeseries.parquet",
+     "bytes": 18188,
+     "sha256": "d3a414d8139de6fe4ffc6ccd22eb6e9d9fd6f411c6940915c4d3c763723371ee"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/attempt2/results_x1_g0m0_smoke_decode_vs_short_C8__control/20261125T114703Z_fcfs_4990/requests.parquet",
+     "bytes": 27942,
+     "sha256": "f7ca53c12859f881a2c18f3d485d91c96e87d7efe2d9cc41326ff7f7aa781750"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/attempt2/results_x1_g0m0_smoke_decode_vs_short_C8__control/20261125T114703Z_fcfs_4990/trace.jsonl",
+     "bytes": 114312,
+     "sha256": "a9df61dd8b6709fb1b7819e865b9df89571fcccc7175757a9b278e5b059aaabc"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/attempt2/results_x1_g0m0_smoke_decode_vs_short_C8__control/20261125T114804Z_fcfs_4991/config.resolved.yaml",
+     "bytes": 4194,
+     "sha256": "c72d4e907460b38b323a70d52d256fbeba31116cf4315ba43660af35ff6cdcae"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/attempt2/results_x1_g0m0_smoke_decode_vs_short_C8__control/20261125T114804Z_fcfs_4991/events.parquet",
+     "bytes": 18913,
+     "sha256": "791c33bac89a8b003f9268925dda571bbee177cee4c7110229bdd6e3efb0397d"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/attempt2/results_x1_g0m0_smoke_decode_vs_short_C8__control/20261125T114804Z_fcfs_4991/manifest.json",
+     "bytes": 4111,
+     "sha256": "9a2112a6504e8afce5db0582a8cf45fa1009c65b24cb8d9bc21ed59c4bdaed41"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/attempt2/results_x1_g0m0_smoke_decode_vs_short_C8__control/20261125T114804Z_fcfs_4991/metrics_summary.json",
+     "bytes": 17277,
+     "sha256": "28f1374622e8cba756d4202becd1de0db218f5ca7edea36e8e0d8692eba2538e"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/attempt2/results_x1_g0m0_smoke_decode_vs_short_C8__control/20261125T114804Z_fcfs_4991/metrics_timeseries.parquet",
+     "bytes": 17856,
+     "sha256": "6799aec6cb3d5168904db461917fdbdc907567e2d2f2463eaa2f0d27bfb9da9b"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/attempt2/results_x1_g0m0_smoke_decode_vs_short_C8__control/20261125T114804Z_fcfs_4991/requests.parquet",
+     "bytes": 26361,
+     "sha256": "a9a0bc657ee0e73b4808dec38255241c928d24eb81acf4c12b93049ea5fc04c6"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/attempt2/results_x1_g0m0_smoke_decode_vs_short_C8__control/20261125T114804Z_fcfs_4991/trace.jsonl",
+     "bytes": 102062,
+     "sha256": "16f4cfbb647ff822325bb1e261722a865537b127784693d2db8a489855a79a81"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/attempt2/telemetry_phase1.jsonl",
+     "bytes": 12904,
+     "sha256": "b2ebc8d0d2ac8bf3673022b0bedeec9f7e4d1d3c74d837f979e41c82dcc3653f"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/attempt2/ttft_onoff_ms.json",
+     "bytes": 783,
+     "sha256": "6f3db9175bd8bc98452c3fe76c787a171e9c6484883744bb6b6158ebbffef3b9"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/attempt2/vllm_g0m0_after_attempt2.log",
+     "bytes": 486495,
+     "sha256": "957b7c5d22430bf2a0094f48c5fe1421382da9e5ab263740b746b415cf28ba64"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/attempt2/x1_g0m0_smoke_decode_vs_short_C8/figure_degradation_ratio.png",
+     "bytes": 37554,
+     "sha256": "e82cd799c7e24fe89e947a1f6c671b86b2ff89cc036ab9ff093e7a474affa2b6"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/attempt2/x1_g0m0_smoke_decode_vs_short_C8/figure_victim_latency.png",
+     "bytes": 25092,
+     "sha256": "269cb1f93c37d9b1873b77f0db96ba7e59f3b1e049c3470cf66879ef6d5a9cb8"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/attempt2/x1_g0m0_smoke_decode_vs_short_C8/manifest.json",
+     "bytes": 18293,
+     "sha256": "29a8e5501a541e6449f91c6e16c43aa6b872b7482ed17d2b5f00f69d8cab8075"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/attempt2/x1_g0m0_smoke_decode_vs_short_C8/summary.csv",
+     "bytes": 6250,
+     "sha256": "e311dd5610a7d27d9c5fe8c47458cc823ac7bc8af37d14dc345abb0ea35ac344"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/attempt2/x1_g0m0_smoke_decode_vs_short_C8/summary.md",
+     "bytes": 5751,
+     "sha256": "968bdec6375bb5b54722f14840da6ddf0bc42edfaae011a5a50d6ca0171056eb"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/attempt2/x1_g0m0_smoke_decode_vs_short_C8/target_snapshot/metrics_vllm.prom",
+     "bytes": 69603,
+     "sha256": "497713950b0281a1c3e6097fa1a848ae42c414a1add2f8c77fe7abe36cd7bab1"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/attempt2/x1_g0m0_smoke_decode_vs_short_C8/target_snapshot/model_revision.json",
+     "bytes": 337,
+     "sha256": "ffbfa38a63b326c389f035bf230c48738bf19a41199dd39d41e1e0b332e293f1"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/attempt2/x1_g0m0_smoke_decode_vs_short_C8/target_snapshot/models.json",
+     "bytes": 482,
+     "sha256": "1242dba8bbb061685c71ede1a2853b4e6a91c754face70aafe42b4d76e68f2b6"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/attempt2/x1_g0m0_smoke_decode_vs_short_C8/target_snapshot/target_check.json",
+     "bytes": 648,
+     "sha256": "b69d1bbf8b49dbf81bd6d9a28c3f694748e4038f35ac6e8a27c3420377348753"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/attempt2/x1_g0m0_smoke_decode_vs_short_C8/target_snapshot/version.json",
+     "bytes": 20,
+     "sha256": "032f141c3b8d73536f0d2dce7cc98f78fdb1e86bfb3fdf134d81b9e121a3abf4"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/attempt2/x1_g0m0_smoke_decode_vs_short_C8.yaml",
+     "bytes": 1789,
+     "sha256": "689d296b0ec7cebbbf2fe447bb67cbefe42691cd4a5d9eb15a72cfeed533399f"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/evidence_2026-11-25/SHA256SUMS",
+     "bytes": 257,
+     "sha256": "3656efed6bc213c5d75ddf0a00ef9e5e957dbcc1ceee23398837694c44002b37"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/evidence_2026-11-25/launch_g0m0.json",
+     "bytes": 101,
+     "sha256": "376c21dfdfe50f3605230864021a6b8483a2768cb3e1842a4a7d2f31d54d868d"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/evidence_2026-11-25/telemetry_g0m0_phase1.jsonl",
+     "bytes": 7712,
+     "sha256": "865e850913b7341afdb06c5a027d251b3d1664c3ef8f5d77dcd80627b1a5f334"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/evidence_2026-11-25/vllm_g0m0.log",
+     "bytes": 279903,
+     "sha256": "75c920aef8609db204a242198edc8801b65f4f9d0712d87c5f137cd235cdb350"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/isolated_ms.json",
+     "bytes": 3955,
+     "sha256": "145bc926ba2f894bdcab384f2316ba90656341479c450a51a7a3b2136c591258"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/telemetry_phase1.jsonl",
+     "bytes": 12878,
+     "sha256": "9f7837eb1d95ce1d55886186b34072fdbc81b5bb5bbf679da3e543fda2be4373"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/x1_g0m0_smoke_decode_vs_short_C8/figure_degradation_ratio.png",
+     "bytes": 37523,
+     "sha256": "53c1f70426890da6b4f54e98afc9c1e65bb5a2c5d6046ceb8cb5cb13030bd96e"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/x1_g0m0_smoke_decode_vs_short_C8/figure_victim_latency.png",
+     "bytes": 25209,
+     "sha256": "d8b3709ae32f029944e6d371c904d951ef10659518de5ee962d057ce9405e8af"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/x1_g0m0_smoke_decode_vs_short_C8/manifest.json",
+     "bytes": 18296,
+     "sha256": "c5fec2db1a659415dea8b683bd8d11e9495cf2b6ef2af9af5e2510e23c885e31"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/x1_g0m0_smoke_decode_vs_short_C8/summary.csv",
+     "bytes": 6228,
+     "sha256": "f2be8a574bbd3dceb115ef784db4579849610ba1b517ee59c1c5b7eaf3b34b2d"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/x1_g0m0_smoke_decode_vs_short_C8/summary.md",
+     "bytes": 5747,
+     "sha256": "4a70880feb7ce6e4939f6ecc9acb1ab74020c201952f3ca3eada1e5438b030e6"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/x1_g0m0_smoke_decode_vs_short_C8/target_snapshot/metrics_vllm.prom",
+     "bytes": 69857,
+     "sha256": "3b123e0199add4b7aa6b4b8bd92595b52eed51a9770f97e4c44579d63369f92f"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/x1_g0m0_smoke_decode_vs_short_C8/target_snapshot/model_revision.json",
+     "bytes": 337,
+     "sha256": "ffbfa38a63b326c389f035bf230c48738bf19a41199dd39d41e1e0b332e293f1"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/x1_g0m0_smoke_decode_vs_short_C8/target_snapshot/models.json",
+     "bytes": 482,
+     "sha256": "a5540e8a2c49e71c81f564d4fb4cc365f346396cca955db5398e91869f5b8e0f"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/x1_g0m0_smoke_decode_vs_short_C8/target_snapshot/target_check.json",
+     "bytes": 648,
+     "sha256": "fed3d8db5b8f5c2cea5ab2965ba80c135f27bf5e8463734ccc32af54aff5ac79"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/x1_g0m0_smoke_decode_vs_short_C8/target_snapshot/version.json",
+     "bytes": 20,
+     "sha256": "032f141c3b8d73536f0d2dce7cc98f78fdb1e86bfb3fdf134d81b9e121a3abf4"
+    },
+    {
+     "path": "reports/x1/g0m0/preflight/x1_g0m0_smoke_decode_vs_short_C8.yaml",
+     "bytes": 1789,
+     "sha256": "689d296b0ec7cebbbf2fe447bb67cbefe42691cd4a5d9eb15a72cfeed533399f"
+    }
+   ],
+   "n": 132,
+   "bytes": 3703346
+  },
+  "x1_results": {
+   "files": [
+    {
+     "path": "results/x1_g0m0_smoke_decode_vs_short_C8__attack/20261125T125032Z_fcfs_4990/config.resolved.yaml",
+     "bytes": 4193,
+     "sha256": "ed3328c4271968d06dc7f9d541ad71deebebe9d810a171610976426bbd2b2802"
+    },
+    {
+     "path": "results/x1_g0m0_smoke_decode_vs_short_C8__attack/20261125T125032Z_fcfs_4990/events.parquet",
+     "bytes": 15481,
+     "sha256": "30c87224af31045ff61825f65d5f8ad053d0a9002158da65ded23242d865e8dd"
+    },
+    {
+     "path": "results/x1_g0m0_smoke_decode_vs_short_C8__attack/20261125T125032Z_fcfs_4990/manifest.json",
+     "bytes": 4110,
+     "sha256": "fc1c2e5dd5b5aae021c020120d65c04a2942cbfdb26083e759f1d97ab40c611f"
+    },
+    {
+     "path": "results/x1_g0m0_smoke_decode_vs_short_C8__attack/20261125T125032Z_fcfs_4990/metrics_summary.json",
+     "bytes": 17141,
+     "sha256": "a26ad10d9a719de21ba3ff581a13547991b7c3bfbfad5eb91f7aa7bfb7569698"
+    },
+    {
+     "path": "results/x1_g0m0_smoke_decode_vs_short_C8__attack/20261125T125032Z_fcfs_4990/metrics_timeseries.parquet",
+     "bytes": 18365,
+     "sha256": "6bc99208147c7e1ecafa557d667a0d3333e1371b833f18e9916342dcbec39144"
+    },
+    {
+     "path": "results/x1_g0m0_smoke_decode_vs_short_C8__attack/20261125T125032Z_fcfs_4990/requests.parquet",
+     "bytes": 23547,
+     "sha256": "ce4213f5c47af68fe3ea1910d8183af4d8c6953ef84a435d3a1451adbc326bb2"
+    },
+    {
+     "path": "results/x1_g0m0_smoke_decode_vs_short_C8__attack/20261125T125032Z_fcfs_4990/trace.jsonl",
+     "bytes": 72584,
+     "sha256": "ca7239f0e560f9c388bddc91daf1f51ed372e386f9a1c3f50f7e6672445dec63"
+    },
+    {
+     "path": "results/x1_g0m0_smoke_decode_vs_short_C8__attack/20261125T125338Z_fcfs_4991/config.resolved.yaml",
+     "bytes": 4193,
+     "sha256": "ed3328c4271968d06dc7f9d541ad71deebebe9d810a171610976426bbd2b2802"
+    },
+    {
+     "path": "results/x1_g0m0_smoke_decode_vs_short_C8__attack/20261125T125338Z_fcfs_4991/events.parquet",
+     "bytes": 13657,
+     "sha256": "9dff8d0ef9d4a540d5de7996e852a9eba0ac6b5c20b564ecec18f761d716b025"
+    },
+    {
+     "path": "results/x1_g0m0_smoke_decode_vs_short_C8__attack/20261125T125338Z_fcfs_4991/manifest.json",
+     "bytes": 4110,
+     "sha256": "2e4e7a373a461257a90a7c1fa700af9634fe349c89bdb2c2c0a0c95a988fa2e8"
+    },
+    {
+     "path": "results/x1_g0m0_smoke_decode_vs_short_C8__attack/20261125T125338Z_fcfs_4991/metrics_summary.json",
+     "bytes": 17199,
+     "sha256": "6b7f4d61c7c68021842a7804253d8458f7d49b73d09c6391f92ee1a2c692a6eb"
+    },
+    {
+     "path": "results/x1_g0m0_smoke_decode_vs_short_C8__attack/20261125T125338Z_fcfs_4991/metrics_timeseries.parquet",
+     "bytes": 17832,
+     "sha256": "ce7f8e1e28da5ca54fb1297ca4f6be4192b24d94cdeb286b8a3d0563e92b9008"
+    },
+    {
+     "path": "results/x1_g0m0_smoke_decode_vs_short_C8__attack/20261125T125338Z_fcfs_4991/requests.parquet",
+     "bytes": 22014,
+     "sha256": "a5c5ceaf26e724b8aee86a8bf3ff153cc21ba375bb95fbde0f51103120b488ab"
+    },
+    {
+     "path": "results/x1_g0m0_smoke_decode_vs_short_C8__attack/20261125T125338Z_fcfs_4991/trace.jsonl",
+     "bytes": 60334,
+     "sha256": "4c86c0d279f7eb488ea5ca5300399505e28397c46b4c7d9cb3d499aa661afe9a"
+    },
+    {
+     "path": "results/x1_g0m0_smoke_decode_vs_short_C8__control/20261125T125136Z_fcfs_4990/config.resolved.yaml",
+     "bytes": 4194,
+     "sha256": "c72d4e907460b38b323a70d52d256fbeba31116cf4315ba43660af35ff6cdcae"
+    },
+    {
+     "path": "results/x1_g0m0_smoke_decode_vs_short_C8__control/20261125T125136Z_fcfs_4990/events.parquet",
+     "bytes": 20612,
+     "sha256": "c69db5a8b3590c93af3ebfd5312c5bc2f866a7ff27a535cc17d228c7c12c2fa4"
+    },
+    {
+     "path": "results/x1_g0m0_smoke_decode_vs_short_C8__control/20261125T125136Z_fcfs_4990/manifest.json",
+     "bytes": 4113,
+     "sha256": "143b3deb298126b686ff7ba20aa35a417c59ea62f31da5e6262234b7f81897b9"
+    },
+    {
+     "path": "results/x1_g0m0_smoke_decode_vs_short_C8__control/20261125T125136Z_fcfs_4990/metrics_summary.json",
+     "bytes": 17269,
+     "sha256": "326de126902c52f8050f054531f32becfa0dce9270e3f9a43c4057b7c2167408"
+    },
+    {
+     "path": "results/x1_g0m0_smoke_decode_vs_short_C8__control/20261125T125136Z_fcfs_4990/metrics_timeseries.parquet",
+     "bytes": 18174,
+     "sha256": "71c0d9ca95377e2f66ecc2f9abcfe5b9b5c385088bdb6aa7da4b145725b34eda"
+    },
+    {
+     "path": "results/x1_g0m0_smoke_decode_vs_short_C8__control/20261125T125136Z_fcfs_4990/requests.parquet",
+     "bytes": 27963,
+     "sha256": "a1ae64e13cfefb6b61cc887b305fd1e707286308e8d8fea7cda45cd059725bb4"
+    },
+    {
+     "path": "results/x1_g0m0_smoke_decode_vs_short_C8__control/20261125T125136Z_fcfs_4990/trace.jsonl",
+     "bytes": 114312,
+     "sha256": "a9df61dd8b6709fb1b7819e865b9df89571fcccc7175757a9b278e5b059aaabc"
+    },
+    {
+     "path": "results/x1_g0m0_smoke_decode_vs_short_C8__control/20261125T125237Z_fcfs_4991/config.resolved.yaml",
+     "bytes": 4194,
+     "sha256": "c72d4e907460b38b323a70d52d256fbeba31116cf4315ba43660af35ff6cdcae"
+    },
+    {
+     "path": "results/x1_g0m0_smoke_decode_vs_short_C8__control/20261125T125237Z_fcfs_4991/events.parquet",
+     "bytes": 18897,
+     "sha256": "a76a05a6d6b232a88c0010c8475d79217cbd0e625ea95f8c31818ac8946846aa"
+    },
+    {
+     "path": "results/x1_g0m0_smoke_decode_vs_short_C8__control/20261125T125237Z_fcfs_4991/manifest.json",
+     "bytes": 4111,
+     "sha256": "fa4a913b5124e0d3482a0902314080fdd0fdc2549577e0b3905bc1d0cf2bbf7d"
+    },
+    {
+     "path": "results/x1_g0m0_smoke_decode_vs_short_C8__control/20261125T125237Z_fcfs_4991/metrics_summary.json",
+     "bytes": 17267,
+     "sha256": "7e8f8272a54b3ea010af25a24c4033137ef91bdec029530bd92461e00f789dab"
+    },
+    {
+     "path": "results/x1_g0m0_smoke_decode_vs_short_C8__control/20261125T125237Z_fcfs_4991/metrics_timeseries.parquet",
+     "bytes": 17905,
+     "sha256": "56d4e587ebb89ad3cefbc8c858069048952d7e1c2a9ab5b4d184bd4f7c103a1f"
+    },
+    {
+     "path": "results/x1_g0m0_smoke_decode_vs_short_C8__control/20261125T125237Z_fcfs_4991/requests.parquet",
+     "bytes": 26294,
+     "sha256": "23722881a444ad0349fda40f721ae333c787732f05c3db405f2bad9b66f619c7"
+    },
+    {
+     "path": "results/x1_g0m0_smoke_decode_vs_short_C8__control/20261125T125237Z_fcfs_4991/trace.jsonl",
+     "bytes": 102062,
+     "sha256": "16f4cfbb647ff822325bb1e261722a865537b127784693d2db8a489855a79a81"
+    }
+   ],
+   "n": 28,
+   "bytes": 692127
+  },
+  "archives": {
+   "files": [
+    {
+     "path": "~/QuotaShift-backups/v5_stage_A/RAW_DATA_MANIFEST_A.json",
+     "bytes": 409605,
+     "sha256": "19c215536b17af7281235824c3312153d0bf0937a9f87515ae12c389a94d130c"
+    },
+    {
+     "path": "~/QuotaShift-backups/v5_stage_A/export_salt",
+     "bytes": 64,
+     "sha256": "157f6468e8bea80a0eb7f44df8ec9cb16ec86f1691f1e58a516087bcb819793a"
+    },
+    {
+     "path": "~/QuotaShift-backups/v5_stage_A/quotashift-v5-A.tar.gz",
+     "bytes": 22641308,
+     "sha256": "6e0cd5a11412074fc72aee5af20a7fd5add6d23eee3ec3985d7c502da0328415"
+    },
+    {
+     "path": "~/QuotaShift-backups/v5_stage_B/RAW_DATA_MANIFEST_B.json",
+     "bytes": 237504,
+     "sha256": "d697cf5f3058e779f76905da7bd28fdcd39227c8e639b4198dd23d0e464db1ab"
+    },
+    {
+     "path": "~/QuotaShift-backups/v5_stage_B/quotashift-v5-B.tar.gz",
+     "bytes": 17846895,
+     "sha256": "81ce39baeccd9a4ce736474c5e1c314c2104b0742cced387d24e58a694c7d49a"
+    }
+   ],
+   "n": 5,
+   "bytes": 41135376
+  }
+ }
+}

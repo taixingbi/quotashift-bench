@@ -400,3 +400,36 @@ run "x1_apply_and_destroy_on_mock_leave_gpu_at_zero" {
     error_message = "A (mock) apply must start no GPU and no vLLM task; the test framework then destroys everything."
   }
 }
+
+run "x2_overlay_disables_daemons_and_enables_snapshotd" {
+  command = plan
+  variables {
+    enable_host_sampler  = false
+    enable_dcgm_exporter = false
+    enable_x2_snapshotd  = true
+  }
+  assert {
+    condition     = length(aws_ecs_service.host_sampler) == 0 && length(aws_ecs_service.dcgm) == 0
+    error_message = "X2: no X1 sampler daemon and no DCGM exporter daemon on the GPU host."
+  }
+  assert {
+    condition     = aws_ecs_task_definition.x2_snapshotd[0].pid_mode == "host" && aws_ecs_service.x2_snapshotd[0].scheduling_strategy == "DAEMON"
+    error_message = "X2 snapshot daemon must be a host-PID daemon."
+  }
+  assert {
+    condition     = jsondecode(aws_ecs_task_definition.x2_snapshotd[0].container_definitions)[0].readonlyRootFilesystem == true && try(jsondecode(aws_ecs_task_definition.x2_snapshotd[0].container_definitions)[0].logConfiguration, null) == null
+    error_message = "X2 snapshot daemon must be read-only and must not log."
+  }
+  assert {
+    condition     = aws_vpc_security_group_ingress_rule.x2_snapshotd_from_runner[0].from_port == 9500 && aws_vpc_security_group_ingress_rule.x2_snapshotd_from_runner[0].referenced_security_group_id == aws_security_group.runner.id
+    error_message = "X2 snapshot daemon reachable from the runner only, on 9500."
+  }
+}
+
+run "x2_snapshotd_off_by_default" {
+  command = plan
+  assert {
+    condition     = length(aws_ecs_service.x2_snapshotd) == 0 && length(aws_vpc_security_group_ingress_rule.x2_snapshotd_from_runner) == 0
+    error_message = "X1 stacks must not run the X2 snapshot daemon."
+  }
+}
