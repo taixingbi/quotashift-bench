@@ -350,3 +350,14 @@ A1–A9 results and controls are unchanged. No v4 GPU run is made before owner a
   - 1 h operator sessions;
   - the key's only permission is assuming the two roles.
 - **Unchanged.** Root-account MFA, which is not part of this change, and the plan to retire the root access keys.
+
+## ADR-X1-B-C — X1 owner user and profiles created and verified (2026-11-24, at the owner's request)
+- **Created.** IAM user `quotashift-x1-owner`, with an assume-only inline policy and one access key stored only in the local profile, never printed.
+- **Configured.** Local profiles `quotashift-x1-readonly` (4 h) and `quotashift-x1-operator` (1 h).
+- **Live, non-mutating verification:**
+  - both roles are assumable;
+  - the user alone can do nothing else;
+  - read-only role: preflight and pricing work, launches are denied;
+  - operator role: dry-run allows only g6.xlarge with the `Project=QuotaShift` tag in us-east-1;
+  - `aws_ops.sh` refuses root.
+- **Pending (owner only).** Step D: deactivate, then later delete, the root access keys. The default CLI profile is still root.

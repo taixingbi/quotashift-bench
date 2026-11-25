@@ -1,5 +1,30 @@
 # X1-B: least-privilege, temporary-credential IAM migration checklist
 
+**Progress, 2026-11-24 20:35–20:40.** Steps B.2, B.3 and C were done by Claude at the owner's request.
+- **IAM user `quotashift-x1-owner`** created. Its only policy is the inline assume-only policy. One access key was created and written directly into the local profile `quotashift-x1-owner`; it was never printed, and `~/.aws/credentials` is mode 600.
+- **Local role profiles:**
+  - `quotashift-x1-readonly`: `role_arn` + `source_profile`, 4 h, us-east-1;
+  - `quotashift-x1-operator`: 1 h, us-east-1.
+- **Verification, all live and non-mutating:**
+
+  | Profile | Check | Result |
+  |---|---|---|
+  | owner user | `ec2 describe-regions` | **UnauthorizedOperation**: the user can only assume the two roles |
+  | readonly | identity | `assumed-role/quotashift-x1-readonly` |
+  | readonly | `check_prereqs.sh` | passes: not root; G/VT quota 4; g6.xlarge in all 5 AZs; AMI `ami-0b8f7c7154f9e8f8b` |
+  | readonly | Price List | g6.xlarge query works |
+  | readonly | `run-instances --dry-run` | **UnauthorizedOperation** |
+  | operator | identity | `assumed-role/quotashift-x1-operator` |
+  | operator | `--dry-run` g6.xlarge with `Project=QuotaShift`, us-east-1 | **DryRunOperation**, i.e. would be allowed |
+  | operator | `--dry-run` g5.2xlarge | **UnauthorizedOperation** |
+  | operator | `--dry-run` g6.xlarge without the tag | **UnauthorizedOperation** |
+  | operator | `--dry-run` g6.xlarge in us-west-2 | **UnauthorizedOperation** |
+  | — | `aws_ops.sh healthcheck` with the default root profile | **REFUSED … ROOT** |
+  | readonly | `aws_ops.sh healthcheck` | passes the identity check; then fails only because nothing is deployed (expected) |
+
+  Deny rules that would create something if they failed (access keys, Cost Explorer) were verified only with the policy simulator (23 of 23), never live.
+- **Remaining:** step D, retiring the root access keys, is for the **owner only**. The default CLI profile is still the root key. Use `AWS_PROFILE=quotashift-x1-readonly` or `AWS_PROFILE=quotashift-x1-operator` from now on.
+
 **Owner decision, 2026-11-24: MFA requirement removed** from the X1 setup.
 - The trust policies of both live roles now allow `sts:AssumeRole` only from IAM user `quotashift-x1-owner`, with **no MFA condition**.
 - `x1-owner-user-policy.json` no longer requires MFA and no longer includes MFA-device management.
