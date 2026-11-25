@@ -265,3 +265,7 @@
   - it is post hoc;
   - it bounds the sampler's effect on idle TTFT only, not under load;
   - its sample size was sized on one G0 session's noise, so a noisier platform may fail for lack of power. That outcome must be reported as inconclusive, not as sampler perturbation.
+- **Final outcome (closeout 2026-11-25, `docs/X1_CLOSEOUT.md`).** The single A1 run failed: +0.85 ms, 90% CI [+0.26, +1.44], δ 1.05 ms. g0m0 is not admissible, so X1 is closed at G0 preflight with **no confirmatory X1 results**.
+- **What the failure means.** Equivalence was not established. There is no evidence that the effect exceeds δ.
+- **Effect shape.** The ON-procedure shift is intermittent (5 of 24 pairs at +3–5 ms) and its cause is unidentified.
+- **Follow-on.** Any cross-platform claim now requires the separate X2 protocol (draft).

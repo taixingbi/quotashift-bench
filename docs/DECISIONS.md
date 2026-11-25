@@ -475,3 +475,19 @@ Written **before** the re-run, from the read-only forensic review of attempt 1 (
 - **Every other Phase 1 gate passes,** including `sampler_overhead` (0.055% of a core) and the smoke block (all 14 gates).
 - **Legacy rev 4 rule** (pooled, reported only, non-gating): would have passed (+0.58 ms).
 - **Consequence.** Per A1.6 the result is final. g0m0 is not admissible; no further attempt. Recorded as produced in `HOST_VERIFICATION.json`; attempts 1 and 2 unchanged.
+
+## ADR-X1-CLOSEOUT — X1 closed at G0 preflight; X2 proposed separately (2026-11-25)
+- **Owner decision.** Accept the final A1 FAIL (`fb81bef`). X1 G0 confirmatory execution stops; no retry, waiver or further amendment.
+- **Closeout** (`docs/X1_CLOSEOUT.md`; descriptive figures from `scripts/x1_closeout_descriptive.py` → `reports/x1/X1_CLOSEOUT_DESCRIPTIVE.json`):
+  - g0m0 is not admissible, because equivalence was **not established**.
+  - It is **not** evidence of an effect above δ (one-sided p = 0.71).
+  - A positive ON-procedure shift is detected: +0.85 ms, 90% CI [+0.26, +1.44], concentrated in 5 of 24 pairs.
+  - X1 produced no confirmatory data.
+- **Why the 2 × 2 cannot continue unchanged:**
+  - the anchor is permanently inadmissible;
+  - every remaining platform's calibration grid is anchor-relative (s_p, `X1_FREEZE_CANDIDATE.md` §2 / frozen `build_x1.grid`);
+  - the factorial loses its reference cell;
+  - the instrument is unqualified on the G0 host.
+- **The remaining three platforms** could reach GENERALISES only with 3 of 3. They cannot be run as frozen; none was tested.
+- **X2** (`docs/PROTOCOL_X2_DRAFT.md`): a separate draft. It has no in-band GPU-host instrumentation, boundary-snapshot accounting, a pre-registered instrumentation-invariance gate sized for heavy tails, platform-local self-calibration with no anchor, a focused hypothesis set (H1 effect, H2/H3 cap-dependence, H4 localisation), new seeds (20990–23023) and new `x2_*` approvals.
+- **Unchanged.** No X1 or v5 frozen file changed; nothing was run.
