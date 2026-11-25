@@ -7,7 +7,9 @@ locals {
     CostCenter  = var.cost_center
     ManagedBy   = "terraform"
   }
-  azs             = slice(data.aws_availability_zones.available.names, 0, var.az_count)
+  # primary_az (optional) pins the single-AZ stack (GPU, runner, NAT) to one named zone, e.g. when the default first zone
+  # has no g6.xlarge capacity; GPU and runner stay co-located so the measured network path does not vary between stages.
+  azs             = slice(var.primary_az != "" ? concat([var.primary_az], [for z in data.aws_availability_zones.available.names : z if z != var.primary_az]) : data.aws_availability_zones.available.names, 0, var.az_count)
   private_compute = var.network_mode != "public_egress_only"
   gpu_ami_id      = var.gpu_ami_id != "" ? var.gpu_ami_id : nonsensitive(data.aws_ssm_parameter.ecs_gpu_ami[0].value)
 }

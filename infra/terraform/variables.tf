@@ -48,6 +48,16 @@ variable "vpc_cidr" {
   default = "10.42.0.0/16"
 }
 
+variable "primary_az" {
+  type        = string
+  default     = ""
+  description = "Optional single-AZ placement (e.g. us-east-1b). Empty = the region's first available zone (previous behaviour)."
+  validation {
+    condition     = var.primary_az == "" || can(regex("^us-east-1[a-f]$", var.primary_az))
+    error_message = "primary_az must be empty or a us-east-1 zone (us-east-1a..f)."
+  }
+}
+
 variable "az_count" {
   type    = number
   default = 1

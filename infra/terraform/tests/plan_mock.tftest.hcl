@@ -453,3 +453,22 @@ run "x2_snapshotd_off_by_default" {
     error_message = "X1 stacks must not run the X2 snapshot daemon."
   }
 }
+
+run "primary_az_pins_the_single_az_stack" {
+  command = plan
+  variables {
+    primary_az = "us-east-1b"
+  }
+  assert {
+    condition     = aws_subnet.private[0].availability_zone == "us-east-1b" && aws_subnet.public[0].availability_zone == "us-east-1b" && length(aws_subnet.private) == 1
+    error_message = "primary_az must place the single private and public subnet (GPU, runner, NAT) in that zone."
+  }
+}
+
+run "primary_az_rejects_other_regions" {
+  command = plan
+  variables {
+    primary_az = "us-west-2a"
+  }
+  expect_failures = [var.primary_az]
+}
