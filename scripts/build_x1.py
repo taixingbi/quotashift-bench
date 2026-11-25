@@ -4,9 +4,10 @@ Generated YAMLs are a pure function of (platform, phase, rates); nothing is rand
 drawn later by the harness from each scenario's seed + isolation salt). The generator is FROZEN with X1 Freeze
 Commit 1; the YAMLs it produces are pinned later, together with the inputs they depend on:
 
-    calA   per platform, after preflight Phase 1: 6-rate grid scaled by the platform speed factor s_p   (Freeze 2)
-    calB   per platform, after the low/high rates are chosen from calibration A (rule in choose_rates) (Freeze 2b)
-    main   per platform, the six cells X-a..X-f at the frozen rates                                    (Freeze 3)
+    calA   per platform, after preflight Phase 1: 6-rate grid scaled by s_p; traces frozen BEFORE any calA run
+    calB   per platform, after the rates are chosen from calibration A (choose_rates); traces frozen BEFORE calB
+    main   per platform, X-a..X-f at the frozen rates; traces frozen BEFORE any main run (Freeze Commit 3)
+  (scripts/freeze_x1_traces.py + scripts/pin_x1.py --pin-phase enforce that order; x1_stage.py re-checks it)
 
     uv run python scripts/build_x1.py calA --platform g0m0 --speed-factor 1.0 --out experiments/x1
     uv run python scripts/build_x1.py calB --platform g0m0 --rates experiments/x1/g0m0/RATES.json --out experiments/x1
@@ -155,7 +156,7 @@ def build_cal_a(plat: str, speed_factor: float) -> dict[str, str]:
             plat=plat, sid=sid, phase="calibration A", what=f"rate grid point {rate} tok/s (s_p = {speed_factor}): "
             "A/A-ind short-short at C = 8; the control arm's slot demand calibrates the operating points.",
             shape="S", load=rate, control="independent_replicate", cap=8, reps=CAL_A_REPS, seed=CAL_A_SEED0,
-            traces="../FROZEN_TRACES_CAL.json")
+            traces="../FROZEN_TRACES_CALA.json")
     return files
 
 
@@ -168,7 +169,7 @@ def build_cal_b(plat: str, rates: dict) -> dict[str, str]:
             files[f"{plat}/calB/{sid}.yaml"] = scenario(
                 plat=plat, sid=sid, phase="calibration B", what=f"hold-time pools for X1-H5 at the {point} point "
                 f"({rates[point]} tok/s), C = 8; never used confirmatorily.", shape=shape, load=rates[point],
-                control=ctrl, cap=8, reps=CAL_B_REPS, seed=CAL_B_SEED0, traces="../FROZEN_TRACES_CAL.json")
+                control=ctrl, cap=8, reps=CAL_B_REPS, seed=CAL_B_SEED0, traces="../FROZEN_TRACES_CALB.json")
     return files
 
 

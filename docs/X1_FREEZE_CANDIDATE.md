@@ -1,7 +1,7 @@
 # X1 freeze candidate (X1-G preparation)
 
 **Date:** 2026-11-24.
-**Status:** CANDIDATE. **Freeze Commit 1 has NOT been executed.** `experiments/x1/FROZEN_SHA256.json` does not exist, and `scripts/pin_x1.py --write` refuses without `QUOTASHIFT_APPROVED=x1_freeze1`.
+**Status:** CANDIDATE, conditionally accepted (owner review of `9727889`); the 7 choices in §2 are approved, and the trace-freeze ordering is clarified in §2 item 2. **Freeze Commit 1 has NOT been executed.** `experiments/x1/FROZEN_SHA256.json` does not exist, and `scripts/pin_x1.py --write` refuses without `QUOTASHIFT_APPROVED=x1_freeze1`.
 **Protocol:** rev 4, owner-approved final (`docs/PROTOCOL_X1_CROSS_PLATFORM_DRAFT.md`). Nothing in rev 4 has changed:
 - hypotheses H1–H5 and D1/D2;
 - the 1.25× threshold, the [0.8, 1.25] and [0.9, 1.1] bands, and the families F-X1 (Holm over 4) and F-X2 (Holm over 8);
@@ -36,11 +36,11 @@ and they become frozen with the code.
    - **Base:** `GRID_BASE` = 120, 160, 200, 260, 330, 420 tok/s, multiplied by the platform speed factor s_p and rounded to 5 tok/s. The base spans v5's L = 200 (ρ ≈ 0.43) to L = 400 (ρ ≈ 0.72).
    - **s_p** = the platform's idle single-request decode rate for the D shape, divided by G0-anchor's. Both are measured in preflight Phase 1. s_p = 1 for the anchor.
    - **Rate rule:** closest ρ_ctl to 0.43 / 0.72, ties to the lower rate, with the infeasibility rule, exactly as rev 4 states.
-2. **Trace freezing happens in two steps.** Tokenizer-exact traces depend on the schedule, and the schedule depends on the rates.
-   - Calibration traces (`FROZEN_TRACES_CAL.json`) are frozen after the calibration A/B files are generated (X1-H).
-   - Main-stage traces (`FROZEN_TRACES_MAIN.json`) are frozen **at Freeze 3**, together with the rates and predictions.
-   
-   Rev 4's staged plan puts all of P2 before calibration. This refines it; no tokenization depends on results.
+2. **Trace freezing happens per phase** (owner-approved and clarified in the 2026-11-24 review; implemented in `scripts/freeze_x1_traces.py`, `scripts/pin_x1.py --pin-phase`, and re-checked by `scripts/x1_stage.py`):
+   - **calA:** `FROZEN_SCHEDULE_CALA.json` + `FROZEN_TRACES_CALA.json`, frozen after the grid files exist and **before any calA run**. Gated pin `x1_freeze_calA_<plat>`.
+   - **calB:** `…_CALB.json`, frozen **after calA has completed and `RATES.json` is selected**; the calB files must equal the generator output at those rates. Frozen **before any calB run**. Gated pin `x1_freeze_calB_<plat>`.
+   - **main:** `…_MAIN.json`, frozen **after calB has completed**, pinned together with `RATES.json` and `FCFS_PREDICTIONS.json` (Freeze Commit 3), **before any main run**. Gated pin `x1_freeze_main_<plat>`.
+   - Before every live block the stage driver refuses if the phase is not pinned, if any pinned file (block YAMLs and reruns, schedule, traces, rates, predictions) changed, or if the phase's stage log started before its pin.
 3. **X1-H5 predictor parameters:**
    - RNG entropy 81000;
    - LOSO with 50 draws (as v5);

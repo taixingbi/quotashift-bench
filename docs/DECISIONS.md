@@ -406,3 +406,27 @@ A1–A9 results and controls are unchanged. No v4 GPU run is made before owner a
   - protocol-consistency tests;
   - the implementation choices awaiting owner confirmation are in `docs/X1_FREEZE_CANDIDATE.md` §2.
 - **Reports.** `docs/X1_FREEZE_CANDIDATE.md` and `docs/X1_AWS_DEPLOYMENT_READINESS.md` (blockers B1–B7, the approval sequence, costs ≈ $40 planned / $52 pessimistic).
+
+## ADR-X1-B1-TRACES — B1 applied; per-phase trace-freeze ordering; identity and alignment checks (2026-11-24)
+- **B1 (owner-approved, policy only).**
+  - The live `quotashift-x1-operator` inline policy matched its creation version (`6700309`), so there were no unexpected differences.
+  - The diff to the reviewed `9727889` was two read-only Allow statements.
+  - Applied 21:15:11. Afterwards: live == reviewed; trust, session, tags and description unchanged; simulator 23 of 23 guard rails and 54 of 54 required actions.
+- **Trace ordering.** Per-phase schedule and trace files (calA, calB, main) with gated per-phase pins:
+  - calA before any calA run;
+  - calB after calA completed and rates selected, before calB;
+  - main after calB completed, with predictions and rates (Freeze 3), before main.
+  
+  The stage driver re-checks pins, file checksums and start times before every live block.
+- **H5.** Parameters are named constants, tested against the frozen v5 values (entropy 81000, MC 200, LOSO 50, τ floor 5 ms, ρ obs ≥ 5 ms with ≥ 3 runs, fallback = v5 `rho_rel` with provenance).
+- **Alignment and identity.**
+  - Clock offset from the server `Date` header (Phase 1; pass ≤ 2 s, fail > 5 s); arm windows shifted by it.
+  - `platform_identity`: model, server-reported revision, vLLM 0.17.1, `x1_<plat>_` prefix, protocol 5 and all 14 v5 gates.
+  - `server_identity` per platform.
+- **Infrastructure.**
+  - Owner and budget email moved to the git-ignored `owner.auto.tfvars`.
+  - `deploy` refuses plans without the budget alarm.
+  - `stop-gpu` stops runner tasks first.
+  - `run-stage` checks the runner, vLLM and the G1-only stage token.
+  - State-bootstrap plan prepared (7 to add); not applied.
+- **Freeze 1.** Manifest prepared (`docs/X1_FREEZE1_REQUEST.md` §7). NOT executed.

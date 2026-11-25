@@ -1,0 +1,5 @@
+# Copy to infra/terraform/owner.auto.tfvars (git-ignored: infra/terraform/*.auto.tfvars) and fill in locally.
+# Terraform loads *.auto.tfvars automatically. Never commit the filled-in file.
+owner               = "<owner-handle>"          # Owner tag on every resource (a handle; no secrets)
+budget_alert_emails = ["<owner@example.org>"]   # REQUIRED before deploy: without it the $60 budget alarm is not
+                                                # created and scripts/aws_ops.sh deploy refuses the plan

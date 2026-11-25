@@ -224,3 +224,23 @@ def sampler_equivalence_check(ttft_on_ms: Sequence[float], ttft_off_ms: Sequence
     bad = abs(d) > SAMPLER_EQ_ABS_MS and abs(d) > SAMPLER_EQ_REL * off
     return _res("fail" if bad else "pass", [f"sampler shifts idle TTFT median by {d:+.2f} ms"] if bad else [],
                 median_on_ms=on, median_off_ms=off, diff_ms=d)
+
+
+# ------------------------------------------------------------------------------------------------ clock alignment
+CLOCK_OFFSET_FLAG_S, CLOCK_OFFSET_FAIL_S = 2.0, 5.0
+
+
+def clock_offset_check(offset_s: float | None, bound_s: float | None) -> dict:
+    """Phase 1: GPU-host clock minus runner clock (from the server's HTTP Date header; tokenize_probe.clock_offset_probe).
+    Host-telemetry samples are stamped by the GPU host, arm windows by the runner: the analysis shifts each window by
+    this offset. Windows are padded by 30 s, so |offset| <= 2 s is negligible; > 5 s fails (clock not synchronised)."""
+    if offset_s is None:
+        return _res("fail", ["no clock-offset measurement"], offset_s=None, bound_s=bound_s)
+    worst = abs(offset_s) + (bound_s or 0.0)
+    if worst > CLOCK_OFFSET_FAIL_S:
+        return _res("fail", [f"clock offset {offset_s:+.2f} s (+/- {bound_s:.2f}) > {CLOCK_OFFSET_FAIL_S} s"],
+                    offset_s=offset_s, bound_s=bound_s)
+    if worst > CLOCK_OFFSET_FLAG_S:
+        return _res("flag", [f"clock offset {offset_s:+.2f} s (+/- {bound_s:.2f}) > {CLOCK_OFFSET_FLAG_S} s"],
+                    offset_s=offset_s, bound_s=bound_s)
+    return _res("pass", [], offset_s=offset_s, bound_s=bound_s)

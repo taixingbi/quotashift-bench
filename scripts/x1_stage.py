@@ -64,7 +64,8 @@ def phase_prereqs(plat: str, phase: str, reports_root: Path, root: Path = X1) ->
     return p
 
 
-def live_problems(plat: str, phase: str, *, interactive_ok: bool, root: Path = X1) -> list[str]:
+def live_problems(plat: str, phase: str, *, interactive_ok: bool, root: Path = X1,
+                  reports_root: Path = REPO / "reports" / "x1") -> list[str]:
     p: list[str] = []
     token = f"x1_{phase}_{plat}"
     if os.environ.get(APPROVAL_ENV) != token:
@@ -75,9 +76,8 @@ def live_problems(plat: str, phase: str, *, interactive_ok: bool, root: Path = X
                          capture_output=True, text=True)
     if chk.returncode != 0:
         p.append(f"X1 Freeze Commit 1 not in place or pins changed: {chk.stdout.strip()[-200:]}{chk.stderr.strip()[-200:]}")
-    traces = "FROZEN_TRACES_MAIN.json" if phase == "main" else "FROZEN_TRACES_CAL.json"
-    if not (root / plat / traces).exists():
-        p.append(f"{root / plat / traces} missing (tokenizer-exact traces for this phase)")
+    import pin_x1  # per-phase pin: traces frozen + pinned BEFORE any run of the phase; nothing changed since
+    p += pin_x1.phase_pin_problems(plat, phase, root=root, reports_root=reports_root)
     rec = root / plat / "HOST_VERIFICATION.json"
     if not rec.exists():
         p.append(f"{rec} missing (P1 + preflight)")
@@ -194,7 +194,7 @@ def main() -> int:
     if a.live:
         ok = os.environ.get("QUOTASHIFT_IN_VPC_RUNNER") == "1" or (
             sys.stdin.isatty() and input(f"Type 'yes' to run X1 {a.platform}/{a.phase} live: ").strip() == "yes")
-        probs = live_problems(a.platform, a.phase, interactive_ok=ok)
+        probs = live_problems(a.platform, a.phase, interactive_ok=ok, reports_root=out)
         if probs:
             print("REFUSED:\n  " + "\n  ".join(probs), file=sys.stderr)
             return 3

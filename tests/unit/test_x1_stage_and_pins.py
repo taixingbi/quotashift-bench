@@ -74,8 +74,8 @@ def test_stop_single_rerun_and_server_identity(tmp_path, root):
 def test_live_refuses_before_freeze(monkeypatch, root):
     monkeypatch.delenv("QUOTASHIFT_APPROVED", raising=False)
     monkeypatch.delenv("QUOTASHIFT_IN_VPC_RUNNER", raising=False)
-    p = "\n".join(xs.live_problems("g0m0", "main", interactive_ok=False, root=root))
-    for needle in ("x1_main_g0m0", "interactively", "Freeze Commit 1", "FROZEN_TRACES_MAIN", "HOST_VERIFICATION"):
+    p = "\n".join(xs.live_problems("g0m0", "main", interactive_ok=False, root=root, reports_root=root.parent / "rep"))
+    for needle in ("x1_main_g0m0", "interactively", "Freeze Commit 1", "g0m0/main is not pinned", "HOST_VERIFICATION"):
         assert needle in p, needle
 
 

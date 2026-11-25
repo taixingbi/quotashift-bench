@@ -38,7 +38,11 @@ case "$ACTION" in
   plan-destroy) # read-only teardown preview; creates/destroys nothing
     $TF init -backend-config=backend.hcl -input=false
     $TF plan -destroy $VARS ;;
-  deploy)      gate deploy; $TF apply "${ENVIRONMENT}.tfplan" ;;          # applies the REVIEWED plan file only
+  deploy)      gate deploy                                                  # applies the REVIEWED plan file only
+    # X1: refuse a plan without the $60 budget alarm (owner.auto.tfvars must set budget_alert_emails)
+    $TF show -json "${ENVIRONMENT}.tfplan" | python3 -c 'import json,sys; rc=json.load(sys.stdin).get("resource_changes",[]); sys.exit(0 if any(r["type"]=="aws_budgets_budget" and r["change"]["actions"]!=["delete"] for r in rc) else 1)' \
+      || { echo "REFUSED: the reviewed plan has no budget alarm (set budget_alert_emails in infra/terraform/owner.auto.tfvars)" >&2; exit 3; }
+    $TF apply "${ENVIRONMENT}.tfplan" ;;
   start-gpu)   gate start-gpu
     aws autoscaling set-desired-capacity --auto-scaling-group-name "$(out gpu_asg_name)" --desired-capacity 1
     echo "Waiting for container instance..."; sleep 120
@@ -46,7 +50,10 @@ case "$ACTION" in
     GW="$(out gateway_service_name 2>/dev/null || true)"
     [[ -n "$GW" && "$GW" != "null" ]] && aws ecs update-service --cluster "$(out cluster_name)" --service "$GW" --desired-count 1 >/dev/null || true
     echo "GPU STARTED - billing is running. Stop with: scripts/aws_ops.sh stop-gpu ${ENVIRONMENT}" ;;
-  stop-gpu)    # always allowed: reduces cost
+  stop-gpu)    # always allowed: reduces cost. Order: stop X1 runner tasks, then gateway/vLLM services, then the GPU ASG.
+    for T in $(aws ecs list-tasks --cluster "$(out cluster_name)" --desired-status RUNNING --query 'taskArns' --output text 2>/dev/null || true); do
+      [[ "$T" == "None" || -z "$T" ]] || aws ecs stop-task --cluster "$(out cluster_name)" --task "$T" --reason "stop-gpu" >/dev/null || true
+    done
     GW="$(out gateway_service_name 2>/dev/null || true)"
     [[ -n "$GW" && "$GW" != "null" ]] && aws ecs update-service --cluster "$(out cluster_name)" --service "$GW" --desired-count 0 >/dev/null || true
     aws ecs update-service --cluster "$(out cluster_name)" --service "$(out vllm_service_name)" --desired-count 0 >/dev/null || true
@@ -66,8 +73,16 @@ case "$ACTION" in
   run-stage)   # X1: one approved stage on the in-VPC runner (Fargate run-task); args after <env> go to the stage driver
     gate run-stage
     shift 2
+    # dependencies: runner task definition exists (runner_image set) and exactly one vLLM task is RUNNING
+    RF="$(out runner_task_definition_family 2>/dev/null || true)"
+    [[ -n "$RF" && "$RF" != "null" ]] || { echo "REFUSED: no runner task definition (set runner_image, re-plan, deploy)" >&2; exit 3; }
+    RUN="$(aws ecs describe-services --cluster "$(out cluster_name)" --services "$(out vllm_service_name)" --query 'services[0].runningCount' --output text)"
+    [[ "$RUN" == "1" ]] || { echo "REFUSED: vLLM service runningCount=$RUN (start-gpu first; exactly one vLLM task)" >&2; exit 3; }
     [[ $# -gt 0 ]] || { echo "run-stage needs stage-driver arguments" >&2; exit 2; }
-    OVR=$(python3 -c 'import json,sys; print(json.dumps({"containerOverrides":[{"name":"runner","command":["python","scripts/x1_stage.py",*sys.argv[1:]]}]}))' "$@")
+    # the per-stage approval token (x1_<calA|calB|main>_<g1m0|g1m1>) is forwarded to the in-VPC stage driver
+    [[ "${QUOTASHIFT_STAGE_APPROVAL:-}" =~ ^x1_(calA|calB|main)_g1m[01]$ ]] \
+      || { echo "REFUSED: set QUOTASHIFT_STAGE_APPROVAL=x1_<calA|calB|main>_<g1m0|g1m1> (owner approval for that stage)" >&2; exit 3; }
+    OVR=$(python3 -c 'import json,os,sys; print(json.dumps({"containerOverrides":[{"name":"runner","command":["python","scripts/x1_stage.py",*sys.argv[1:]],"environment":[{"name":"QUOTASHIFT_APPROVED","value":os.environ["QUOTASHIFT_STAGE_APPROVAL"]}]}]}))' "$@")
     aws ecs run-task --cluster "$(out cluster_name)" --task-definition "$(out runner_task_definition_family)" --launch-type FARGATE \
       --network-configuration "awsvpcConfiguration={subnets=[$(out private_subnet_ids_csv)],securityGroups=[$(out runner_security_group_id)],assignPublicIp=DISABLED}" \
       --overrides "$OVR" --query 'tasks[0].taskArn' --output text ;;

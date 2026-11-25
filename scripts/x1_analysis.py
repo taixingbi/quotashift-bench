@@ -45,6 +45,12 @@ PLATFORMS = tuple(build_x1.PLATFORMS)
 ALPHA = va.ALPHA
 BACKEND_LO, BACKEND_HI = math.log(0.9), math.log(1.1)
 ARM_WINDOW_PAD_S = 30.0
+X1_VLLM_VERSION = "0.17.1"
+# every v5 harness gate must be present in every X1 cell report (protocol_version 5 => the full v5 gate set)
+V5_GATES = ("backend_error_rate", "http_400_rate", "admission_rate", "competitor_completion", "primary_metric_present",
+            "tokenized_context", "planned_vs_reported_tokens", "provenance", "victim_latency_censoring",
+            "arrival_coverage", "realized_output_equals_authorized", "cap_configured", "occupancy_reconstruction",
+            "gateway_timestamp_alignment")
 
 
 # ------------------------------------------------------------------------------------------------ loader
@@ -96,6 +102,8 @@ def load_x1_cell(rep: Path) -> dict:
             "path": "direct" if C is None else "gateway", "report": str(rep),
             "synthetic_backend": bool(man.get("synthetic_backend")), "failed_gates": failed,
             "server_start": list((man.get("provenance") or {}).get("server_start") or []),
+            "provenance": man.get("provenance") or {}, "gates": [c["name"] for c in checks],
+            "scenario_id": man.get("scenario_id"), "protocol_version": man.get("protocol_version"),
             "seeds": [r["seed"] for r in rows], "rows": rows}
 
 
@@ -171,12 +179,13 @@ def h5_scores(plat_cells: dict[str, dict], preds: dict | None) -> dict:
     return {"verdict": verdict, "scores": scores}
 
 
-def host_flags(cell: dict, samples: list[dict] | None) -> dict:
+def host_flags(cell: dict, samples: list[dict] | None, offset_s: float = 0.0) -> dict:
     """X1-D2: per arm, slice the platform's 1 Hz host telemetry to the arm window [created, created + 120 s + pad]
-    and apply the frozen per-arm gates (host_cpu_headroom / host_ram_headroom; OOM -> fail)."""
+    and apply the frozen per-arm gates (host_cpu_headroom / host_ram_headroom; OOM -> fail). Samples are stamped by
+    the GPU host; the window (runner clock) is shifted by the Phase-1 clock offset (GPU host minus runner)."""
     if samples is None:
         return {"available": False}
-    out = {"available": True, "arms": {}, "flag": False, "oom_fail": False}
+    out = {"available": True, "arms": {}, "flag": False, "oom_fail": False, "clock_offset_s": offset_s}
     for r in cell["rows"]:
         for arm in ("attack", "control"):
             run = Path(r[arm]["run_dir"])
@@ -186,7 +195,8 @@ def host_flags(cell: dict, samples: list[dict] | None) -> dict:
             except (OSError, KeyError, ValueError):
                 out["arms"][f"{r['seed']}/{arm}"] = {"status": "no_window"}
                 continue
-            win = [s for s in samples if "ts" in s and t0 <= s["ts"] <= t0 + build_x1.RUNTIME + ARM_WINDOW_PAD_S]
+            a0 = t0 + offset_s
+            win = [s for s in samples if "ts" in s and a0 <= s["ts"] <= a0 + build_x1.RUNTIME + ARM_WINDOW_PAD_S]
             cpu, ram = pf.cpu_check(win, preflight=False), pf.ram_check(win)
             st = pf.combine(cpu, ram)
             out["arms"][f"{r['seed']}/{arm}"] = {"status": st, "cpu": cpu["status"], "ram": ram["status"]}
@@ -196,17 +206,21 @@ def host_flags(cell: dict, samples: list[dict] | None) -> dict:
 
 
 def analyse(cells: dict[str, dict[str, dict]], preds: dict[str, dict | None],
-            host: dict[str, list[dict] | None] | None = None) -> dict:
+            host: dict[str, list[dict] | None] | None = None, host_offsets: dict[str, float] | None = None) -> dict:
     """cells: platform -> block -> loaded cell (with 'summary')."""
-    host = host or {}
+    host, host_offsets = host or {}, host_offsets or {}
     for pc in cells.values():
         for c in pc.values():
             c["summary"] = summarize(c)
-            c["host"] = host_flags(c, host.get(c["platform"]))
+            c["host"] = host_flags(c, host.get(c["platform"]), host_offsets.get(c["platform"], 0.0))
+    ident = {p: platform_identity(p, cells.get(p, {})) for p in PLATFORMS}
+    srv = {p: server_identity(cells.get(p, {})) for p in PLATFORMS}
 
     def ok(p: str, b: str, need_vb: bool = True) -> bool:
         c = cells.get(p, {}).get(b)
-        return c is not None and (c["summary"]["stratum"] == "E&Vb" if need_vb else c["summary"]["stratum"] != "notE")
+        if c is None or not ident[p]["passed"] or not srv[p]["passed"]:
+            return False          # identity / server-identity failure: the platform's hypotheses are not evaluable
+        return c["summary"]["stratum"] == "E&Vb" if need_vb else c["summary"]["stratum"] != "notE"
 
     p1 = {p: (va.p_superiority([r["log_ratio"] for r in cells[p]["Xa"]["rows"]]) if ok(p, "Xa") else 1.0)
           for p in PLATFORMS}
@@ -243,7 +257,8 @@ def analyse(cells: dict[str, dict[str, dict]], preds: dict[str, dict | None],
         res["D1"] = d1
         res["D2"] = {b: {"flag": c["host"].get("flag"), "oom_fail": c["host"].get("oom_fail"),
                          "available": c["host"]["available"]} for b, c in cells.get(p, {}).items()}
-        res["server_identity"] = server_identity(cells.get(p, {}))
+        res["server_identity"] = srv[p]
+        res["platform_identity"] = ident[p]
         per[p] = res
     # interpretation rule (rev 4 section 2.2): a G1 claim that differs from its G0 counterpart (same model) AND
     # carries a host flag is reported as "GPU+host, host-limited", not as a GPU effect
@@ -265,6 +280,29 @@ def analyse(cells: dict[str, dict[str, dict]], preds: dict[str, dict | None],
         verdict = "PARTIAL"
     return {"platforms": per, "families": {"F-X1": p1, "F-X2": p2}, "counts": {"H1": n1, "H2": n2, "H4": n4},
             "verdict": verdict}
+
+
+def platform_identity(plat: str, pcells: dict[str, dict]) -> dict:
+    """X1-specific identity (fail): every cell of the platform ran the platform's model at its pinned revision on
+    vLLM 0.17.1, is an `x1_<plat>_` scenario with protocol_version 5, and carries the full v5 gate set."""
+    if not pcells or all(c.get("synthetic_backend") for c in pcells.values()):
+        return {"passed": True, "applicable": False}
+    exp = build_x1.PLATFORMS[plat]
+    probs = []
+    for b, c in sorted(pcells.items()):
+        pv = c.get("provenance") or {}
+        if pv.get("model") != [exp["model"]]:
+            probs.append(f"{b}: model {pv.get('model')} != {exp['model']}")
+        if not any(X1_VLLM_VERSION in v for v in pv.get("vllm_version") or []) or len(pv.get("vllm_version") or []) != 1:
+            probs.append(f"{b}: vLLM {pv.get('vllm_version')} != {X1_VLLM_VERSION}")
+        if pv.get("model_revision_server_reported") != exp["revision"]:
+            probs.append(f"{b}: server-reported revision {pv.get('model_revision_server_reported')} != {exp['revision']}")
+        if not str(c.get("scenario_id") or "").startswith(f"x1_{plat}_") or c.get("protocol_version") != 5:
+            probs.append(f"{b}: scenario {c.get('scenario_id')} / protocol {c.get('protocol_version')}")
+        missing = [g for g in V5_GATES if g not in (c.get("gates") or [])]
+        if missing:
+            probs.append(f"{b}: v5 gates missing {missing}")
+    return {"passed": not probs, "applicable": True, "problems": probs}
 
 
 def server_identity(pcells: dict[str, dict]) -> dict:
@@ -299,7 +337,14 @@ def run(dirs: list[Path], out: Path, *, predictions_root: Path | None = None, ho
              for p in PLATFORMS}
     host = {p: ([json.loads(x) for x in f.read_text().splitlines() if x.strip().startswith('{"t"')]
                 if f.exists() else None) for p, f in (host_files or {}).items()}
-    res = analyse(cells, preds, host)
+    offs = {}
+    for p in PLATFORMS:
+        hv = (predictions_root / p / "HOST_VERIFICATION.json") if predictions_root else None
+        if hv and hv.exists():
+            o = ((json.loads(hv.read_text()).get("preflight") or {}).get("phase1") or {}).get("clock_offset_s")
+            if o is not None:
+                offs[p] = float(o)
+    res = analyse(cells, preds, host, offs)
     res |= {"synthetic_backend": synthetic, "missing_cells": missing, "seed_sets_match_protocol": seeds_ok,
             "cells": {p: {b: {"cell": c["cell"], "summary": c["summary"], "seeds": c["seeds"],
                               "failed_gates": c["failed_gates"], "per_seed": c["rows"]} for b, c in pc.items()}

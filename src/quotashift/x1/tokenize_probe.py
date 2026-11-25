@@ -63,6 +63,32 @@ async def burst(base_url: str, model: str, prompts: Sequence[str], *, rate_rps: 
             "achieved_rps": len(lat) / wall if wall > 0 else 0.0, "latencies_ms": lat, "wall_s": wall}
 
 
+def clock_offset_probe(base_url: str, n: int = 20) -> dict:
+    """GPU-host clock minus local clock from the server's HTTP `Date` header (1 s resolution) on GET /health.
+    Each sample bounds the offset to [date - t_send - 1, date - t_recv + 1); the estimate is the centre of the
+    intersection of all intervals, the bound its half-width. Read-only; no generation."""
+    import email.utils
+
+    ok, why = endpoint_is_private(base_url)
+    if not ok:
+        raise ValueError(f"refusing non-private target {base_url}: {why}")
+    lo, hi = -1e18, 1e18
+    with httpx.Client(timeout=10) as c:
+        for _ in range(n):
+            t0 = time.time()
+            r = c.get(base_url.rstrip("/") + "/health")
+            t1 = time.time()
+            d = r.headers.get("date")
+            if not d:
+                return {"offset_s": None, "bound_s": None, "reason": "server sent no Date header"}
+            srv = email.utils.parsedate_to_datetime(d).timestamp()
+            lo, hi = max(lo, srv - t1), min(hi, srv + 1.0 - t0)
+            time.sleep(0.137)                       # spread samples across second boundaries
+    if lo > hi:
+        return {"offset_s": None, "bound_s": None, "reason": "inconsistent Date headers"}
+    return {"offset_s": (lo + hi) / 2, "bound_s": (hi - lo) / 2, "samples": n}
+
+
 def run_probe(base_url: str, model: str, prompts: Sequence[str], *, peak_request_rps: float | None,
               repeats: int = 200, burst_seconds: float = 30.0, burst_mult: float = 10.0) -> dict:
     """Phase 1: peak_request_rps=None -> isolated only. Phase 2: also the burst at burst_mult x peak."""

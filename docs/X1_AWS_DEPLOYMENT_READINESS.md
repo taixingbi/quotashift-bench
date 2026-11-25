@@ -43,8 +43,8 @@
 
 | # | Blocker | Who | Kind |
 |---|---|---|---|
-| B1 | **Re-apply the revised operator inline policy** (`infra/iam/x1-operator-policy.json`) to role `quotashift-x1-operator`. The live role lacks read permissions, so `deploy` would fail | owner approval → `aws iam put-role-policy` | AWS change (IAM) |
-| B2 | Set `owner` and **`budget_alert_emails`** in `infra/terraform/envs/research.tfvars`. Without an email the $60 budget alarm is not created | owner | repo edit |
+| B1 ✅ done 2026-11-24 21:15 (verified: live = reviewed `9727889`; trust unchanged; simulator 23/23 + 54/54) | ~~Re-apply the revised operator inline policy~~ (`infra/iam/x1-operator-policy.json`) to role `quotashift-x1-operator`. The live role lacks read permissions, so `deploy` would fail | owner approval → `aws iam put-role-policy` | AWS change (IAM) |
+| B2 | Copy `infra/terraform/owner.auto.tfvars.example` to the **git-ignored** `owner.auto.tfvars`, and set `owner` and `budget_alert_emails` locally. `aws_ops.sh deploy` now **refuses** any plan without the budget alarm | owner | local file (never committed) |
 | B3 | Choose the remote state option: approve **applying `infra/state-bootstrap`** (one S3 bucket, about $0/month at this size), then write `backend.hcl` and remove the local `backend_override.tf`, **or** approve local state with `state-backup` after every apply | owner | AWS change / decision |
 | B4 | **Build the runner image** (`build_image`) and **push it to the project ECR** (`push_image`). ECR exists only after deploy, so: deploy → push → set `runner_image` → re-plan → apply | owner approvals | build / push |
 | B5 | **Freeze Commit 1** (`x1_freeze1`) after confirming the implementation choices in `docs/X1_FREEZE_CANDIDATE.md` §2. Live stages refuse without it | owner | repo freeze |

@@ -32,7 +32,12 @@ REPO = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO / "scripts"))
 import v5_fcfs_predictions as v5p  # noqa: E402  (frozen; read-only import)
 
-RNG_ENTROPY = 81000                     # fixed; part of the X1 frozen spec
+RNG_ENTROPY = 81000                     # fixed; part of the X1 frozen spec (owner-approved, review of 9727889)
+LOSO_DRAWS = 50                         # as the frozen v5 LOSO validation (draws=50)
+MC_DRAWS = v5p.MC                       # 200, the frozen v5 Monte Carlo draws per prediction
+TAU_ABS_FLOOR_MS = 5.0                  # tau_abs = max(5 ms, q95 |LOSO err|), as v5
+RHO_OBS_MIN_MS = 5.0                    # rho over LOSO runs with obs >= 5 ms, as v5
+RHO_MIN_RUNS = 3                        # fewer such runs -> fallback (recorded as rho_source = "v5_fallback")
 V5_RHO_FALLBACK = 0.3491564644530319    # experiments/v5/FCFS_PREDICTIONS.json tolerances.rho_rel
 PREDICTED = {"Xa": "low", "Xb": "low", "Xe": "high"}   # block -> pool operating point
 
@@ -62,13 +67,15 @@ def loso(runs: dict[tuple[str, str, str], list[tuple[int, Path]]], rng: np.rando
             obs = float(((r.t_sent - r.t_offered)[r.workload_class == "victim"]).mean() * 1000)
             pool = v5p.pool_of(lst, exclude_seed=seed)
             pr = v5p.predict(r.t_offered.to_numpy(), (r.workload_class == "victim").to_numpy(), pool, 8, rng,
-                             float(r.t_terminal.max()), draws=50)
+                             float(r.t_terminal.max()), draws=LOSO_DRAWS)
             rows.append({"point": point, "comparison": comp, "arm": arm, "seed": seed, "obs_ms": obs,
                          "pred_ms": pr["victim_queue_mean_ms"], "err_ms": pr["victim_queue_mean_ms"] - obs})
     ae = np.array([abs(r["err_ms"]) for r in rows])
-    big = [abs(r["err_ms"]) / r["obs_ms"] for r in rows if r["obs_ms"] >= 5.0]
-    rho, src = (float(np.quantile(big, 0.95)), "loso") if len(big) >= 3 else (V5_RHO_FALLBACK, "v5_fallback")
-    return {"n_runs": len(rows), "tau_abs_ms": max(5.0, float(np.quantile(ae, 0.95))) if len(ae) else 5.0,
+    big = [abs(r["err_ms"]) / r["obs_ms"] for r in rows if r["obs_ms"] >= RHO_OBS_MIN_MS]
+    rho, src = ((float(np.quantile(big, 0.95)), "loso") if len(big) >= RHO_MIN_RUNS
+                else (V5_RHO_FALLBACK, "v5_fallback"))
+    return {"n_runs": len(rows),
+            "tau_abs_ms": max(TAU_ABS_FLOOR_MS, float(np.quantile(ae, 0.95))) if len(ae) else TAU_ABS_FLOOR_MS,
             "rho_rel": rho, "rho_source": src, "n_obs_ge_5ms": len(big), "runs": rows}
 
 
@@ -99,18 +106,21 @@ def build(plat: str, cal_b: Path, main_dir: Path, results_root: Path, rng_entrop
             for arm, tr in (("attack", atk), ("control", ctl)):
                 arr = np.array([it.request.arrival_time_s for it in tr])
                 vic = np.array([it.request.workload_class == "victim" for it in tr])
-                pr = v5p.predict(arr, vic, pools[(point, comp, arm)], cap, rng, float(sc.runtime_seconds))
+                pr = v5p.predict(arr, vic, pools[(point, comp, arm)], cap, rng, float(sc.runtime_seconds),
+                                 draws=MC_DRAWS)
                 pr["tolerance_ms"] = max(tol["tau_abs_ms"], tol["rho_rel"] * pr["victim_queue_mean_ms"])
                 ent["seeds"][str(seed)][arm] = pr
         for arm in ("attack", "control"):
             m = float(np.mean([ent["seeds"][s][arm]["victim_queue_mean_ms"] for s in ent["seeds"]]))
             ent[f"{arm}_cell_victim_queue_mean_ms"] = m
-            ent[f"{arm}_tolerance_cell_ms"] = max(5.0, tol["rho_rel"] * m)
+            ent[f"{arm}_tolerance_cell_ms"] = max(TAU_ABS_FLOOR_MS, tol["rho_rel"] * m)
         cells[y.stem] = ent
     return {"status": "X1-H5 predictions; pinned at X1 Freeze Commit 3 before any main-stage run",
-            "platform": plat, "rng_entropy": rng_entropy, "model": {"code": "scripts/v5_fcfs_predictions.py (frozen)",
-                                                                   "discipline": "single global FCFS, C slots",
-                                                                   "mc_draws": v5p.MC},
+            "platform": plat, "rng_entropy": rng_entropy,
+            "model": {"code": "scripts/v5_fcfs_predictions.py (frozen)", "discipline": "single global FCFS, C slots",
+                      "mc_draws": MC_DRAWS, "loso_draws": LOSO_DRAWS, "tau_abs_floor_ms": TAU_ABS_FLOOR_MS,
+                      "rho_obs_min_ms": RHO_OBS_MIN_MS, "rho_min_runs": RHO_MIN_RUNS,
+                      "rho_fallback": V5_RHO_FALLBACK, "rho_fallback_source": "experiments/v5/FCFS_PREDICTIONS.json"},
             "pool_inputs_sha256": inputs, "tolerances": {k: v for k, v in tol.items() if k != "runs"},
             "loso_runs": tol["runs"], "cells": cells}
 
