@@ -70,6 +70,11 @@ resource "aws_route" "private_nat" {
   route_table_id         = aws_route_table.private[0].id
   destination_cidr_block = "0.0.0.0/0"
   nat_gateway_id         = aws_nat_gateway.this[0].id
+  # The operator role may create/delete routes but not ec2:ReplaceRoute (least privilege): when the NAT gateway is
+  # replaced (e.g. a placement change), replace the route instead of updating it in place.
+  lifecycle {
+    replace_triggered_by = [aws_nat_gateway.this[0].id]
+  }
 }
 
 resource "aws_route_table_association" "private" {
