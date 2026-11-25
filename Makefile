@@ -19,7 +19,7 @@ run-live:       ; uv run quotashift run-local experiments/smoke.yaml --live   # 
 summarize:      ; uv run quotashift summarize --input results --output reports
 tf-fmt:         ; terraform -chdir=infra/terraform fmt -check -recursive
 tf-validate:    ; terraform -chdir=infra/terraform init -backend=false -input=false >/dev/null && terraform -chdir=infra/terraform validate
-tf-test:        ; terraform -chdir=infra/terraform test      # mock provider: no credentials, no API calls
+tf-test:        ; scripts/tf_test_clean.sh                   # clean copy; mock provider: no credentials, no API calls
 # --- touches AWS (read-only plan) / approval-gated below ---
 tf-plan:        ; scripts/aws_ops.sh plan $(ENV)
 deploy:         ; scripts/aws_ops.sh deploy $(ENV)

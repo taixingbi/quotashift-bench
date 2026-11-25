@@ -374,6 +374,10 @@ run "x1_runner_with_results_sidecar_qwen" {
     error_message = "run-task overrides replace only the command: the runner entryPoint must not be the image's quotashift.cli."
   }
   assert {
+    condition     = length(aws_ecs_task_definition.generator) == 0
+    error_message = "In-process-gateway stacks (X1/X2) create no legacy load-generator task definitions."
+  }
+  assert {
     condition     = one([for c in jsondecode(aws_ecs_task_definition.runner[0].container_definitions) : c.linuxParameters.initProcessEnabled if c.name == "runner"]) == true && length(regexall("ssmmessages:OpenDataChannel", aws_iam_role_policy.runner_exec.policy)) == 1
     error_message = "X2: ECS Exec needs initProcessEnabled and the four ssmmessages channels on the task role."
   }

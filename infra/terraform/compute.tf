@@ -508,7 +508,7 @@ resource "aws_ecs_service" "gateway" {
 # ---------------------------------------------------------------- load generators (Fargate run-task, no service)
 # benign-runner (fixed seeded victims) and scenario-runner (controlled competing patterns).
 resource "aws_ecs_task_definition" "generator" {
-  for_each                 = var.runner_image == "" ? toset([]) : toset(["benign", "scenario"])
+  for_each                 = var.runner_image == "" || var.x1_inprocess_gateway ? toset([]) : toset(["benign", "scenario"]) # pre-X1 standalone-gateway layout only
   family                   = "${local.name}-${each.key}-runner"
   requires_compatibilities = ["FARGATE"]
   network_mode             = "awsvpc"
