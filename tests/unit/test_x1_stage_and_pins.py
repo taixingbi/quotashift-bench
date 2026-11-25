@@ -75,7 +75,7 @@ def test_live_refuses_before_freeze(monkeypatch, root):
     monkeypatch.delenv("QUOTASHIFT_APPROVED", raising=False)
     monkeypatch.delenv("QUOTASHIFT_IN_VPC_RUNNER", raising=False)
     p = "\n".join(xs.live_problems("g0m0", "main", interactive_ok=False, root=root, reports_root=root.parent / "rep"))
-    for needle in ("x1_main_g0m0", "interactively", "Freeze Commit 1", "g0m0/main is not pinned", "HOST_VERIFICATION"):
+    for needle in ("x1_main_g0m0", "interactively", "g0m0/main is not pinned", "HOST_VERIFICATION"):
         assert needle in p, needle
 
 
@@ -90,5 +90,5 @@ def test_pin_candidate_and_check(tmp_path, monkeypatch):
     man.write_text(json.dumps(m))
     assert any("x1_analysis.py changed" in x for x in pin_x1.check(man))
     monkeypatch.delenv("QUOTASHIFT_APPROVED", raising=False)
-    assert not pin_x1.MANIFEST.exists()                                    # Freeze Commit 1 NOT executed
+    assert pin_x1.MANIFEST.exists() and pin_x1.check() == []            # Freeze Commit 1 executed and intact
     assert os.environ.get("QUOTASHIFT_APPROVED") != "x1_freeze1"

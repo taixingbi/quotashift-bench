@@ -33,3 +33,9 @@ reports/v5/stage_b/
 reports/v5/export/
 infra/state-bootstrap/.terraform/
 infra/state-bootstrap/*.tfstate*
+# X1 live raw output (exports are sanitized + hashed separately)
+reports/x1/g0m0/
+reports/x1/g0m1/
+reports/x1/g1m0/
+reports/x1/g1m1/
+results/x1_*/

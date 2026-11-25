@@ -17,9 +17,9 @@ from quotashift.x1 import preflight as pf  # noqa: E402
 DOC = (REPO / "docs" / "PROTOCOL_X1_CROSS_PLATFORM_DRAFT.md").read_text()
 
 
-def test_status_is_final_not_frozen():
-    assert "rev 4 FINAL, owner-approved; NOT frozen" in DOC
-    assert not (REPO / "experiments" / "x1" / "FROZEN_SHA256.json").exists()
+def test_status_is_frozen_by_freeze_commit_1():
+    assert "**Status:** FROZEN — X1 Freeze Commit 1 (owner approval `x1_freeze1`" in DOC
+    assert (REPO / "experiments" / "x1" / "FROZEN_SHA256.json").exists()
 
 
 def test_cells_seeds_and_n():

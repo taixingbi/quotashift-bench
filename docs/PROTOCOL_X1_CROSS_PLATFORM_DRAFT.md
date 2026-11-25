@@ -1,6 +1,6 @@
 # Protocol X1: independent cross-model and cross-GPU validation (rev 4 FINAL, owner-approved; NOT frozen, not run)
 
-**Status:** rev 4, **approved as final by the owner on 2026-11-24 (X1-A)**.
+**Status:** FROZEN — X1 Freeze Commit 1 (owner approval `x1_freeze1`, 2026-11-24) of rev 4, approved as final by the owner on 2026-11-24 (X1-A); the title and the bullets below describe the pre-freeze state and are kept as written.
 - **No content change** from the reviewed draft.
 - **Not yet frozen:** freezing is stage X1-G (Freeze Commit 1), which needs its own approval and first requires building and testing `scripts/x1_analysis.py` and the X1 schedule generator.
 - **History:** the review text below is kept as written.
