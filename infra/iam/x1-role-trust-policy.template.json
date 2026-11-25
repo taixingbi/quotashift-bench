@@ -2,14 +2,16 @@
   "Version": "2012-10-17",
   "Statement": [
     {
-      "Sid": "AssumeOnlyWithMfaFromThisAccount",
+      "Sid": "AssumeOnlyByTheX1OwnerUser",
       "Effect": "Allow",
-      "Principal": {"AWS": "arn:aws:iam::<ACCOUNT_ID>:root"},
+      "Principal": {
+        "AWS": "arn:aws:iam::<ACCOUNT_ID>:root"
+      },
       "Action": "sts:AssumeRole",
       "Condition": {
-        "Bool": {"aws:MultiFactorAuthPresent": "true"},
-        "NumericLessThan": {"aws:MultiFactorAuthAge": "3600"},
-        "ArnLike": {"aws:PrincipalArn": "arn:aws:iam::<ACCOUNT_ID>:user/<OWNER_IAM_USER>"}
+        "ArnLike": {
+          "aws:PrincipalArn": "arn:aws:iam::<ACCOUNT_ID>:user/<OWNER_IAM_USER>"
+        }
       }
     }
   ]

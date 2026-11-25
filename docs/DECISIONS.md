@@ -339,3 +339,14 @@ A1–A9 results and controls are unchanged. No v4 GPU run is made before owner a
     - stack roles manageable.
   - **Not done.** The owner user, MFA, access key, local profiles and every root-key step (deactivate or delete) are left to the owner.
   - **Recorded identifiers.** No ARNs or account IDs are recorded here.
+
+## ADR-X1-B-MFA — MFA requirement removed from the X1 roles (owner decision, 2026-11-24)
+- **Change.** Owner instruction "rm mfa".
+  - The trust policies of `quotashift-x1-readonly` and `quotashift-x1-operator`, live in AWS and in the template, no longer require MFA. They still allow `sts:AssumeRole` only from IAM user `quotashift-x1-owner`.
+  - `infra/iam/x1-owner-user-policy.json` drops its MFA condition and its MFA-device statement.
+  - Access Analyzer reports 0 findings for both.
+- **Trade-off.** That user's access key alone now yields operator credentials. Kept as mitigations:
+  - the operator guard rails (g6.xlarge, us-east-1, project tag, Cost Explorer / quota / spot / credential changes denied, no self-modification);
+  - 1 h operator sessions;
+  - the key's only permission is assuming the two roles.
+- **Unchanged.** Root-account MFA, which is not part of this change, and the plan to retire the root access keys.

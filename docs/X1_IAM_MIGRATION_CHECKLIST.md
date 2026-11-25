@@ -1,5 +1,13 @@
 # X1-B: least-privilege, temporary-credential IAM migration checklist
 
+**Owner decision, 2026-11-24: MFA requirement removed** from the X1 setup.
+- The trust policies of both live roles now allow `sts:AssumeRole` only from IAM user `quotashift-x1-owner`, with **no MFA condition**.
+- `x1-owner-user-policy.json` no longer requires MFA and no longer includes MFA-device management.
+- **Consequence:** the `quotashift-x1-owner` access key alone is enough to obtain operator credentials. The guard rails remain: g6.xlarge, us-east-1, project tag, no Cost Explorer, quota, spot or credential changes, no self-modification, 1 h sessions.
+- **Keep that key safe and rotate it if it is exposed.**
+- **Unchanged:** root-account MFA (step A.1) is not part of this change and is still recommended.
+- **Superseded below:** the MFA wording in the original status, steps B.2–B.3 and the trust-template description no longer applies.
+
 **Status, 2026-11-24 20:20:**
 - **Option B in progress.** The owner chose for Claude to create the two roles.
 - **Done (by Claude, on the owner's instruction):** step B.1, i.e. roles `quotashift-x1-readonly` (max session 4 h) and `quotashift-x1-operator` (max session 1 h), with the validated inline policies, tags `Project=QuotaShift, Purpose=X1-B`, and a trust policy that allows `sts:AssumeRole` only from IAM user `quotashift-x1-owner`, only with MFA no older than 1 h.
@@ -81,10 +89,9 @@ for both identity policies after one redundancy fix, and 0 for the trust templat
   1. ⚠️ Create the roles `quotashift-x1-readonly` and `quotashift-x1-operator`, with the trust template filled in and the two JSON policies inline. Set the operator's max session to 1 h.
   2. ⚠️ **Owner, next:**
      - Create IAM user **`quotashift-x1-owner`**. The name must match the trust policy.
-     - Attach `infra/iam/x1-owner-user-policy.json` as its only policy: assume the two roles with MFA, and manage its own MFA device.
-     - Enable MFA.
-     - Create one access key for CLI use. It is long-lived but can do nothing except assume roles with MFA.
-  3. Local configuration: profiles with `role_arn` + `mfa_serial` + `source_profile`, so the CLI asks for an MFA code and receives temporary credentials.
+     - Attach `infra/iam/x1-owner-user-policy.json` as its only policy: assume the two roles, nothing else. MFA is not required (owner decision).
+     - Create one access key for CLI use. It is long-lived but can do nothing except assume the two roles.
+  3. Local configuration: profiles with `role_arn` + `source_profile` (no `mfa_serial`). The CLI then obtains temporary role credentials automatically.
   
   Option B still needs one long-lived access key on that limited user, which is why A is preferred.
 

@@ -87,9 +87,10 @@ def test_operator_cannot_modify_or_pass_the_x1_roles():
         assert a in s["Action"]
 
 
-def test_owner_user_can_only_assume_the_two_roles_with_mfa():
+def test_owner_user_can_only_assume_the_two_roles():
     u = json.loads((REPO / "infra" / "iam" / "x1-owner-user-policy.json").read_text())
-    s = next(x for x in u["Statement"] if x["Sid"] == "AssumeOnlyTheTwoX1RolesWithMfa")
-    assert s["Action"] == "sts:AssumeRole" and len(s["Resource"]) == 2
-    assert s["Condition"]["Bool"]["aws:MultiFactorAuthPresent"] == "true"
+    s = next(x for x in u["Statement"] if x["Sid"] == "AssumeOnlyTheTwoX1Roles")
+    assert s["Action"] == "sts:AssumeRole" and len(s["Resource"]) == 2 and "Condition" not in s   # MFA removed (owner)
     assert not any(x["Effect"] == "Allow" and x.get("Action") == "*" for x in u["Statement"])
+    t = json.loads((REPO / "infra" / "iam" / "x1-role-trust-policy.template.json").read_text())["Statement"][0]
+    assert t["Condition"] == {"ArnLike": {"aws:PrincipalArn": "arn:aws:iam::<ACCOUNT_ID>:user/<OWNER_IAM_USER>"}}
