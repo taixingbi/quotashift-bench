@@ -344,6 +344,15 @@ resource "aws_ecs_task_definition" "runner" {
     name = "inputs"
   }
   container_definitions = jsonencode(concat(var.model_sync_image == "" ? [] : [{
+    name             = "results-perms"
+    image            = var.model_sync_image
+    essential        = false
+    user             = "0"
+    entryPoint       = ["sh", "-c"] # Fargate volumes mount root-owned; the runner runs as uid 10001 (B-X2-9)
+    command          = ["chown 10001:10001 /app/results && chmod 0755 /app/results"]
+    mountPoints      = [{ sourceVolume = "results", containerPath = "/app/results" }]
+    logConfiguration = { logDriver = "awslogs", options = { awslogs-group = aws_cloudwatch_log_group.runner.name, awslogs-region = var.region, awslogs-stream-prefix = "results-perms" } }
+    }], var.model_sync_image == "" ? [] : [{
     name             = "inputs-download"
     image            = var.model_sync_image
     essential        = false
@@ -355,7 +364,7 @@ resource "aws_ecs_task_definition" "runner" {
     image           = var.runner_image
     entryPoint      = ["/usr/bin/env"] # overrides replace only `command`; the image ENTRYPOINT (quotashift.cli) would prefix it
     essential       = var.model_sync_image == ""
-    dependsOn       = var.model_sync_image == "" ? [] : [{ containerName = "inputs-download", condition = "SUCCESS" }]
+    dependsOn       = var.model_sync_image == "" ? [] : [{ containerName = "results-perms", condition = "SUCCESS" }, { containerName = "inputs-download", condition = "SUCCESS" }]
     linuxParameters = { initProcessEnabled = true } # ECS Exec (X2 qualification on G1 needs an interactive "yes")
     mountPoints = concat([{ sourceVolume = "results", containerPath = "/app/results" }],
     var.model_sync_image == "" ? [] : [{ sourceVolume = "inputs", containerPath = "/app/inputs", readOnly = true }])

@@ -358,7 +358,7 @@ run "x1_runner_with_results_sidecar_qwen" {
     model_sync_image = "amazon/aws-cli@sha256:eccdb3ec77e159d43ca6a750a70738c546883138be7f094498294a1477ec7e42"
   }
   assert {
-    condition     = length(jsondecode(aws_ecs_task_definition.runner[0].container_definitions)) == 3 && one([for c in jsondecode(aws_ecs_task_definition.runner[0].container_definitions) : c.dependsOn[0].condition if c.name == "results-upload"]) == "COMPLETE"
+    condition     = length(jsondecode(aws_ecs_task_definition.runner[0].container_definitions)) == 4 && one([for c in jsondecode(aws_ecs_task_definition.runner[0].container_definitions) : c.dependsOn[0].condition if c.name == "results-upload"]) == "COMPLETE"
     error_message = "Results upload sidecar must run after the runner completes."
   }
   assert {
@@ -366,12 +366,16 @@ run "x1_runner_with_results_sidecar_qwen" {
     error_message = "Runner must carry the in-VPC flag and the model's private target."
   }
   assert {
-    condition     = one([for c in jsondecode(aws_ecs_task_definition.runner[0].container_definitions) : c.dependsOn[0] if c.name == "runner"]).containerName == "inputs-download" && one([for c in jsondecode(aws_ecs_task_definition.runner[0].container_definitions) : c.command if c.name == "inputs-download"]) == ["--version"]
+    condition     = contains([for d in one([for c in jsondecode(aws_ecs_task_definition.runner[0].container_definitions) : c.dependsOn if c.name == "runner"]) : d.containerName], "inputs-download") && one([for c in jsondecode(aws_ecs_task_definition.runner[0].container_definitions) : c.command if c.name == "inputs-download"]) == ["--version"]
     error_message = "X2: the runner waits for the inputs-download init container, whose default (X1) command is harmless."
   }
   assert {
     condition     = one([for c in jsondecode(aws_ecs_task_definition.runner[0].container_definitions) : c.entryPoint if c.name == "runner"]) == ["/usr/bin/env"]
     error_message = "run-task overrides replace only the command: the runner entryPoint must not be the image's quotashift.cli."
+  }
+  assert {
+    condition     = one([for c in jsondecode(aws_ecs_task_definition.runner[0].container_definitions) : c.user if c.name == "results-perms"]) == "0" && one([for c in jsondecode(aws_ecs_task_definition.runner[0].container_definitions) : c.command[0] if c.name == "results-perms"]) == "chown 10001:10001 /app/results && chmod 0755 /app/results" && contains([for d in one([for c in jsondecode(aws_ecs_task_definition.runner[0].container_definitions) : c.dependsOn if c.name == "runner"]) : d.containerName], "results-perms") && one([for c in jsondecode(aws_ecs_task_definition.runner[0].container_definitions) : lookup(c, "user", null) if c.name == "runner"]) == null
+    error_message = "B-X2-9: a root init container hands the Fargate results volume to uid 10001 before the (non-root) runner starts."
   }
   assert {
     condition     = length(aws_ecs_task_definition.generator) == 0
