@@ -361,3 +361,31 @@ A1–A9 results and controls are unchanged. No v4 GPU run is made before owner a
   - operator role: dry-run allows only g6.xlarge with the `Project=QuotaShift` tag in us-east-1;
   - `aws_ops.sh` refuses root.
 - **Pending (owner only).** Step D: deactivate, then later delete, the root access keys. The default CLI profile is still root.
+
+## ADR-X1-E — AWS preparation in the repo (stage X1-E, 2026-11-24; repo only, read-only AWS)
+- **Terraform:**
+  - `gpu_instance_type` is restricted to **g6.xlarge**, by validation and also by the operator IAM policy.
+  - AMI pinned to `ami-0b8f7c7154f9e8f8b`.
+  - vLLM image is the **0.17.1** digest `0dc46f74…`. The other images (`python 3.12.13-slim`, DCGM `2490e1df…`) were confirmed on Docker Hub.
+- **vLLM launch template:**
+  - The argv is the X1 template: `--dtype float16 --enable-prefix-caching --enable-prompt-tokens-details --max-num-seqs 256 --max-num-batched-tokens 2048`, memory utilisation 0.80.
+  - `--tokenizer-revision` and `--no-enable-prefix-caching` are removed.
+  - `VLLM_SERVER_DEV_MODE=1` is set, as the verified reset requires.
+  - The Mistral flags come from `envs/research.m1-mistral.tfvars`, selected with `QUOTASHIFT_MODEL=m1-mistral`.
+- **Host sampler.** An ECS daemon in the host PID namespace runs `scripts/x1_host_sampler.py` (base64 in the task definition, SHA-256 pinned) on a read-only root filesystem with no ports, logging to `/quotashift/research/x1-host-telemetry`. The sampler gained:
+  - epoch timestamps;
+  - a daemon mode;
+  - a self-overhead report every 60 s;
+  - pid re-discovery after a model switch.
+- **Targets and export.**
+  - Private target profiles `configs/targets/x1-g1-{qwen,mistral}.yaml`, which include the DCGM exporter URL.
+  - An AWS-identifier sanitizer and gate (`src/quotashift/x1/export_gate.py`) layered on top of the frozen v5 exporter.
+- **Cost settings.** `spending_limit_usd` = `monthly_budget_usd` = 60; `max_run_minutes` = 1320.
+- **Verification:**
+  - `terraform fmt`/`validate`/`test`: 13 of 13, including 3 new X1 runs.
+  - Read-only `terraform plan` as `quotashift-x1-readonly` (local state, nothing applied): **58 to add, 0 change, 0 destroy** for both models. The values checked in the plan JSON are: g6.xlarge, the pinned AMI, no public IP, desired capacity 0 of max 1, the exact argv, dev mode, a host-PID read-only sampler.
+  - pytest: 441 passed, 1 skipped (after rewording one trailing comment that the image-pinning guard read as an image reference).
+- **Open, needed before X1-J:**
+  1. Set `owner` and `budget_alert_emails` in `envs/research.tfvars`. Without an email the $60 budget alarm is not created.
+  2. Create the remote state bucket `quotashift-tfstate-<suffix>`, or approve applying with local state.
+  3. The operator role is tested by simulator and dry-run only. The first real apply may expose one missing read permission, which is added by name.

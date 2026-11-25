@@ -63,5 +63,13 @@ def test_run_emits_samples_and_measured_overhead(proc: Path):
     summ = hs.run(str(proc), duration=0.35, interval=0.1, out=buf)
     lines = [json.loads(x) for x in buf.getvalue().splitlines()]
     assert lines[-1]["summary"] == summ and summ["samples"] >= 2
-    assert all({"host_busy", "api_cpu", "mem_available", "oom_kill"} <= set(x) for x in lines[:-1])
+    assert all({"ts", "host_busy", "api_cpu", "mem_available", "oom_kill"} <= set(x) for x in lines[:-1])
     assert summ["pids"] == {"api": 101, "engine": 102} and summ["overhead_core_frac"] is not None
+
+
+def test_periodic_overhead_and_pid_refresh(proc: Path):
+    buf = io.StringIO()
+    hs.run(str(proc), duration=0.45, interval=0.1, out=buf, refresh=2)
+    lines = [json.loads(x) for x in buf.getvalue().splitlines()]
+    oh = [x["overhead"] for x in lines if "overhead" in x]
+    assert oh and all(o["overhead_core_frac"] is not None and o["pids"]["api"] == 101 for o in oh)

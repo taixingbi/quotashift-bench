@@ -6,13 +6,15 @@ Runs ON the GPU host (piped over ssh, nothing installed):
 
 Each line on stdout is one JSON sample:
   t                monotonic seconds since start
+  ts               wall-clock epoch seconds (aligns samples with arm windows; per-arm gates slice on it)
   host_busy        fraction of all CPUs busy since the previous sample (from /proc/stat)
   ncpu             number of CPUs counted
   api_cpu, engine_cpu   CPU seconds used by the vLLM API server / EngineCore since the previous sample,
                    divided by the interval (1.0 = one full core). null if the process was not found.
   mem_available    /proc/meminfo MemAvailable in bytes
   oom_kill, pswpin cumulative /proc/vmstat counters (deltas are taken by the evaluator)
-The last line is {"summary": ...} with the sampler's OWN CPU seconds, wall seconds and overhead fraction
+Every `refresh` ticks (default 60) a {"overhead": ...} line reports the sampler's own CPU so far and the vLLM
+pids are re-discovered (a model switch restarts vLLM). The last line is {"summary": ...} with the sampler's OWN CPU seconds, wall seconds and overhead fraction
 (of one core), so its cost is measured, not assumed.
 
 Distortion budget (draft rev 4 section 9.2): the sampler opens a handful of small /proc files per tick, holds no locks,
@@ -116,19 +118,29 @@ def derive(prev: dict, cur: dict, dt: float, tck: int) -> dict:
             "mem_available": cur["mem_available"], "oom_kill": cur.get("oom_kill"), "pswpin": cur.get("pswpin")}
 
 
-def run(root: str, duration: float, interval: float, out=sys.stdout) -> dict:  # noqa: ANN001
+def run(root: str, duration: float, interval: float, out=sys.stdout, refresh: int = 60) -> dict:  # noqa: ANN001
     tck = os.sysconf("SC_CLK_TCK")
     pids = find_vllm_pids(root)
     r0, w0 = resource.getrusage(resource.RUSAGE_SELF), time.monotonic()
     prev, tp = sample(root, pids), time.monotonic()
     n = 0
     nxt = tp + interval
-    while time.monotonic() - w0 < duration:
+    while duration <= 0 or time.monotonic() - w0 < duration:
         time.sleep(max(0.0, nxt - time.monotonic()))
         nxt += interval
         cur, tc = sample(root, pids), time.monotonic()
-        out.write(json.dumps({"t": round(tc - w0, 3), **derive(prev, cur, tc - tp, tck)}) + "\n")
+        out.write(json.dumps({"t": round(tc - w0, 3), "ts": round(time.time(), 3),
+                              **derive(prev, cur, tc - tp, tck)}) + "\n")
+        out.flush()
         prev, tp, n = cur, tc, n + 1
+        if n % refresh == 0:                       # daemon mode never reaches the summary: report periodically
+            r = resource.getrusage(resource.RUSAGE_SELF)
+            own = (r.ru_utime - r0.ru_utime) + (r.ru_stime - r0.ru_stime)
+            out.write(json.dumps({"overhead": {"ts": round(time.time(), 3), "samples": n, "own_cpu_s": round(own, 4),
+                                               "overhead_core_frac": round(own / (tc - w0), 6), "pids": pids}}) + "\n")
+            new = find_vllm_pids(root)              # vLLM restarts (model switch) change the pids
+            if new != pids:
+                pids, prev = new, sample(root, new)
     r1, w1 = resource.getrusage(resource.RUSAGE_SELF), time.monotonic()
     own = (r1.ru_utime - r0.ru_utime) + (r1.ru_stime - r0.ru_stime)
     summ = {"samples": n, "wall_s": round(w1 - w0, 3), "own_cpu_s": round(own, 4),
@@ -141,7 +153,7 @@ def run(root: str, duration: float, interval: float, out=sys.stdout) -> dict:  #
 
 def main() -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--duration", type=float, default=60.0)
+    ap.add_argument("--duration", type=float, default=60.0, help="seconds; <= 0 runs until killed (ECS daemon)")
     ap.add_argument("--interval", type=float, default=1.0)
     ap.add_argument("--proc-root", default="/", help="root containing proc/ (tests use a fake tree)")
     ap.add_argument("--no-nice", action="store_true")

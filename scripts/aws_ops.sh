@@ -5,7 +5,7 @@
 set -euo pipefail
 ACTION="${1:?action}"; ENVIRONMENT="${2:?env (dev|research)}"
 TF="terraform -chdir=infra/terraform"
-VARS="-var-file=envs/${ENVIRONMENT}.tfvars"
+VARS="-var-file=envs/${ENVIRONMENT}.tfvars${QUOTASHIFT_MODEL:+ -var-file=envs/${ENVIRONMENT}.${QUOTASHIFT_MODEL}.tfvars}"   # X1: QUOTASHIFT_MODEL=m1-mistral
 
 gate() {
   if [[ "${QUOTASHIFT_APPROVED:-}" != "$1" ]]; then

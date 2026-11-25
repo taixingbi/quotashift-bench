@@ -212,3 +212,64 @@ run "missing_cost_gates_block_plan" {
   }
   expect_failures = [var.max_run_minutes]
 }
+
+# ---------------------------------------------------------------- X1 (X1-E, 2026-11-24)
+run "x1_defaults_match_the_launch_template" {
+  command = plan
+
+  assert {
+    condition     = aws_launch_template.gpu.instance_type == "g6.xlarge"
+    error_message = "X1 G1 must be g6.xlarge."
+  }
+  assert {
+    condition     = jsondecode(aws_ecs_task_definition.vllm.container_definitions)[0].image == "vllm/vllm-openai@sha256:0dc46f74eb0e630675d83101dc66c6441c4475cceedcf9235ee42b87c3affd23"
+    error_message = "vLLM image must be the pinned 0.17.1 digest."
+  }
+  assert {
+    condition = alltrue([for f in ["--revision", "--dtype", "float16", "--max-model-len", "4096", "--gpu-memory-utilization", "0.80",
+      "--enable-prefix-caching", "--enable-prompt-tokens-details", "--max-num-seqs", "256", "--max-num-batched-tokens", "2048"] :
+    contains(jsondecode(aws_ecs_task_definition.vllm.container_definitions)[0].command, f)])
+    error_message = "vLLM argv must carry every X1 template flag."
+  }
+  assert {
+    condition     = !contains(jsondecode(aws_ecs_task_definition.vllm.container_definitions)[0].command, "--tokenizer-revision") && !contains(jsondecode(aws_ecs_task_definition.vllm.container_definitions)[0].command, "--no-enable-prefix-caching")
+    error_message = "No flags outside the X1 template."
+  }
+  assert {
+    condition     = contains([for e in jsondecode(aws_ecs_task_definition.vllm.container_definitions)[0].environment : "${e.name}=${e.value}"], "VLLM_SERVER_DEV_MODE=1")
+    error_message = "Dev mode is required for the verified prefix-cache reset."
+  }
+  assert {
+    condition     = aws_ecs_task_definition.host_sampler[0].pid_mode == "host" && aws_ecs_service.host_sampler[0].scheduling_strategy == "DAEMON"
+    error_message = "Host sampler must run as a host-PID daemon."
+  }
+  assert {
+    condition     = jsondecode(aws_ecs_task_definition.host_sampler[0].container_definitions)[0].readonlyRootFilesystem == true && length([for p in try(jsondecode(aws_ecs_task_definition.host_sampler[0].container_definitions)[0].portMappings, []) : p]) == 0
+    error_message = "Host sampler must be read-only with no ports."
+  }
+}
+
+run "x1_other_instance_types_rejected" {
+  command = plan
+  variables {
+    gpu_instance_type = "g6.2xlarge"
+  }
+  expect_failures = [var.gpu_instance_type]
+}
+
+run "x1_mistral_override_appends_model_args" {
+  command = plan
+  variables {
+    model_id        = "mistralai/Mistral-7B-Instruct-v0.3"
+    model_revision  = "c170c708c41dac9275d15a8fff4eca08d52bab71"
+    vllm_model_args = ["--tokenizer-mode", "mistral", "--config-format", "mistral", "--load-format", "mistral"]
+  }
+  assert {
+    condition     = slice(jsondecode(aws_ecs_task_definition.vllm.container_definitions)[0].command, length(jsondecode(aws_ecs_task_definition.vllm.container_definitions)[0].command) - 6, length(jsondecode(aws_ecs_task_definition.vllm.container_definitions)[0].command)) == ["--tokenizer-mode", "mistral", "--config-format", "mistral", "--load-format", "mistral"]
+    error_message = "Mistral flags must be appended after the shared template."
+  }
+  assert {
+    condition     = jsondecode(aws_ecs_task_definition.vllm.container_definitions)[0].command[0] == "mistralai/Mistral-7B-Instruct-v0.3"
+    error_message = "Model id must be the first argv element."
+  }
+}

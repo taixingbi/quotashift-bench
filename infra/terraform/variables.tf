@@ -59,8 +59,13 @@ variable "az_count" {
 
 # ---------------------------------------------------------------- GPU host
 variable "gpu_instance_type" {
-  type    = string
-  default = "g5.2xlarge" # 1x NVIDIA A10G 24 GB; verify regional availability, quota and price before approval
+  type        = string
+  default     = "g6.xlarge" # X1 G1 (owner decision 2026-11-24): 1x NVIDIA L4 24 GB, 4 vCPU, 16 GiB; fits the 4-vCPU G/VT quota
+  description = "X1 allows only g6.xlarge (also enforced by the quotashift-x1-operator IAM policy)."
+  validation {
+    condition     = contains(["g6.xlarge"], var.gpu_instance_type)
+    error_message = "X1: gpu_instance_type must be g6.xlarge (owner decision; no quota increase)."
+  }
 }
 
 variable "gpu_ami_ssm_parameter" {
@@ -92,7 +97,7 @@ variable "gpu_root_volume_gb" {
 # ---------------------------------------------------------------- vLLM task
 variable "vllm_image" {
   type        = string
-  default     = "vllm/vllm-openai@sha256:d825baf9ce4b1b6bfc5ecc7b79880c7e6748c65a72d697ce3d47607aafa84c6e" # v0.33.0
+  default     = "vllm/vllm-openai@sha256:0dc46f74eb0e630675d83101dc66c6441c4475cceedcf9235ee42b87c3affd23" # v0.17.1 (X1: same as v5 / G0; Docker Hub index digest, 2026-11-24)
   description = "Must be pinned by digest."
   validation {
     condition     = can(regex("@sha256:[0-9a-f]{64}$", var.vllm_image))
@@ -131,12 +136,41 @@ variable "vllm_max_model_len" {
 
 variable "vllm_gpu_memory_utilization" {
   type    = number
-  default = 0.90
+  default = 0.80 # X1 launch template (identical on all four platforms)
 }
 
 variable "vllm_extra_args" {
-  type    = list(string)
-  default = ["--no-enable-prefix-caching"] # fixed serving config; fcfs is vLLM default (QuotaShift studies workload, not the scheduler)
+  type        = list(string)
+  description = "X1 launch template flags (docs/PROTOCOL_X1_CROSS_PLATFORM_DRAFT.md rev 4, section 2.1); identical on G0 and G1."
+  default = ["--dtype", "float16", "--enable-prefix-caching", "--enable-prompt-tokens-details",
+  "--max-num-seqs", "256", "--max-num-batched-tokens", "2048"]
+}
+
+variable "vllm_model_args" {
+  type        = list(string)
+  default     = []
+  description = "Model-specific flags. X1 M1 (Mistral): [\"--tokenizer-mode\", \"mistral\", \"--config-format\", \"mistral\", \"--load-format\", \"mistral\"]."
+}
+
+variable "vllm_dev_mode" {
+  type        = bool
+  default     = true
+  description = "VLLM_SERVER_DEV_MODE=1: exposes /reset_prefix_cache and /server_info, required by the X1 verified pre-block cache reset. Private VPC only."
+}
+
+variable "enable_host_sampler" {
+  type        = bool
+  default     = true
+  description = "X1 host-telemetry sampler (scripts/x1_host_sampler.py) as an ECS daemon with host PID namespace; read-only /proc, output to CloudWatch."
+}
+
+variable "host_sampler_image" {
+  type    = string
+  default = "python@sha256:229a2c5bfa27522db7815ea81f9bed70af17ccb9de9fc7ad142b1877b5830d36" # = python 3.12.13-slim (Docker Hub index digest, 2026-11-24)
+  validation {
+    condition     = can(regex("@sha256:[0-9a-f]{64}$", var.host_sampler_image))
+    error_message = "host_sampler_image must be pinned by @sha256 digest."
+  }
 }
 
 variable "vllm_desired_count" {

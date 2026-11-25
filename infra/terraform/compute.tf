@@ -98,21 +98,24 @@ locals {
     image      = var.vllm_image
     essential  = true
     entryPoint = ["vllm", "serve"]
+    # X1 launch template (rev 4 section 2.1): same flag set as on G0; `vllm serve` is PID 1 (no shell wrapper).
     command = concat([
       local.model_arg,
       "--revision", var.model_revision,
-      "--tokenizer-revision", var.model_revision,
       "--host", "0.0.0.0",
       "--port", "8000",
       "--max-model-len", tostring(var.vllm_max_model_len),
-      "--gpu-memory-utilization", tostring(var.vllm_gpu_memory_utilization),
-    ], var.vllm_extra_args)
+      "--gpu-memory-utilization", format("%.2f", var.vllm_gpu_memory_utilization),
+    ], var.vllm_extra_args, var.vllm_model_args)
     resourceRequirements = [{ type = "GPU", value = "1" }]
     memoryReservation    = 12288
     portMappings         = [{ containerPort = 8000, hostPort = 8000, protocol = "tcp" }]
     linuxParameters      = { sharedMemorySize = 4096 }
     mountPoints          = [{ sourceVolume = "hf-cache", containerPath = "/root/.cache/huggingface" }, { sourceVolume = "models", containerPath = "/models" }]
-    environment          = [{ name = "VLLM_NO_USAGE_STATS", value = "1" }, { name = "HF_HUB_DISABLE_TELEMETRY", value = "1" }]
+    environment = concat(
+      [{ name = "VLLM_NO_USAGE_STATS", value = "1" }, { name = "HF_HUB_DISABLE_TELEMETRY", value = "1" }],
+      var.vllm_dev_mode ? [{ name = "VLLM_SERVER_DEV_MODE", value = "1" }] : [],
+    )
     healthCheck = {
       command     = ["CMD-SHELL", "curl -fsS http://localhost:8000/health || exit 1"]
       interval    = 30
@@ -226,6 +229,49 @@ resource "aws_ecs_service" "dcgm" {
   name                = "${local.name}-dcgm"
   cluster             = aws_ecs_cluster.this.id
   task_definition     = aws_ecs_task_definition.dcgm[0].arn
+  launch_type         = "EC2"
+  scheduling_strategy = "DAEMON" # runs only while a GPU instance exists
+}
+
+# ---------------------------------------------------------------- X1 host-telemetry sampler (daemon on the GPU host)
+# Read-only /proc sampler (scripts/x1_host_sampler.py, stdlib only): host CPU, API-server/EngineCore CPU, MemAvailable,
+# OOM kills, swap-in at 1 Hz, plus its own overhead every 60 s. pid_mode = host so it sees the vLLM processes; no GPU,
+# no ports, no writes. The script is shipped inside the task definition (base64) and pinned by its SHA-256.
+resource "aws_ecs_task_definition" "host_sampler" {
+  count                    = var.enable_host_sampler ? 1 : 0
+  family                   = "${local.name}-host-sampler"
+  requires_compatibilities = ["EC2"]
+  network_mode             = "host"
+  pid_mode                 = "host"
+  execution_role_arn       = aws_iam_role.task_execution.arn
+  container_definitions = jsonencode([{
+    name                   = "x1-host-sampler"
+    image                  = var.host_sampler_image
+    essential              = true
+    memoryReservation      = 64
+    readonlyRootFilesystem = true
+    entryPoint             = ["python3", "-c", "import base64,os;exec(compile(base64.b64decode(os.environ['X1_SAMPLER_B64']),'x1_host_sampler.py','exec'))"]
+    command                = ["--duration", "0", "--interval", "1.0"]
+    environment = [
+      { name = "X1_SAMPLER_B64", value = filebase64("${path.module}/../../scripts/x1_host_sampler.py") },
+      { name = "X1_SAMPLER_SHA256", value = filesha256("${path.module}/../../scripts/x1_host_sampler.py") },
+    ]
+    logConfiguration = {
+      logDriver = "awslogs"
+      options = {
+        awslogs-group         = aws_cloudwatch_log_group.host_telemetry.name
+        awslogs-region        = var.region
+        awslogs-stream-prefix = "x1-host"
+      }
+    }
+  }])
+}
+
+resource "aws_ecs_service" "host_sampler" {
+  count               = var.enable_host_sampler ? 1 : 0
+  name                = "${local.name}-host-sampler"
+  cluster             = aws_ecs_cluster.this.id
+  task_definition     = aws_ecs_task_definition.host_sampler[0].arn
   launch_type         = "EC2"
   scheduling_strategy = "DAEMON" # runs only while a GPU instance exists
 }

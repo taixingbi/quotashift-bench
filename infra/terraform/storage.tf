@@ -154,6 +154,11 @@ resource "aws_cloudwatch_log_group" "gateway" {
   retention_in_days = var.log_retention_days
 }
 
+resource "aws_cloudwatch_log_group" "host_telemetry" {
+  name              = "/${var.name_prefix}/${var.environment}/x1-host-telemetry"
+  retention_in_days = var.log_retention_days
+}
+
 resource "aws_cloudwatch_log_group" "dcgm" {
   name              = "/${var.name_prefix}/${var.environment}/dcgm"
   retention_in_days = var.log_retention_days

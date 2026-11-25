@@ -300,7 +300,7 @@ instance can run at a time. The plan needs only one.
 | **X1-B** | Least-privilege, temporary-credential migration per `docs/X1_IAM_MIGRATION_CHECKLIST.md`. **Every create, deactivate or rotate step is performed by the owner**, with explicit confirmation. `aws_ops.sh` already refuses root credentials | AWS IAM | $0 | owner action, step by step |
 | **X1-C** | gpu-node-2: create the 0.17.1 environment; download both models (≈ 30 GB) | local host | $0 | `x1_local_env` |
 | **X1-D** | gpu-node-2: restart with the template; P1 and **preflight Phase 1** per model (incl. the sampler on/off check); smoke | local host | $0 | `x1_local_restart` |
-| **X1-E** | AWS prep in the repo: Terraform variables (`g6.xlarge`, AMI pinned, image digest 0.17.1, host-telemetry sampler, exporter, private target profile, AWS identifiers in the export gate); `terraform fmt`/`validate`/`test`/read-only `plan` | repo + read-only AWS | $0 | review |
+| **X1-E** ✅ 2026-11-24 | AWS prep in the repo: Terraform variables (`g6.xlarge`, AMI pinned, image digest 0.17.1, host-telemetry sampler, exporter, private target profile, AWS identifiers in the export gate); `terraform fmt`/`validate`/`test`/read-only `plan` | repo + read-only AWS | $0 | review |
 | ~~X1-F~~ | ~~quota increase~~: **not requested** (owner decision) | — | — | — |
 | **X1-G** | Freeze Commit 1 (protocol, analysis code, schedule generator, preflight thresholds) | repo | $0 | `x1_freeze1` |
 | **X1-H** | P2 tokenizer trace freeze for both models on gpu-node-2 → Freeze Commit 2 | local host | $0 | `x1_p2` |

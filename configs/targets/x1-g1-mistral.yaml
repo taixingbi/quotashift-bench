@@ -1,0 +1,11 @@
+# X1 G1 target (AWS g6.xlarge, NVIDIA L4) for model mistralai/Mistral-7B-Instruct-v0.3. Private VPC only (Cloud Map name).
+# Selecting this target does NOT start anything; deploy/start-gpu are approval-gated (X1-J/K/N).
+name: x1-g1-mistral
+kind: aws
+backend_url: http://vllm.quotashift.internal:8000
+model: mistralai/Mistral-7B-Instruct-v0.3
+model_revision: c170c708c41dac9275d15a8fff4eca08d52bab71
+max_model_len: 4096
+gpu_type: NVIDIA L4
+gpu_type_source: owner_stated
+gpu_exporter_url: http://vllm.quotashift.internal:9400/metrics   # DCGM exporter daemon (host network); energy compared within G1 only
