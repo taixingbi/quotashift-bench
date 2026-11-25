@@ -430,3 +430,23 @@ A1–A9 results and controls are unchanged. No v4 GPU run is made before owner a
   - `run-stage` checks the runner, vLLM and the G1-only stage token.
   - State-bootstrap plan prepared (7 to add); not applied.
 - **Freeze 1.** Manifest prepared (`docs/X1_FREEZE1_REQUEST.md` §7). NOT executed.
+
+## ADR-X1-G0M0-P1-RECOVERY — g0m0 Phase 1 measurement defect and the single approved re-run (2026-11-25)
+Written **before** the re-run, from the read-only forensic review of attempt 1 (`6b6ca7b`). Owner approval: "approve recovery".
+- **Attempt 1 (kept as recorded):** `experiments/x1/g0m0/HOST_VERIFICATION.attempt1.json` (sha256 `ef6c6b47…`); raw files
+  under `reports/x1/g0m0/preflight/attempt1/` and the server log under `.../evidence_2026-11-25/` (both git-ignored, with checksums).
+- **Defect 1, `sampler_overhead` "no sampler summary".** The driver ran the frozen sampler in daemon mode for about 40 s.
+  Daemon mode reports its own CPU only every 60 samples; the SIGINT sent by `sampler_stop` is ignored by a background job
+  started from a non-interactive shell, and the follow-up SIGTERM ends it without a summary. So no overhead value existed.
+  Indirect bound from the idle telemetry: all non-vLLM CPU ≈ 0.005 core (limit 0.01). Not a substitute for the check.
+- **Defect 2, `sampler_equivalence` (on 47.16 ms vs off 56.50 ms, frozen nearest-rank medians, Δ −9.34 ms).** The ON pass
+  re-sent the 20 prompts the OFF pass had just sent, with prefix caching on and no reset. The server log shows a prefix-cache
+  hit rate of 0.0% through the OFF pass and 21.8% → 40.2% exactly during the ON pass. The descriptive `ttft_floor_ms`
+  (48.30 / 56.53, Δ −8.24) used `statistics.median` instead of the frozen nearest-rank rule, hence two different numbers.
+- **Fix (driver `scripts/x1_preflight.py` only; nothing frozen changes: sampler, checks, thresholds, 20 + 20 prompts):**
+  1. verified `/reset_prefix_cache` immediately before each TTFT pass (new fail-safe check `ttft_passes_cache_cold`);
+  2. Phase 1 sampler run with a finite `--duration 65`, waited on until it exits and writes its `summary` line, which
+     `overhead()` reads (Phase 2 is unchanged: its 120 s block already yields periodic overhead lines);
+  3. per-request TTFTs saved; descriptive medians use the frozen `pf.pctl` rule.
+- **Single re-run, outcome fixed in advance.** The whole g0m0 Phase 1 is re-run once, every check included. Pass → the
+  batch continues as approved (Mistral). Any failure → stop; no further attempt. No optional OFF/ON/OFF repetition.

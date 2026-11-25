@@ -183,14 +183,27 @@ def tokenizer_parity(host: str, base: str, plat: str, n: int = 60) -> dict:
 
 
 # ------------------------------------------------------------------------------------------------ host sampler
-def sampler_start(host: str, tag: str) -> None:
+def sampler_start(host: str, tag: str, duration: float = 0) -> None:
+    """duration <= 0: daemon mode (periodic overhead line every 60 samples; killed by sampler_stop). duration > 0: the
+    frozen sampler exits by itself and writes its {"summary": ...} line (ADR-X1-G0M0-P1-RECOVERY)."""
     # three separate ssh calls: a pkill/pgrep pattern must never match the remote shell that carries it
     ssh(host, "cat > $HOME/x1/x1_host_sampler.py", stdin=(REPO / "scripts" / "x1_host_sampler.py").read_text())
     ssh(host, "pkill -f '[x]1_host_sampler' || true")
-    ssh(host, f"cd $HOME/x1; setsid nohup python3 ./x1_host_sampler.py --duration 0 > telemetry_{tag}.jsonl 2>&1 < /dev/null &")
+    ssh(host, f"cd $HOME/x1; setsid nohup python3 ./x1_host_sampler.py --duration {duration:g} > telemetry_{tag}.jsonl "
+              "2>&1 < /dev/null &")
     time.sleep(2)
     if not ssh(host, "pgrep -f '[x]1_host_sampler' || true").strip():
         raise RuntimeError("host sampler did not start")
+
+
+def sampler_wait(host: str, timeout_s: float) -> bool:
+    """Wait for a finite-duration sampler to exit on its own (so it writes its summary). False on timeout."""
+    end = time.time() + timeout_s
+    while time.time() < end:
+        if not ssh(host, "pgrep -f '[x]1_host_sampler' || true").strip():
+            return True
+        time.sleep(2)
+    return False
 
 
 def sampler_stop(host: str, tag: str, dst: Path) -> list[dict]:
@@ -208,8 +221,13 @@ def window(samples: list[dict], t0: float, t1: float) -> list[dict]:
 
 
 def overhead(samples: list[dict]) -> dict:
-    oh = [s["overhead"] for s in samples if "overhead" in s]
+    """The sampler's own-CPU report: the final {"summary"} line if present (finite run), else the last periodic
+    {"overhead"} line (daemon run). Both carry overhead_core_frac over the whole run so far."""
+    oh = [s.get("summary") or s.get("overhead") for s in samples if "summary" in s or "overhead" in s]
     return oh[-1] if oh else {}
+
+
+SAMPLER_PHASE1_S = 65      # >= 60 samples at 1 s, and the frozen sampler's summary line on exit
 
 
 # ------------------------------------------------------------------------------------------------ mini-blocks
@@ -269,13 +287,23 @@ def phase1(plat: str, host: str, anchor_tps: float | None) -> dict:
     (rawdir / "isolated_ms.json").write_text(json.dumps(iso))
     tps = [completion(base, model, prompt_of(60, 100 + k), 256, stream=True)["decode_tps"] for k in range(5)]
     decode_tps = st.median([x for x in tps if x])
+    # Sampler on/off TTFT floor (ADR-X1-G0M0-P1-RECOVERY): the same 20 prompts in both passes, each pass starting from
+    # a verified-cold prefix cache, so a cache hit can never masquerade as a sampler effect.
+    reset_off = reset_and_verify(base, model, tag=f"x1-ttft-off-{plat}")
+    time.sleep(3)
     ttft_off = [completion(base, model, prompt_of(60, 200 + k), 8, stream=True)["ttft_ms"] for k in range(20)]
-    sampler_start(host, f"{plat}_phase1")
+    sampler_start(host, f"{plat}_phase1", duration=SAMPLER_PHASE1_S)
+    reset_on = reset_and_verify(base, model, tag=f"x1-ttft-on-{plat}")
     time.sleep(3)
     ttft_on = [completion(base, model, prompt_of(60, 200 + k), 8, stream=True)["ttft_ms"] for k in range(20)]
     tq0 = time.time()
-    time.sleep(30)
+    sampler_exited = sampler_wait(host, SAMPLER_PHASE1_S + 60)
     samples = sampler_stop(host, f"{plat}_phase1", rawdir / "telemetry_phase1.jsonl")
+    (rawdir / "ttft_onoff_ms.json").write_text(json.dumps({"off": ttft_off, "on": ttft_on}))
+    cold = {"status": "pass" if reset_off.get("verified") and reset_on.get("verified") else "fail",
+            "reasons": [] if reset_off.get("verified") and reset_on.get("verified")
+            else ["prefix cache not verified cold before a TTFT pass"],
+            "reset_before_off": reset_off, "reset_before_on": reset_on, "sampler_exited_by_itself": sampler_exited}
     idle = window(samples, tq0, time.time() + 5)
     clock = clock_offset_probe(base, n=20)
     s_p = 1.0 if plat == "g0m0" else (decode_tps / anchor_tps if anchor_tps else None)
@@ -300,6 +328,7 @@ def phase1(plat: str, host: str, anchor_tps: float | None) -> dict:
         "tokenization_isolated": pf.tokenization_check(isolated_ms=iso, peak_request_rps=0.0),
         "sampler_overhead": pf.sampler_overhead_check(overhead(samples) or {}),
         "sampler_equivalence": pf.sampler_equivalence_check([x for x in ttft_on if x], [x for x in ttft_off if x]),
+        "ttft_passes_cache_cold": cold,
         "clock_offset": pf.clock_offset_check(clock.get("offset_s"), clock.get("bound_s")),
         "smoke_mini_block": smoke,
     }
@@ -307,8 +336,10 @@ def phase1(plat: str, host: str, anchor_tps: float | None) -> dict:
             "decode_tps_D": decode_tps, "decode_tps_samples": tps, "speed_factor": s_p,
             "anchor_decode_tps": anchor_tps if plat != "g0m0" else decode_tps,
             "clock_offset_s": clock.get("offset_s"), "clock_bound_s": clock.get("bound_s"),
-            "ttft_floor_ms": {"sampler_off_median": st.median([x for x in ttft_off if x]),
-                              "sampler_on_median": st.median([x for x in ttft_on if x])},
+            "ttft_floor_ms": {"median_rule": "nearest-rank p50 (frozen pf.pctl, as the equivalence check)",
+                              "sampler_off_median": pf.pctl([x for x in ttft_off if x], 50),
+                              "sampler_on_median": pf.pctl([x for x in ttft_on if x], 50),
+                              "sampler_off_ms": ttft_off, "sampler_on_ms": ttft_on},
             "finished_utc": now()}
     p1 = {"platform": plat, "model": model, "revision": build_x1.PLATFORMS[plat]["revision"],
           "vllm_version": facts["vllm_version"], "process_start_time_seconds": facts["process_start_time_seconds"],

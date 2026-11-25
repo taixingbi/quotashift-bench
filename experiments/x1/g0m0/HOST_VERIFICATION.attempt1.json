@@ -1,0 +1,185 @@
+{
+ "platform": "g0m0",
+ "p1": {
+  "platform": "g0m0",
+  "model": "Qwen/Qwen2.5-7B-Instruct",
+  "revision": "a09a35458c702b33eeacc393d103063234e8bc28",
+  "vllm_version": "0.17.1",
+  "process_start_time_seconds": 1795583406.76,
+  "argv": {
+   "ok": true,
+   "model": "Qwen/Qwen2.5-7B-Instruct",
+   "unexpected": [],
+   "mismatched": [],
+   "env_python_is_pinned_env": true
+  },
+  "weights": {
+   "ok": true,
+   "files": {
+    "model-00001-of-00004.safetensors": {
+     "expected": "a1333e6293854747c481288ea83b348226af178dd565c49b6f9495ba1966aba7",
+     "actual": "a1333e6293854747c481288ea83b348226af178dd565c49b6f9495ba1966aba7"
+    },
+    "model-00002-of-00004.safetensors": {
+     "expected": "f5d25a2772cb825164a2a2c0fb6d51a87e282abf21e4dd75bc5cfb3cd0ea6185",
+     "actual": "f5d25a2772cb825164a2a2c0fb6d51a87e282abf21e4dd75bc5cfb3cd0ea6185"
+    },
+    "model-00003-of-00004.safetensors": {
+     "expected": "8efdec4c1bc12317ae1a38dc42b595ce777738a64deea3fcb8a0a91381bcdfd5",
+     "actual": "8efdec4c1bc12317ae1a38dc42b595ce777738a64deea3fcb8a0a91381bcdfd5"
+    },
+    "model-00004-of-00004.safetensors": {
+     "expected": "1a72d403cdf0c1ec3cb7f289f17b394a01e64394c2e9b3c0f94dbce3faf879bd",
+     "actual": "1a72d403cdf0c1ec3cb7f289f17b394a01e64394c2e9b3c0f94dbce3faf879bd"
+    }
+   }
+  },
+  "kv_tokens": 65936,
+  "launch_startup_s": 40.4,
+  "verified_by": "Claude under owner batch approval x1_local_restart (experiments/x1/approvals/)",
+  "verified_utc": "2026-11-25T05:21:55.142409+00:00"
+ },
+ "preflight": {
+  "phase1": {
+   "started_utc": "2026-11-25T05:16:05.214343+00:00",
+   "status": "fail",
+   "checks": {
+    "server_version": {
+     "status": "pass",
+     "value": "0.17.1"
+    },
+    "env_sources": {
+     "status": "pass",
+     "vllm": "0.17.1",
+     "torch": "2.10.0",
+     "transformers": "4.57.6",
+     "mistral_common": "1.10.0",
+     "sources": {
+      "engine/arg_utils.py": "846fe5ade00f9651e7cee487092c6cb69eb02f19b15906a8c68a3683678a179f",
+      "config/vllm.py": "405074725a88d63cf1221caf84261485f97d3f1d4eadb2837df78753fc8d5490",
+      "entrypoints/cli/serve.py": "64b4427d989d6e35b353d1d718075a1c6560e1c65026de8592a57c1567e7b0ec"
+     },
+     "sources_match_v5_pins": true
+    },
+    "model_load": {
+     "status": "pass",
+     "reasons": [],
+     "startup_s": 40.4,
+     "log_error_lines": []
+    },
+    "kv_capacity": {
+     "status": "pass",
+     "reasons": [],
+     "kv_tokens": 65936
+    },
+    "prefix_cache": {
+     "status": "pass",
+     "block_size": "16",
+     "num_gpu_blocks": "4121",
+     "gpu_memory_utilization": "0.8",
+     "enable_prefix_caching": "True",
+     "cache_dtype": "auto"
+    },
+    "prefix_cache_reset": {
+     "status": "pass",
+     "endpoint": "/reset_prefix_cache",
+     "verified": true,
+     "reset_http_status": 200,
+     "probe_hits_before_reset": 96.0,
+     "probe_hits_after_reset": 0.0
+    },
+    "tokenizer_parity": {
+     "status": "pass",
+     "ok": true,
+     "n": 60,
+     "mismatches": 0,
+     "examples": [],
+     "offline": "transformers AutoTokenizer"
+    },
+    "ram_idle": {
+     "status": "pass",
+     "reasons": [],
+     "min_mem_available": 27890401280,
+     "oom_kills": 0,
+     "swap_in": 0
+    },
+    "tokenization_isolated": {
+     "status": "pass",
+     "reasons": [],
+     "isolated_p50_ms": 12.380333966575563,
+     "isolated_p99_ms": 20.821249985601753,
+     "isolated_mean_ms": 12.975111234700307,
+     "rho_at_peak": 0.0,
+     "peak_request_rps": 0.0
+    },
+    "sampler_overhead": {
+     "status": "fail",
+     "reasons": [
+      "no sampler summary"
+     ],
+     "overhead_core_frac": null
+    },
+    "sampler_equivalence": {
+     "status": "fail",
+     "reasons": [
+      "sampler shifts idle TTFT median by -9.34 ms"
+     ],
+     "median_on_ms": 47.158708970528096,
+     "median_off_ms": 56.50145898107439,
+     "diff_ms": -9.342750010546297
+    },
+    "clock_offset": {
+     "status": "pass",
+     "reasons": [],
+     "offset_s": -0.734567403793335,
+     "bound_s": 0.029569625854492188
+    },
+    "smoke_mini_block": {
+     "rc": 0,
+     "t0": 1795583863.908334,
+     "t1": 1795584115.142277,
+     "rate": 200,
+     "reps": 2,
+     "runtime_s": 60,
+     "gates": {
+      "backend_error_rate": "pass",
+      "http_400_rate": "pass",
+      "admission_rate": "pass",
+      "competitor_completion": "pass",
+      "primary_metric_present": "pass",
+      "tokenized_context": "pass",
+      "planned_vs_reported_tokens": "pass",
+      "provenance": "pass",
+      "victim_latency_censoring": "pass",
+      "arrival_coverage": "pass",
+      "realized_output_equals_authorized": "pass",
+      "cap_configured": "pass",
+      "occupancy_reconstruction": "pass",
+      "gateway_timestamp_alignment": "pass"
+     },
+     "failed_gates": [],
+     "flagged_gates": [],
+     "status": "pass",
+     "stderr_tail": ""
+    }
+   },
+   "decode_tps_D": 50.78757883916948,
+   "decode_tps_samples": [
+    50.712038701061346,
+    50.88185614603501,
+    50.635109721966444,
+    50.78757883916948,
+    50.79728160161868
+   ],
+   "speed_factor": 1.0,
+   "anchor_decode_tps": 50.78757883916948,
+   "clock_offset_s": -0.734567403793335,
+   "clock_bound_s": 0.029569625854492188,
+   "ttft_floor_ms": {
+    "sampler_off_median": 56.53435448766686,
+    "sampler_on_median": 48.297333501977846
+   },
+   "finished_utc": "2026-11-25T05:21:55.142394+00:00"
+  }
+ }
+}
