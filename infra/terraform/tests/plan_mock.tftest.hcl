@@ -2,6 +2,49 @@
 # Run: terraform -chdir=infra/terraform test
 
 mock_provider "aws" {
+  # realistic ARNs so that (in-memory) mock applies pass provider-side ARN validation
+  mock_resource "aws_iam_role" {
+    defaults = { arn = "arn:aws:iam::123456789012:role/quotashift-mock" }
+  }
+  mock_resource "aws_iam_instance_profile" {
+    defaults = { arn = "arn:aws:iam::123456789012:instance-profile/quotashift-mock" }
+  }
+  mock_resource "aws_ecs_task_definition" {
+    defaults = { arn = "arn:aws:ecs:us-east-1:123456789012:task-definition/quotashift-mock:1" }
+  }
+  mock_resource "aws_ecs_cluster" {
+    defaults = { arn = "arn:aws:ecs:us-east-1:123456789012:cluster/quotashift-mock", id = "arn:aws:ecs:us-east-1:123456789012:cluster/quotashift-mock" }
+  }
+  mock_resource "aws_service_discovery_service" {
+    defaults = { arn = "arn:aws:servicediscovery:us-east-1:123456789012:service/srv-mock", id = "srv-mock0123456789" }
+  }
+  mock_resource "aws_service_discovery_private_dns_namespace" {
+    defaults = { arn = "arn:aws:servicediscovery:us-east-1:123456789012:namespace/ns-mock", hosted_zone = "Z0MOCKZONE" }
+  }
+  mock_resource "aws_launch_template" {
+    defaults = { id = "lt-0123456789abcdef0", arn = "arn:aws:ec2:us-east-1:123456789012:launch-template/lt-0123456789abcdef0" }
+  }
+  mock_resource "aws_autoscaling_group" {
+    defaults = { arn = "arn:aws:autoscaling:us-east-1:123456789012:autoScalingGroup:mock:autoScalingGroupName/quotashift-mock" }
+  }
+  mock_resource "aws_vpc" {
+    defaults = { id = "vpc-0123456789abcdef0", arn = "arn:aws:ec2:us-east-1:123456789012:vpc/vpc-0123456789abcdef0" }
+  }
+  mock_resource "aws_subnet" {
+    defaults = { id = "subnet-0123456789abcdef0", arn = "arn:aws:ec2:us-east-1:123456789012:subnet/subnet-0123456789abcdef0" }
+  }
+  mock_resource "aws_security_group" {
+    defaults = { id = "sg-0123456789abcdef0", arn = "arn:aws:ec2:us-east-1:123456789012:security-group/sg-0123456789abcdef0" }
+  }
+  mock_resource "aws_s3_bucket" {
+    defaults = { arn = "arn:aws:s3:::quotashift-mock" }
+  }
+  mock_resource "aws_cloudwatch_log_group" {
+    defaults = { arn = "arn:aws:logs:us-east-1:123456789012:log-group:/quotashift/mock" }
+  }
+  mock_resource "aws_ecr_repository" {
+    defaults = { arn = "arn:aws:ecr:us-east-1:123456789012:repository/quotashift-mock", repository_url = "123456789012.dkr.ecr.us-east-1.amazonaws.com/quotashift-mock" }
+  }
   override_data {
     target = data.aws_availability_zones.available
     values = { names = ["us-east-1a", "us-east-1b"] }
@@ -172,8 +215,9 @@ run "budget_created_with_emails" {
 run "gateway_and_generators_are_private_when_enabled" {
   command = plan
   variables {
-    gateway_image = "123456789012.dkr.ecr.us-east-1.amazonaws.com/quotashift-dev-gateway@sha256:1111111111111111111111111111111111111111111111111111111111111111"
-    runner_image  = "123456789012.dkr.ecr.us-east-1.amazonaws.com/quotashift-dev-runner@sha256:2222222222222222222222222222222222222222222222222222222222222222"
+    x1_inprocess_gateway = false # pre-X1 standalone-gateway layout
+    gateway_image        = "123456789012.dkr.ecr.us-east-1.amazonaws.com/quotashift-dev-gateway@sha256:1111111111111111111111111111111111111111111111111111111111111111"
+    runner_image         = "123456789012.dkr.ecr.us-east-1.amazonaws.com/quotashift-dev-runner@sha256:2222222222222222222222222222222222222222222222222222222222222222"
   }
   assert {
     condition     = length(aws_ecs_service.vllm[*]) == 1
@@ -271,5 +315,88 @@ run "x1_mistral_override_appends_model_args" {
   assert {
     condition     = jsondecode(aws_ecs_task_definition.vllm.container_definitions)[0].command[0] == "mistralai/Mistral-7B-Instruct-v0.3"
     error_message = "Model id must be the first argv element."
+  }
+}
+
+# ---------------------------------------------------------------- X1-E completion
+run "x1_private_dns_runner_access_and_cloudmap_registration" {
+  command = apply # mock apply (in memory): the Cloud Map service id in user_data is known only after create
+  assert {
+    condition     = length(aws_service_discovery_private_dns_namespace.internal) == 1 && aws_service_discovery_private_dns_namespace.internal[0].name == "quotashift.internal" && length(aws_service_discovery_service.vllm) == 1 && aws_service_discovery_service.vllm[0].name == "vllm"
+    error_message = "vllm.quotashift.internal must exist (X1 targets)."
+  }
+  assert {
+    condition     = strcontains(base64decode(aws_launch_template.gpu.user_data), "servicediscovery register-instance") && strcontains(base64decode(aws_launch_template.gpu.user_data), "--instance-id gpu-host")
+    error_message = "GPU host must register its private IP in Cloud Map at boot under a fixed instance id."
+  }
+  assert {
+    condition     = length(aws_vpc_security_group_ingress_rule.vllm_from_runner) == 1 && aws_vpc_security_group_ingress_rule.vllm_from_runner[0].from_port == 8000 && aws_vpc_security_group_ingress_rule.vllm_from_runner[0].cidr_ipv4 == null
+    error_message = "Runner (in-process gateway) reaches vLLM via security-group reference only."
+  }
+  assert {
+    condition     = length(aws_iam_role_policy.gpu_host_cloudmap) == 1
+    error_message = "GPU host needs the scoped Cloud Map registration policy."
+  }
+  assert {
+    condition     = length(aws_ecs_service.gateway) == 0
+    error_message = "X1: no standalone gateway service."
+  }
+}
+
+run "x1_standalone_gateway_refused" {
+  command = plan
+  variables {
+    gateway_image = "123456789012.dkr.ecr.us-east-1.amazonaws.com/quotashift-dev-gateway@sha256:1111111111111111111111111111111111111111111111111111111111111111"
+  }
+  expect_failures = [aws_ecs_service.gateway]
+}
+
+run "x1_runner_with_results_sidecar_qwen" {
+  command = plan
+  variables {
+    runner_image     = "123456789012.dkr.ecr.us-east-1.amazonaws.com/quotashift-research-runner@sha256:2222222222222222222222222222222222222222222222222222222222222222"
+    model_sync_image = "amazon/aws-cli@sha256:eccdb3ec77e159d43ca6a750a70738c546883138be7f094498294a1477ec7e42"
+  }
+  assert {
+    condition     = length(jsondecode(aws_ecs_task_definition.runner[0].container_definitions)) == 2 && jsondecode(aws_ecs_task_definition.runner[0].container_definitions)[1].dependsOn[0].condition == "COMPLETE"
+    error_message = "Results upload sidecar must run after the runner completes."
+  }
+  assert {
+    condition     = contains([for e in jsondecode(aws_ecs_task_definition.runner[0].container_definitions)[0].environment : "${e.name}=${e.value}"], "QUOTASHIFT_IN_VPC_RUNNER=1") && contains([for e in jsondecode(aws_ecs_task_definition.runner[0].container_definitions)[0].environment : "${e.name}=${e.value}"], "QUOTASHIFT_TARGET=x1-g1-qwen")
+    error_message = "Runner must carry the in-VPC flag and the model's private target."
+  }
+}
+
+run "x1_runner_target_follows_model_switch" {
+  command = plan
+  variables {
+    runner_image    = "123456789012.dkr.ecr.us-east-1.amazonaws.com/quotashift-research-runner@sha256:2222222222222222222222222222222222222222222222222222222222222222"
+    model_id        = "mistralai/Mistral-7B-Instruct-v0.3"
+    model_revision  = "c170c708c41dac9275d15a8fff4eca08d52bab71"
+    vllm_model_args = ["--tokenizer-mode", "mistral", "--config-format", "mistral", "--load-format", "mistral"]
+  }
+  assert {
+    condition     = contains([for e in jsondecode(aws_ecs_task_definition.runner[0].container_definitions)[0].environment : "${e.name}=${e.value}"], "QUOTASHIFT_TARGET=x1-g1-mistral")
+    error_message = "Runner target must switch with the model."
+  }
+}
+
+run "x1_budget_is_60_with_actual_and_forecast_alerts" {
+  command = plan
+  variables {
+    budget_alert_emails = ["alerts@example.com"]
+    monthly_budget_usd  = 60
+  }
+  assert {
+    condition     = aws_budgets_budget.monthly[0].limit_amount == "60" && length(aws_budgets_budget.monthly[0].notification) == 4
+    error_message = "X1 budget: $60 with 50/80/100% actual + 100% forecast alerts."
+  }
+}
+
+run "x1_apply_and_destroy_on_mock_leave_gpu_at_zero" {
+  command = apply
+  assert {
+    condition     = aws_autoscaling_group.gpu.desired_capacity == 0 && aws_ecs_service.vllm.desired_count == 0 && aws_ecs_service.host_sampler[0].scheduling_strategy == "DAEMON"
+    error_message = "A (mock) apply must start no GPU and no vLLM task; the test framework then destroys everything."
   }
 }

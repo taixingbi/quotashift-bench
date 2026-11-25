@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Approval-gated AWS operations. NOTHING here runs automatically from tests or CI.
-#   scripts/aws_ops.sh <plan|plan-destroy|deploy|healthcheck|start-gpu|stop-gpu|collect|destroy|cost-report> <dev|research>
+#   scripts/aws_ops.sh <plan|plan-destroy|deploy|healthcheck|start-gpu|stop-gpu|collect|destroy|cost-report|state-backup|run-stage> <dev|research> [stage args]
 # Gated actions require BOTH env QUOTASHIFT_APPROVED=<action> and an interactive "yes".
 set -euo pipefail
 ACTION="${1:?action}"; ENVIRONMENT="${2:?env (dev|research)}"
@@ -59,6 +59,18 @@ case "$ACTION" in
       --query 'AutoScalingGroups[0].{desired:DesiredCapacity,instances:Instances[].{id:InstanceId,state:LifecycleState}}' ;;
   collect)     mkdir -p results/aws; aws s3 sync "s3://$(out results_bucket)/results/" results/aws/ ;;
   destroy)     gate destroy; $TF destroy $VARS ;;
+  state-backup) # read-only: copy the current remote state to the owner's local encrypted-backup folder (mode 600)
+    D="${QUOTASHIFT_STATE_BACKUP_DIR:-$HOME/QuotaShift-backups/tfstate}"; mkdir -p "$D"; chmod 700 "$D"
+    F="$D/${ENVIRONMENT}-$(date -u +%Y%m%dT%H%M%SZ).tfstate"
+    $TF state pull > "$F"; chmod 600 "$F"; shasum -a 256 "$F" ;;
+  run-stage)   # X1: one approved stage on the in-VPC runner (Fargate run-task); args after <env> go to the stage driver
+    gate run-stage
+    shift 2
+    [[ $# -gt 0 ]] || { echo "run-stage needs stage-driver arguments" >&2; exit 2; }
+    OVR=$(python3 -c 'import json,sys; print(json.dumps({"containerOverrides":[{"name":"runner","command":["python","scripts/x1_stage.py",*sys.argv[1:]]}]}))' "$@")
+    aws ecs run-task --cluster "$(out cluster_name)" --task-definition "$(out runner_task_definition_family)" --launch-type FARGATE \
+      --network-configuration "awsvpcConfiguration={subnets=[$(out private_subnet_ids_csv)],securityGroups=[$(out runner_security_group_id)],assignPublicIp=DISABLED}" \
+      --overrides "$OVR" --query 'tasks[0].taskArn' --output text ;;
   cost-report) # NOTE: each Cost Explorer API request is billed (~$0.01). Gated for that reason.
     gate cost-report
     aws ce get-cost-and-usage --time-period "Start=$(date -u -v-30d +%F 2>/dev/null || date -u -d '30 days ago' +%F),End=$(date -u +%F)" \

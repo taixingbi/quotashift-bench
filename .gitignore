@@ -31,3 +31,5 @@ reports/v5/smoke/
 reports/v5/stage_a/
 reports/v5/stage_b/
 reports/v5/export/
+infra/state-bootstrap/.terraform/
+infra/state-bootstrap/*.tfstate*

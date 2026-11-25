@@ -1,0 +1,24 @@
+{
+ "kind": "X1 freeze CANDIDATE (not a freeze; Freeze Commit 1 not executed)",
+ "created_utc": "2026-11-25T02:12:34.308179+00:00",
+ "files": {
+  "docs/PROTOCOL_X1_CROSS_PLATFORM_DRAFT.md": "8d937ba1f563460e58a26a653441ec51f501fd55077245d11d9bf39f1a253cd1",
+  "scripts/build_x1.py": "a8a7c6b72fcc52049d3840412e7ea0efdf6ea3de790561b312bf03904933cddb",
+  "scripts/x1_analysis.py": "5de42f5635c815a9b4440dfca4ca3d3581b0974237298b4f123b24a34200faa3",
+  "scripts/x1_predictions.py": "2694f482ff89d00f8c1a49ccf3c8f26be6bf0673af636a7e46444ef0640af7d5",
+  "scripts/x1_stage.py": "7626c71b4f37a2ae3d31068a6680c3feaacb192d585b6f00d567556674267b8c",
+  "scripts/x1_host_sampler.py": "23a1698040e5504dc237afa75b168a1a1c709274601f8c50c67ab48ca8fe8b0f",
+  "scripts/pin_x1.py": "ee85ef74e012fc47e733406fe0105108c5625294e272404887dc3160fb7d4f10",
+  "src/quotashift/x1/__init__.py": "e6ea8349d65c7407d50807d3026a0393985d7d2c7b9874bbaa247b198f687302",
+  "src/quotashift/x1/preflight.py": "04436055988b817227960ff45b179d8e6268c40a65ff94269c866b243fb0b104",
+  "src/quotashift/x1/tokenize_probe.py": "9eb0b6a0f0e7c09fdffad7fc5da87814e7ff65076add2d43194d03af34805b6a",
+  "src/quotashift/x1/export_gate.py": "18db641d075af1e491f7b207374b2d4e2174a15163b26d8acf8242bbda5bbf31"
+ },
+ "v5_dependencies_verified_against": "experiments/v5/FROZEN_SHA256.json",
+ "v5_dependencies": {
+  "scripts/v5_analysis.py": "d894baae9f50d74c1c5105aedb4f32ddf03438e0980ee248ff8f64e00d7d98bf",
+  "scripts/v5_fcfs_predictions.py": "b32e10aaf49b73f84c668db6cfdd1817fd07cc70e7c9c0a4580e892a1bf5ab09",
+  "scripts/build_v5.py": "fd36b1e186fc3a3395e0a739c179aee0f0d0a29a62bbba7daca821cee0010926",
+  "scripts/v5_stage.py": "532dbfca4730c9db080e6dd411fcb2cbdada9b66cd8c1a3aff42f0fc55f113a0"
+ }
+}

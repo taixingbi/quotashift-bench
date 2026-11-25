@@ -284,3 +284,16 @@ variable "model_sync_image" {
     error_message = "model_sync_image must be pinned by @sha256 digest."
   }
 }
+
+# ---------------------------------------------------------------- X1 (X1-E completion, 2026-11-24)
+variable "x1_inprocess_gateway" {
+  type        = bool
+  default     = true
+  description = "X1/v5 semantics: the FCFS gateway runs IN-PROCESS inside the runner task (cap from each scenario). The standalone Fargate gateway service must stay disabled (gateway_image = \"\"), otherwise requests would pass two admission layers."
+}
+
+variable "enable_private_dns" {
+  type        = bool
+  default     = true
+  description = "Cloud Map private namespace <name_prefix>.internal with an A record vllm.<ns> registered by the GPU host at boot (X1 targets use http://vllm.quotashift.internal:8000)."
+}

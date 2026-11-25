@@ -49,3 +49,17 @@ output "resolved_gpu_ami_id" {
   value       = local.gpu_ami_id
   description = "Record this in the run manifest; pin it via gpu_ami_id for the experiment campaign."
 }
+
+output "runner_task_definition_family" {
+  value       = one(aws_ecs_task_definition.runner[*].family)
+  description = "X1 runner (null until runner_image is set)."
+}
+
+output "private_subnet_ids_csv" {
+  value       = join(",", local.compute_subnet_ids)
+  description = "Subnets for the X1 runner task (no public IP)."
+}
+
+output "vllm_private_dns" {
+  value = var.enable_private_dns ? "vllm.${var.name_prefix}.internal" : null
+}

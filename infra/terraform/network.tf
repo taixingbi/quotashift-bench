@@ -159,6 +159,17 @@ resource "aws_vpc_security_group_ingress_rule" "vllm_from_gateway" {
   description                  = "vLLM OpenAI API from the gateway only"
 }
 
+# X1: the in-process FCFS gateway runs inside the runner task, so the runner reaches vLLM (API + /metrics) directly.
+resource "aws_vpc_security_group_ingress_rule" "vllm_from_runner" {
+  count                        = var.x1_inprocess_gateway ? 1 : 0
+  security_group_id            = aws_security_group.gpu_host.id
+  referenced_security_group_id = aws_security_group.runner.id
+  ip_protocol                  = "tcp"
+  from_port                    = 8000
+  to_port                      = 8000
+  description                  = "X1: vLLM API from the runner (in-process FCFS gateway) only"
+}
+
 # DCGM / vLLM metrics are scraped by the generators' collector (not the model API).
 resource "aws_vpc_security_group_ingress_rule" "dcgm_from_runner" {
   count                        = var.enable_dcgm_exporter ? 1 : 0

@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import shutil
 import subprocess
 import sys
@@ -265,8 +266,11 @@ def cmd_experiment(a: argparse.Namespace) -> int:
     target = None
     if a.live:
         target = load_target(a.target) if a.target else active_target()
-        if target.kind == "aws":
-            print("experiment --live supports self-hosted targets only.", file=sys.stderr)
+        if target.kind == "aws" and os.environ.get("QUOTASHIFT_IN_VPC_RUNNER") != "1":
+            # AWS targets are private VPC endpoints: only the approval-gated runner task inside the VPC (which sets
+            # QUOTASHIFT_IN_VPC_RUNNER=1, infra/terraform compute.tf) may drive them. Never from a workstation.
+            print("experiment --live supports self-hosted targets only (AWS targets run only inside the VPC runner "
+                  "task started by scripts/aws_ops.sh).", file=sys.stderr)
             return 3
     try:
         sc = load_scenario(_resolve(a.config))

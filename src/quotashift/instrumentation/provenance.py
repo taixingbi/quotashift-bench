@@ -26,6 +26,14 @@ def git_info(repo: Path) -> dict:
 
     sha = run("rev-parse", "HEAD")
     status = run("status", "--porcelain")
+    if sha is None:
+        # X1 runner image (no .git inside): provenance baked in by scripts/build_runner_image.sh, which refuses to
+        # build from a dirty tree. Labelled with its source so it is never mistaken for a live `git status`.
+        import os
+        bsha, bdirty = os.environ.get("QUOTASHIFT_BUILD_GIT_SHA"), os.environ.get("QUOTASHIFT_BUILD_GIT_DIRTY")
+        if bsha and bdirty in ("true", "false"):
+            return {"sha": bsha, "dirty": bdirty == "true", "source": "image-build",
+                    "note": "commit baked into the runner image at build time (clean-tree build enforced)"}
     return {"sha": sha, "dirty": bool(status) if status is not None else None,
             "note": None if sha else "no commit yet / not a git repo: results are not tied to a commit"}
 

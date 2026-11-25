@@ -11,8 +11,17 @@ COPY pyproject.toml uv.lock README.md ./
 RUN uv sync --frozen --no-dev --no-install-project
 COPY src ./src
 COPY configs ./configs
+# X1 runner: the stage driver, frozen analysis/generator scripts and the frozen scenario files travel with the image
+# (their SHA-256 are re-checked by scripts/pin_x1.py --check inside the runner before any live block).
+COPY scripts ./scripts
+COPY experiments ./experiments
+COPY docs/PROTOCOL_X1_CROSS_PLATFORM_DRAFT.md ./docs/
 RUN uv sync --frozen --no-dev && useradd -m -u 10001 quotashift && mkdir -p /app/results && chown -R quotashift /app/results
 USER quotashift
+# Build provenance for the in-VPC runner (no .git in the image); set ONLY by scripts/build_runner_image.sh.
+ARG GIT_SHA=""
+ARG GIT_DIRTY=""
+ENV QUOTASHIFT_BUILD_GIT_SHA=$GIT_SHA QUOTASHIFT_BUILD_GIT_DIRTY=$GIT_DIRTY
 ENV PATH="/app/.venv/bin:$PATH"
 ENTRYPOINT ["python", "-m", "quotashift.cli"]
 CMD ["doctor"]

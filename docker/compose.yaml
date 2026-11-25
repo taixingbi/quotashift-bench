@@ -39,7 +39,7 @@ services:
   # Real vLLM on a local NVIDIA GPU (opt-in: `--profile gpu`). Requires NVIDIA Container Toolkit.
   vllm:
     profiles: ["gpu"]
-    image: vllm/vllm-openai@sha256:d825baf9ce4b1b6bfc5ecc7b79880c7e6748c65a72d697ce3d47607aafa84c6e  # v0.33.0
+    image: vllm/vllm-openai@sha256:0dc46f74eb0e630675d83101dc66c6441c4475cceedcf9235ee42b87c3affd23  # v0.17.1 (X1 / v5)
     command: ["Qwen/Qwen2.5-7B-Instruct", "--max-model-len", "4096",
               "--gpu-memory-utilization", "0.90", "--no-enable-prefix-caching"]
     ipc: host

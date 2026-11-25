@@ -50,6 +50,14 @@ resource "aws_launch_template" "gpu" {
     ECS_ENABLE_CONTAINER_METADATA=true
     ECS_IMAGE_PULL_BEHAVIOR=prefer-cached
     CFG
+    %{if var.enable_private_dns~}
+    # X1: register this host's private IPv4 as vllm.${var.name_prefix}.internal (fixed instance id -> overwritten on
+    # every boot, so a replaced host never leaves a second, stale record). vLLM and DCGM use host networking.
+    TOKEN=$(curl -sX PUT http://169.254.169.254/latest/api/token -H "X-aws-ec2-metadata-token-ttl-seconds: 300")
+    IP=$(curl -s -H "X-aws-ec2-metadata-token: $TOKEN" http://169.254.169.254/latest/meta-data/local-ipv4)
+    aws servicediscovery register-instance --region ${var.region} --service-id ${aws_service_discovery_service.vllm[0].id} \
+      --instance-id gpu-host --attributes AWS_INSTANCE_IPV4=$IP || echo "X1: Cloud Map registration FAILED" >&2
+    %{endif~}
   EOT
   )
 
@@ -290,11 +298,21 @@ resource "aws_ecs_task_definition" "runner" {
     cpu_architecture        = "X86_64"
     operating_system_family = "LINUX"
   }
-  container_definitions = jsonencode([{
+  # X1: the runner executes the stage driver with the in-process FCFS gateway against the private vLLM; results are
+  # written to a task-local volume and uploaded by a digest-pinned AWS CLI sidecar after the runner exits.
+  volume {
+    name = "results"
+  }
+  container_definitions = jsonencode(concat([{
     name        = "runner"
     image       = var.runner_image
-    essential   = true
-    environment = [{ name = "QUOTASHIFT_RESULTS_S3", value = "s3://${aws_s3_bucket.results.bucket}/results/" }]
+    essential   = var.model_sync_image == ""
+    mountPoints = [{ sourceVolume = "results", containerPath = "/app/results" }]
+    environment = [
+      { name = "QUOTASHIFT_RESULTS_S3", value = "s3://${aws_s3_bucket.results.bucket}/results/" },
+      { name = "QUOTASHIFT_IN_VPC_RUNNER", value = "1" },
+      { name = "QUOTASHIFT_TARGET", value = local.x1_target },
+    ]
     logConfiguration = {
       logDriver = "awslogs"
       options = {
@@ -303,17 +321,53 @@ resource "aws_ecs_task_definition" "runner" {
         awslogs-stream-prefix = "runner"
       }
     }
-  }])
+    }], var.model_sync_image == "" ? [] : [{
+    name        = "results-upload"
+    image       = var.model_sync_image
+    essential   = true
+    dependsOn   = [{ containerName = "runner", condition = "COMPLETE" }]
+    command     = ["s3", "sync", "/app/results", "s3://${aws_s3_bucket.results.bucket}/results/", "--only-show-errors"]
+    mountPoints = [{ sourceVolume = "results", containerPath = "/app/results", readOnly = true }]
+    logConfiguration = {
+      logDriver = "awslogs"
+      options = {
+        awslogs-group         = aws_cloudwatch_log_group.runner.name
+        awslogs-region        = var.region
+        awslogs-stream-prefix = "results-upload"
+      }
+    }
+  }]))
+}
+
+locals {
+  x1_target = var.model_id == "mistralai/Mistral-7B-Instruct-v0.3" ? "x1-g1-mistral" : "x1-g1-qwen"
 }
 
 # ---------------------------------------------------------------- internal service discovery
 # Private DNS namespace so generators resolve the gateway by name. Created only when a
 # gateway image is provided (keeps the default plan free of a private hosted zone).
+locals {
+  private_dns = var.enable_private_dns || var.gateway_image != ""
+}
+
 resource "aws_service_discovery_private_dns_namespace" "internal" {
-  count       = var.gateway_image == "" ? 0 : 1
+  count       = local.private_dns ? 1 : 0
   name        = "${var.name_prefix}.internal"
   description = "QuotaShift internal service discovery (no public records)"
   vpc         = aws_vpc.this.id
+}
+
+resource "aws_service_discovery_service" "vllm" {
+  count = var.enable_private_dns ? 1 : 0
+  name  = "vllm"
+  dns_config {
+    namespace_id = aws_service_discovery_private_dns_namespace.internal[0].id
+    dns_records {
+      type = "A"
+      ttl  = 10
+    }
+    routing_policy = "MULTIVALUE"
+  }
 }
 
 resource "aws_service_discovery_service" "gateway" {
@@ -375,7 +429,14 @@ resource "aws_ecs_task_definition" "gateway" {
 }
 
 resource "aws_ecs_service" "gateway" {
-  count           = var.gateway_image == "" ? 0 : 1
+  count = var.gateway_image == "" ? 0 : 1
+  lifecycle {
+    precondition {
+      condition     = !var.x1_inprocess_gateway
+      error_message = "X1 runs the FCFS gateway in-process in the runner; set gateway_image = \"\" (or x1_inprocess_gateway = false outside X1)."
+    }
+    ignore_changes = [desired_count]
+  }
   name            = "${local.name}-gateway"
   cluster         = aws_ecs_cluster.this.id
   task_definition = aws_ecs_task_definition.gateway[0].arn
@@ -390,10 +451,6 @@ resource "aws_ecs_service" "gateway" {
 
   service_registries {
     registry_arn = aws_service_discovery_service.gateway[0].arn
-  }
-
-  lifecycle {
-    ignore_changes = [desired_count]
   }
 }
 

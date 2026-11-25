@@ -84,3 +84,21 @@ resource "aws_iam_role_policy" "runner_s3" {
     ]
   })
 }
+
+# X1: the GPU host registers its private IP as vllm.<ns> at boot (user_data). Scoped to that one Cloud Map service
+# and the namespace's private hosted zone.
+resource "aws_iam_role_policy" "gpu_host_cloudmap" {
+  count = var.enable_private_dns ? 1 : 0
+  name  = "cloudmap-register-vllm"
+  role  = aws_iam_role.gpu_host.id
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      { Effect = "Allow", Action = ["servicediscovery:RegisterInstance", "servicediscovery:DeregisterInstance"],
+      Resource = aws_service_discovery_service.vllm[0].arn },
+      { Effect = "Allow", Action = ["servicediscovery:GetOperation"], Resource = "*" },
+      { Effect = "Allow", Action = ["route53:ChangeResourceRecordSets", "route53:GetHostedZone"],
+      Resource = "arn:aws:route53:::hostedzone/${aws_service_discovery_private_dns_namespace.internal[0].hosted_zone}" },
+    ]
+  })
+}

@@ -94,3 +94,37 @@ def test_owner_user_can_only_assume_the_two_roles():
     assert not any(x["Effect"] == "Allow" and x.get("Action") == "*" for x in u["Statement"])
     t = json.loads((REPO / "infra" / "iam" / "x1-role-trust-policy.template.json").read_text())["Statement"][0]
     assert t["Condition"] == {"ArnLike": {"aws:PrincipalArn": "arn:aws:iam::<ACCOUNT_ID>:user/<OWNER_IAM_USER>"}}
+
+
+# ---------------------------------------------------------------- X1-E completion: aws_ops.sh model switch / gates
+ROLE = "arn:aws:sts::111122223333:assumed-role/quotashift-x1-operator/s"
+
+
+def test_plan_includes_the_model_override_only_when_selected(tmp_path):
+    env = _fake_bin(tmp_path, ROLE)
+    subprocess.run(["bash", str(REPO / "scripts" / "aws_ops.sh"), "plan", "research"], cwd=REPO, env=env,
+                   capture_output=True, text=True, stdin=subprocess.DEVNULL)
+    (tmp_path / "b").mkdir()
+    env2 = {**_fake_bin(tmp_path / "b", ROLE), "QUOTASHIFT_MODEL": "m1-mistral"}
+    subprocess.run(["bash", str(REPO / "scripts" / "aws_ops.sh"), "plan", "research"], cwd=REPO, env=env2,
+                   capture_output=True, text=True, stdin=subprocess.DEVNULL)
+    log1 = Path(env["CALLS"]).read_text()
+    log2 = Path(env2["CALLS"]).read_text()
+    plan1 = next(x for x in log1.splitlines() if " plan " in x)
+    plan2 = next(x for x in log2.splitlines() if " plan " in x)
+    assert "-var-file=envs/research.tfvars" in plan1 and "m1-mistral" not in plan1
+    assert "-var-file=envs/research.tfvars -var-file=envs/research.m1-mistral.tfvars" in plan2
+    assert (REPO / "infra" / "terraform" / "envs" / "research.m1-mistral.tfvars").exists()
+
+
+@pytest.mark.parametrize("action", ["deploy", "start-gpu", "destroy", "run-stage"])
+def test_billable_actions_stay_gated_for_the_operator_role(tmp_path, action):
+    r, log = _run(tmp_path, ROLE, action, "research", "--stage", "x")
+    assert r.returncode == 3 and "approval-gated" in r.stderr
+    assert "apply" not in log and "destroy" not in log.replace("aws_ops", "") and "run-task" not in log
+
+
+def test_stop_gpu_scales_everything_to_zero(tmp_path):
+    r, log = _run(tmp_path, ROLE, "stop-gpu", "research")
+    assert r.returncode == 0
+    assert "set-desired-capacity" in log and "--desired-capacity 0" in log and "--desired-count 0" in log

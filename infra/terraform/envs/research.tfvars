@@ -15,3 +15,9 @@ monthly_budget_usd  = 60
 budget_alert_emails = []
 max_run_minutes     = 1320 # longest single X1 AWS stage (X1-N main); X1-K uses <= 480
 spending_limit_usd  = 60
+# Runner (Fargate): stage driver + in-process FCFS gateway + load generation. Sized so the runner never limits load
+# (the CPU confounder under study is the GPU host's). runner_image = ECR digest after the approved build (X1-J prep).
+runner_cpu       = 4096
+runner_memory    = 8192
+model_sync_image = "amazon/aws-cli@sha256:eccdb3ec77e159d43ca6a750a70738c546883138be7f094498294a1477ec7e42" # 2.39.6 (2026-11-06): results-upload sidecar
+gateway_image    = ""                                                                                       # X1: in-process gateway only (x1_inprocess_gateway = true)

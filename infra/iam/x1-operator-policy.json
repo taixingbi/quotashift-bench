@@ -2,6 +2,46 @@
   "Version": "2012-10-17",
   "Statement": [
     {
+      "Sid": "ReadProjectIamAndBuckets",
+      "Effect": "Allow",
+      "Action": [
+        "iam:GetRole",
+        "iam:GetRolePolicy",
+        "iam:ListRolePolicies",
+        "iam:ListAttachedRolePolicies",
+        "iam:GetInstanceProfile",
+        "iam:ListInstanceProfilesForRole"
+      ],
+      "Resource": [
+        "arn:aws:iam::*:role/quotashift-*",
+        "arn:aws:iam::*:instance-profile/quotashift-*"
+      ]
+    },
+    {
+      "Sid": "ReadsNeededByTerraformAndAwsOps",
+      "Effect": "Allow",
+      "Action": [
+        "sts:GetCallerIdentity",
+        "ec2:Describe*",
+        "autoscaling:Describe*",
+        "ecs:Describe*",
+        "ecs:List*",
+        "ecr:Describe*",
+        "ecr:List*",
+        "logs:Describe*",
+        "servicediscovery:Get*",
+        "servicediscovery:List*",
+        "budgets:ViewBudget",
+        "route53:ListHostedZonesByName",
+        "route53:ListResourceRecordSets",
+        "route53:GetHostedZoneCount",
+        "ssm:GetParameter",
+        "ssm:GetParameters",
+        "pricing:GetProducts"
+      ],
+      "Resource": "*"
+    },
+    {
       "Sid": "NetworkAndComputeInUsEast1",
       "Effect": "Allow",
       "Action": [

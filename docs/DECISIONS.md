@@ -389,3 +389,20 @@ A1–A9 results and controls are unchanged. No v4 GPU run is made before owner a
   1. Set `owner` and `budget_alert_emails` in `envs/research.tfvars`. Without an email the $60 budget alarm is not created.
   2. Create the remote state bucket `quotashift-tfstate-<suffix>`, or approve applying with local state.
   3. The operator role is tested by simulator and dry-run only. The first real apply may expose one missing read permission, which is added by name.
+
+## ADR-X1-OFFLINE — X1-E completion and X1-G freeze candidate (2026-11-24; offline only)
+- **Infrastructure:**
+  - Cloud Map `vllm.quotashift.internal`: the GPU host registers itself at boot, with a scoped IAM inline policy.
+  - In-process FCFS gateway in the runner; the standalone gateway service is refused by a precondition.
+  - Runner can reach vLLM :8000 through a security-group reference; Fargate runner 4 vCPU / 8 GB; results-upload sidecar (`amazon/aws-cli` 2.39.6 digest).
+  - `experiment --live` accepts AWS targets only with `QUOTASHIFT_IN_VPC_RUNNER=1`.
+  - Image-build provenance: clean-tree build with the baked commit, labelled `image-build`.
+  - `aws_ops.sh state-backup` and gated `run-stage`.
+  - S3 remote-state bootstrap module: versioned, encrypted, private, TLS-only, deletion-protected, S3 native lock. Not applied.
+  - $60 budget test; mock apply + destroy cycle.
+- **IAM finding.** The operator policy lacked the read actions Terraform needs. It is revised in the repo (0 findings; simulator 46 of 46 actions). **Re-applying it to the live role is an owner-approved step (B1).**
+- **X1-G candidate:**
+  - `build_x1.py` (deterministic generator with reruns), `x1_predictions.py` (calibration-B pools, frozen v5 predictor), `x1_analysis.py` (frozen v5 rules; X1 loader identical to v5 on real data), `x1_stage.py`, `pin_x1.py` (candidate / check; Freeze 1 gated, **not executed**);
+  - protocol-consistency tests;
+  - the implementation choices awaiting owner confirmation are in `docs/X1_FREEZE_CANDIDATE.md` §2.
+- **Reports.** `docs/X1_FREEZE_CANDIDATE.md` and `docs/X1_AWS_DEPLOYMENT_READINESS.md` (blockers B1–B7, the approval sequence, costs ≈ $40 planned / $52 pessimistic).
