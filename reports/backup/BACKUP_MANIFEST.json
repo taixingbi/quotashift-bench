@@ -1,5 +1,5 @@
 {
- "created_utc": "2026-11-25T14:01:31.623250+00:00",
+ "created_utc": "2026-11-25T23:40:48.670035+00:00",
  "note": "names, sizes and SHA-256 only; no contents",
  "sets": {
   "x1_raw_evidence": {
@@ -668,6 +668,72 @@
    "n": 132,
    "bytes": 3703346
   },
+  "x2_raw_evidence": {
+   "files": [
+    {
+     "path": "reports/x2/g1m0/SHA256SUMS",
+     "bytes": 302,
+     "sha256": "3979f83791ea244954834755b0996436c9da20c7ba64f5ce8e3ca6a91dbc824a"
+    },
+    {
+     "path": "reports/x2/g1m0/aws_logs/x2_qual_g1m0.blocked_at_prompt.log",
+     "bytes": 50,
+     "sha256": "92db3e7176c65fb61e22f8d2c7014bfbadbef424dd1ed2e66e110e33411b0529"
+    },
+    {
+     "path": "reports/x2/g1m0/aws_logs/x2_qual_g1m0.log",
+     "bytes": 11732,
+     "sha256": "b4646d6779044754e37f17b04ca4abbc20dccb067bee4824388fcc435c2f07f1"
+    },
+    {
+     "path": "reports/x2/g1m0/qualification/segments.json",
+     "bytes": 183836,
+     "sha256": "d7f682c37d35ec9d4f44b7b5b1c75b76b4f321b2031386f319068da9119bf6d9"
+    },
+    {
+     "path": "results/aws/.x2_done",
+     "bytes": 0,
+     "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+     "path": "results/aws/x2_firstboot2/marker.json",
+     "bytes": 26,
+     "sha256": "ac0d591bd2a9c1586414a1a4178ff2111811086afbfe7dd2275fc47e1690e9ca"
+    },
+    {
+     "path": "results/aws/x2_firstboot3/marker.json",
+     "bytes": 27,
+     "sha256": "0859fb7d5255f71e030107ed99020874beabd45b415b39c2f41ee06689522693"
+    },
+    {
+     "path": "results/aws/x2_outputs/experiments/x2/g1m0/QUALIFICATION.json",
+     "bytes": 5458,
+     "sha256": "f8a4a062ca9c08977573c7e69bb51c1ddf37f6d6a120a6d917b5085c883477e0"
+    },
+    {
+     "path": "results/aws/x2_outputs/experiments/x2/g1m0/README.md",
+     "bytes": 410,
+     "sha256": "145817b1e2e297edf8de6e531c72d87e0583ee772f9ac46bd8ed932c9d2331b3"
+    },
+    {
+     "path": "results/aws/x2_outputs/reports/x2/g1m0/qualification/segments.json",
+     "bytes": 183836,
+     "sha256": "d7f682c37d35ec9d4f44b7b5b1c75b76b4f321b2031386f319068da9119bf6d9"
+    },
+    {
+     "path": "results/aws/x2_qual_g1m0.blocked_at_prompt.log",
+     "bytes": 50,
+     "sha256": "92db3e7176c65fb61e22f8d2c7014bfbadbef424dd1ed2e66e110e33411b0529"
+    },
+    {
+     "path": "results/aws/x2_qual_g1m0.log",
+     "bytes": 11732,
+     "sha256": "b4646d6779044754e37f17b04ca4abbc20dccb067bee4824388fcc435c2f07f1"
+    }
+   ],
+   "n": 12,
+   "bytes": 397459
+  },
   "x1_results": {
    "files": [
     {
@@ -817,6 +883,46 @@
   "archives": {
    "files": [
     {
+     "path": "~/QuotaShift-backups/tfstate/research-20261125T175200Z.tfstate",
+     "bytes": 134879,
+     "sha256": "7404ccbfc7f36076caa86d0d8a3e2b6cdbd2698c04247686ca45bb29de8b4e42"
+    },
+    {
+     "path": "~/QuotaShift-backups/tfstate/research-20261125T182250Z.tfstate",
+     "bytes": 148961,
+     "sha256": "9d2d36d671c4885ef39da548db62c7bd1335bf2d3aad1c1d84a51e885bf0655c"
+    },
+    {
+     "path": "~/QuotaShift-backups/tfstate/research-20261125T191514Z.tfstate",
+     "bytes": 151760,
+     "sha256": "2c3efe77b3cf0476968ff811be371e41a335d37cd4d8291e53c4f53cae6681ea"
+    },
+    {
+     "path": "~/QuotaShift-backups/tfstate/research-20261125T191555Z.tfstate",
+     "bytes": 149183,
+     "sha256": "e32693040756ddc0d34f8b17eca0d9b08787454840a875d971f524329651004e"
+    },
+    {
+     "path": "~/QuotaShift-backups/tfstate/research-20261125T201545Z.tfstate",
+     "bytes": 149885,
+     "sha256": "40bbe628f8e05f69a5e5da2182a0c14f35e2d8a56f2bfd2cf784192c4220fcbe"
+    },
+    {
+     "path": "~/QuotaShift-backups/tfstate/research-20261125T203903Z.tfstate",
+     "bytes": 149885,
+     "sha256": "3c64d818f180da636d22dc49667c16627fc0ae93b600221c37c0af7f63f6f9d5"
+    },
+    {
+     "path": "~/QuotaShift-backups/tfstate/research-20261125T220345Z.tfstate",
+     "bytes": 149883,
+     "sha256": "f69bb813debadd3e0809b631b41ea0dbeb4bdf492c7e67649bd3a359d6c61fa1"
+    },
+    {
+     "path": "~/QuotaShift-backups/tfstate/state-bootstrap-20261125T171741Z.tfstate",
+     "bytes": 14751,
+     "sha256": "b7ab410e292f3cc1a21bb5b6dc47faeb80620b5ca557e13206b7593fa153cd43"
+    },
+    {
      "path": "~/QuotaShift-backups/v5_stage_A/RAW_DATA_MANIFEST_A.json",
      "bytes": 409605,
      "sha256": "19c215536b17af7281235824c3312153d0bf0937a9f87515ae12c389a94d130c"
@@ -842,8 +948,8 @@
      "sha256": "81ce39baeccd9a4ce736474c5e1c314c2104b0742cced387d24e58a694c7d49a"
     }
    ],
-   "n": 5,
-   "bytes": 41135376
+   "n": 13,
+   "bytes": 42184563
   }
  }
 }
