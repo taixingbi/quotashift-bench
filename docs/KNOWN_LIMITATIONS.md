@@ -252,3 +252,16 @@
   `ANALYSIS_<stage>.json`. Left unchanged because the code is frozen.
 - **Backups are on a single disk.** As of 2026-11-24 every copy of the v4/v5 raw data and the export salt sits on one
   disk. The off-machine checklist is in `docs/RESULTS_V4_V5.md` §8.
+
+## X1 sampler on/off equivalence (2026-11-25)
+- **Two failures on g0m0 (Qwen, gpu-node-2).** The anchor's Phase 1 failed the frozen rev 4 `sampler_equivalence` rule twice:
+  - attempt 1 was confounded by a warm prefix cache;
+  - attempt 2 was clean, at +1.23 ms.
+
+  Both FAIL verdicts stand.
+- **The rule is a coin flip on this host.** Its 20 + 20 point rule fails about 53% of the time with no sampler effect (offline simulation).
+- **Proposed fix.** Amendment A1 (`docs/X1_AMENDMENT_A1_SAMPLER_EQUIVALENCE.md`, proposal) replaces it with a paired-segment equivalence test.
+- **A1's known limits:**
+  - it is post hoc;
+  - it bounds the sampler's effect on idle TTFT only, not under load;
+  - its sample size was sized on one G0 session's noise, so a noisier platform may fail for lack of power. That outcome must be reported as inconclusive, not as sampler perturbation.

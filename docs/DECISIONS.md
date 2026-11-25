@@ -450,3 +450,18 @@ Written **before** the re-run, from the read-only forensic review of attempt 1 (
   3. per-request TTFTs saved; descriptive medians use the frozen `pf.pctl` rule.
 - **Single re-run, outcome fixed in advance.** The whole g0m0 Phase 1 is re-run once, every check included. Pass → the
   batch continues as approved (Mistral). Any failure → stop; no further attempt. No optional OFF/ON/OFF repetition.
+
+## ADR-X1-A1-PROPOSAL — Amendment A1 (sampler on/off equivalence) drafted, NOT in effect (2026-11-25)
+- **Trigger.** Owner decision Option A after g0m0 Phase 1 attempt 2 failed `sampler_equivalence` (+1.23 ms, `9427ddf`).
+- **Finding.** The frozen rev 4 point rule (two nearest-rank medians of 20) has no defined error rate on this host. Simulated on attempt 2's noise:
+  - P(fail | no effect) ≈ 0.53;
+  - P(pass | 0.9 ms shift) ≈ 0.45;
+  - P(pass | 1.5 ms shift) ≈ 0.36.
+- **Proposal.** `docs/X1_AMENDMENT_A1_SAMPLER_EQUIVALENCE.md`:
+  - paired-segment TOST, α = 0.05;
+  - K = 24 balanced OFF/ON pairs × 80 identical-prompt requests, each segment cache-cold with 3 warm-ups;
+  - δ = max(1 ms, 2% × OFF p50), unchanged from rev 4;
+  - sized by `scripts/x1_amendment_a1_power.py` against criteria fixed in code before it first ran.
+- **Comparator.** Strict 95% would need K = 40 × 60.
+- **Status.** Explicitly post hoc. Both FAIL attempts stand and are never reclassified.
+- **Nothing frozen modified.** On approval, A1 is pinned in a separate manifest (`AMENDMENT_A1_SHA256.json`, token `x1_amend_a1`). One amended g0m0 run needs `x1_preflight_a1_g0m0`; a fail stops the platform with no retry.
