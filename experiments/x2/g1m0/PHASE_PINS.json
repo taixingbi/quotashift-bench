@@ -1,0 +1,22 @@
+{
+ "calA": {
+  "created_utc": "2026-11-26T00:33:50.706089+00:00",
+  "files": {
+   "calA/x2_g1m0_calA_aa_ind_L10_C8.yaml": "384d37aea9a03d40de0a8a38a918f716117d01b24870beb7ec8a8655e125b400",
+   "calA/x2_g1m0_calA_aa_ind_L135_C8.yaml": "338e5e09bd5e6e19a98e36c7e6e19c52cec1f323d311d9f7fb4d4fc8f159eaa1",
+   "calA/x2_g1m0_calA_aa_ind_L25_C8.yaml": "d0f43c3a1917754dd9269809baac43683f2e48f5cd9e0ecb171461b89c68757c",
+   "calA/x2_g1m0_calA_aa_ind_L50_C8.yaml": "177d971a24b9cba4efaae39ce1e646a4792c7fccc78bfdd116a33483656bd922",
+   "calA/x2_g1m0_calA_aa_ind_L5_C8.yaml": "a552f044546e6ca76930fe8209f68858bc104fc00ad16def71f2357c179d6d81",
+   "calA/x2_g1m0_calA_aa_ind_L95_C8.yaml": "eba2ab53b50f294d5d487c55b5318116d1b36bd73908652505af0f667627445c",
+   "calA/reruns/x2_g1m0_calA_aa_ind_L10_C8__r2.yaml": "e22a19ce6a22543c28d60ae70a5ac5dee8d2f453aceb2c5bed985494c2e92f14",
+   "calA/reruns/x2_g1m0_calA_aa_ind_L135_C8__r2.yaml": "928c30adf8646722aa7b5ccff1947a716fadf0a4382ea6b17598a30907c08a77",
+   "calA/reruns/x2_g1m0_calA_aa_ind_L25_C8__r2.yaml": "f3b4dc0bca68cae20888e0baa2348c30aac78e23f04c0344417ee683c6360218",
+   "calA/reruns/x2_g1m0_calA_aa_ind_L50_C8__r2.yaml": "68f9a7ff5fbcf5eb29c684b483c996d89ec4cd5689f23ed1699469dce25a22a7",
+   "calA/reruns/x2_g1m0_calA_aa_ind_L5_C8__r2.yaml": "b83461d5d820c13eb2d7cd9bf56782f4886822db926f97ab63e4cb8c7e89da60",
+   "calA/reruns/x2_g1m0_calA_aa_ind_L95_C8__r2.yaml": "d146b7378b108d90fe68c0767d671c739de6b1d7e8880dd6b3b9ab07c2cd4b2f"
+  },
+  "schedule": "b3fe039eae00e767f39c514cc0a6db4e535a76ddf5d95705704acbe3447d019e",
+  "traces": "b41163681a3a99aed8623bad499f4d89dc2b7108ceaa2dca19be2bb2e4be76e8",
+  "qualification": "f8a4a062ca9c08977573c7e69bb51c1ddf37f6d6a120a6d917b5085c883477e0"
+ }
+}
