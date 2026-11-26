@@ -1,6 +1,6 @@
 # X2 Amendment A2: offline validation, g1m0 (DRAFT)
 
-Generated 2026-11-26T12:07:09.934394+00:00 by `scripts/x2_a2_validate.py`. Offline, zero cost; no measurement. Low rate 10 tok/s (frozen selection). A2 files digest `d0bda2059f97`.
+Generated 2026-11-26T13:07:10.219324+00:00 by `scripts/x2_a2_validate.py`. Offline, zero cost; no measurement. Low rate 10 tok/s (frozen selection). A2 files digest `d0bda2059f97`.
 
 ## Summary (passing / checked)
 

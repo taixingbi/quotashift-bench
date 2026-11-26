@@ -96,19 +96,18 @@ What stays the same, and what changes:
 - Token budgets match under the frozen gate, and request counts, shapes, caps and seeds are unchanged.
 - The H1 contrast (D vs S at matched tokens) therefore still varies only the request shape.
 - The X2b noise floor is measured under the same law as the cells it calibrates.
-- A2 removes one nuisance source: in the original design the attack and control arms got *different* random clustering per seed. That added between-seed variance unrelated to request shape.
+- In the original design the attack and control arms got *different* random clustering per seed; under A2 both arms are spread one per stratum. Whether this changes between-seed variance, and in which direction, is an empirical question; it is not assumed here.
 
-**What the effect estimates now mean.** X2-A2 estimates the shape effect for a competitor whose low-rate requests are spread over the window. It does not estimate it for a Poisson-like competitor whose requests may bunch.
+**Changing the arrival law changes the estimand.** Request counts, token budgets, shapes, caps and seeds are fixed, but the competitor's arrival process is part of the workload being characterised. X2-A2 estimates the shape effect for a competitor whose low-rate requests are spread one per stratum over the window. It does not estimate the effect for an iid-uniform (Poisson-conditioned) competitor whose requests may bunch, which is what the original X2 law, v5 and X1 target. The two estimands are related but not the same quantity.
 
-Expected consequences, to be stated in any report:
-- **Magnitude:** the per-seed effect, especially the victim TTFT tail at C8, should be smaller than under clustered arrivals. Fewer simultaneous decodes means less transient slot and KV pressure, so the H1 test at the unchanged 1.25 threshold is, if anything, **conservative**.
-- **Variance:** between-seed variance should fall in both the cells and the X2b floor, which raises power at the fixed n.
-- **Not an attacker model:** the law is a measurement design choice that stabilises coverage and reduces variance. It does not mean an adversary spreads load.
+**Impact on SLO, effect magnitude and variance is an empirical question.** The schedule statistics in §3 show less clustering under A2, but they are schedule properties, not measurements. How less clustering translates into victim TTFT, control and attack SLO success, effect magnitude and between-seed variance depends on the serving system: batching, KV-cache use, the gateway cap and their interaction. It could move in either direction. No direction is assumed, and none is used to interpret the H1 test at the unchanged 1.25 threshold.
+
+**Not an attacker model.** The law is a measurement design choice that makes window coverage hold by construction. It does not claim that an adversary spreads load.
 
 **Comparability.**
 - **Within X2-A2 (cells, the X2b floor, and later platforms that also use A2):** comparable.
-- **With v5, X1 and X2 calibration A (iid uniform conditioned on count):** comparable in design and in mean load, **not** in effect magnitude or variance. Cross-protocol statements should be qualitative or stated with the law.
-- **Calibration A and rate selection** used the original law. The selection rule depends on mean control slot demand, which A2 leaves unchanged in expectation, so `low = 10` and `low_feasible = true` remain valid. Control SLO under A2 can only be equal or better, because there is less clustering.
+- **With v5, X1 and X2 calibration A (iid uniform conditioned on count):** same request counts and token budgets, but a different estimand (above). Magnitudes and variances are not directly comparable; cross-protocol statements should be qualitative or stated with the arrival law.
+- **Calibration A and rate selection** used the original law. `low = 10` and `low_feasible = true` were produced once by the frozen rule and stand unchanged; A2 does not re-select. Measured control slot demand includes time in service, which depends on concurrency, so neither it nor control SLO success at 10 tok/s is assumed to carry over unchanged to A2. Both are measured again in the A2 main control arms and will be reported alongside the calibration-A values.
 
 **The coverage gate stays but no longer screens.** For N ≥ 4 the frozen coverage gate is satisfied by construction under A2. It is retained unchanged as a defensive check, but it is no longer an informative screen for A2 cells. The amendment says so explicitly rather than presenting the gate as a passed test.
 
