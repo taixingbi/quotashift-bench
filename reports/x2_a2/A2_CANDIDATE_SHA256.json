@@ -1,6 +1,6 @@
 {
  "kind": "X2 Amendment A2 CANDIDATE (not binding)",
- "created_utc": "2026-11-26T12:12:59.810096+00:00",
+ "created_utc": "2026-11-26T13:07:18.555856+00:00",
  "files": {
   "docs/PROTOCOL_X2_AMENDMENT_A2.md": "fd0e49922c6f42af36a3aa4e95b0f211a29e39261422dcf4b6967cf67f648c39",
   "src/quotashift/x2/arrivals_a2.py": "60fa97b9480352aaa74d3677011537cb2197ed90cb3619e3f8199a213968338c",

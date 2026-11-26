@@ -1,0 +1,17 @@
+{
+ "kind": "X2 Amendment A2 (stratified competitor arrivals)",
+ "created_utc": "2026-11-26T13:07:18.589472+00:00",
+ "files": {
+  "docs/PROTOCOL_X2_AMENDMENT_A2.md": "fd0e49922c6f42af36a3aa4e95b0f211a29e39261422dcf4b6967cf67f648c39",
+  "src/quotashift/x2/arrivals_a2.py": "60fa97b9480352aaa74d3677011537cb2197ed90cb3619e3f8199a213968338c",
+  "src/quotashift/cli.py": "b7f369c89fd410bec9fe1078a56e75a04bd9faac28fb20c92516e0a0f27e2b8c",
+  "scripts/build_x2_a2.py": "6a262899145020a515863fe29302ae089deb422fdeae46f53a2d1616d4641168",
+  "scripts/freeze_x2_a2_traces.py": "82255b19589ce226a9d3ae0f854bda43f6326c22acc8e8a319e0fe23e4e0292a",
+  "scripts/pin_x2_a2.py": "89e9109760a0fdeb8b0746d9bd0191fa3b8aecde3dd24cfa5b4112f7995db053",
+  "scripts/x2_a2_stage.py": "04d1720abcf6ed2d22fdba752667e653feecb7a64088d6d0be08b421034a8dff",
+  "scripts/x2_a2_validate.py": "fc74790c2679db3cb56f67ae5161a11caa58ad68c17a092f8c39e3fe2adc71c3"
+ },
+ "x2_freeze1_manifest_sha256": "b50334681adf26b6524d47bbea98ccb983ada6365ed3871473a1848c1df27787",
+ "supersedes": "X2 rev 2 fixed-count competitor arrival law (iid Uniform, stream 101) for files that declare protocol_amendment: X2-A2 only",
+ "unchanged": "X2 Freeze 1 files, rates, seeds, repetitions, caps, budgets, thresholds (1.25), gates (incl. arrival coverage 0.25/0.75), hypotheses, analysis"
+}
