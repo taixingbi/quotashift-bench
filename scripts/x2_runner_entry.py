@@ -51,7 +51,7 @@ def sha256(p: Path) -> str:
 def allowed(name: str, plat: str) -> bool:
     parts = Path(name).parts
     return (not name.startswith("/") and ".." not in parts and len(parts) >= 3
-            and (parts[:3] == ("experiments", "x2", plat) or parts[:3] == ("reports", "x2", plat)))
+            and parts[:3] in (("experiments", "x2", plat), ("experiments", "x2_a2", plat), ("reports", "x2", plat)))
 
 
 def extract(plat: str, *, inputs: Path = INPUTS, want_sha: str | None = None, root: Path = APP) -> list[str]:
@@ -86,19 +86,22 @@ def seed_reports(plat: str, root: Path = APP) -> None:
 
 def export(plat: str, root: Path = APP) -> None:
     dst = root / "results" / "x2_outputs"
-    for rel in (Path("experiments") / "x2" / plat, Path("reports") / "x2" / plat):
+    for rel in (Path("experiments") / "x2" / plat, Path("experiments") / "x2_a2" / plat, Path("reports") / "x2" / plat):
         if (root / rel).exists():
             shutil.copytree(root / rel, dst / rel, dirs_exist_ok=True)
 
 
 TARGET = {"g1m0": "x2-g1-qwen", "g1m1": "x2-g1-mistral"}
+A2_KINDS = ("a2_freeze_main", "a2_main")          # tokens x2a2_freeze_main_<p>, x2a2_main_<p>
 
 
 def pack(plat: str, out: Path, repo: Path) -> str:
-    """Deterministic inputs tarball (sorted, mtime 0, no owners) of experiments/x2/<p>/ and reports/x2/<p>/."""
+    """Deterministic inputs tarball (sorted, mtime 0, no owners) of experiments/x2/<p>/, experiments/x2_a2/<p>/
+    (X2 Amendment A2, when present) and reports/x2/<p>/."""
     import gzip
     import io
-    files = sorted(p for base in (repo / "experiments" / "x2" / plat, repo / "reports" / "x2" / plat) if base.exists()
+    files = sorted(p for base in (repo / "experiments" / "x2" / plat, repo / "experiments" / "x2_a2" / plat,
+                                  repo / "reports" / "x2" / plat) if base.exists()
                    for p in base.rglob("*") if p.is_file() and not p.is_symlink())
     buf = io.BytesIO()
     with tarfile.open(fileobj=buf, mode="w", format=tarfile.PAX_FORMAT) as tf:
@@ -118,14 +121,24 @@ def pack(plat: str, out: Path, repo: Path) -> str:
 
 def overrides(kind: str, plat: str, bucket: str, extra: list[str], env: dict) -> dict:
     """ECS run-task overrides for one X2 G1 stage (aws_ops.sh run-stage). Pure function; tested offline."""
-    if plat not in PLATFORMS or kind not in ("qual", "cal", "main", "freeze_calA", "freeze_main"):
+    if plat not in PLATFORMS or kind not in ("qual", "cal", "main", "freeze_calA", "freeze_main", *A2_KINDS):
         raise Refused(f"no X2 G1 stage {kind!r} for {plat!r}")
     sha = env.get("QUOTASHIFT_X2_INPUTS_SHA256", "")
     tok = env.get("QUOTASHIFT_STAGE_APPROVAL", "")
-    if tok != f"x2_{kind}_{plat}" or len(sha) != 64:
+    want = f"x2a2_{kind[3:]}_{plat}" if kind in A2_KINDS else f"x2_{kind}_{plat}"
+    if tok != want or len(sha) != 64:
         raise Refused("stage token and inputs sha256 must match the requested stage")
     entry = ["python", "scripts/x2_runner_entry.py"]
-    if kind == "qual":
+    if kind == "a2_freeze_main":                    # X2 Amendment A2 (docs/PROTOCOL_X2_AMENDMENT_A2.md)
+        if extra:
+            raise Refused("trace freeze takes no extra arguments")
+        cmd = [*entry, "run", "--", "python", "scripts/freeze_x2_a2_traces.py", "--platform", plat, "--live"]
+    elif kind == "a2_main":
+        if extra and not (len(extra) == 4 and extra[0] == "--rerun" and extra[2] == "--reason"):
+            raise Refused("only '--rerun <block> --reason <text>' may be added to a stage")
+        cmd = [*entry, "run", "--", "python", "scripts/x2_a2_stage.py", "--platform", plat, "--live", "--out-root",
+               "/app/results/reports/x2", *extra]
+    elif kind == "qual":
         if extra:
             raise Refused("qualification takes no extra arguments (one run, no retry)")
         cmd = [*entry, "qualify"]
@@ -216,8 +229,9 @@ def main(argv: list[str] | None = None) -> int:
     try:
         if a.mode == "run":
             cmd = a.cmd[1:] if a.cmd and a.cmd[0] == "--" else a.cmd
-            if not cmd or not any(c.endswith(("x2_stage.py", "freeze_x2_traces.py")) for c in cmd):
-                raise Refused("run accepts only the frozen X2 stage driver or trace freeze")
+            if not cmd or not any(c.endswith(("x2_stage.py", "freeze_x2_traces.py", "x2_a2_stage.py",
+                                              "freeze_x2_a2_traces.py")) for c in cmd):
+                raise Refused("run accepts only the X2 (or X2-A2) stage driver or trace freeze")
             rc = subprocess.run(cmd, cwd=APP).returncode
         elif a.mode == "qualify":
             rc = run_qualify(plat)

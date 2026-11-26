@@ -544,3 +544,17 @@ Written **before** the re-run, from the read-only forensic review of attempt 1 (
   - bash 3.2 empty-array expansion.
 - **Proposed, not applied:** operator IAM `ecs:ExecuteCommand`, runner container only.
 - **Readiness baseline:** Wi-Fi at both ends (ICMP sd 33.2 ms); `network_ready: false`.
+
+## ADR-X2-A2 — X2 Amendment A2: stratified competitor arrivals (DRAFT; owner decision, not frozen) (2026-11-26)
+- **Trigger:** the frozen arrival-coverage gate refused the g1m0 main freeze. At the selected low rate of 10 tok/s, the decode competitor sends N = 4 requests per arm.
+- **Owner's choice:** coverage-preserving stratified arrivals, i.e. one Uniform draw per stratum of width T/N from a new predeclared stream (103). It applies to the attack, the token-matched control and the A/A replicate; victims are unchanged.
+- **Rejected:**
+  - a seed-skip rule;
+  - closing the platform as infeasible;
+  - any change to rates, seeds, n, caps, gates or thresholds.
+- **Implemented additively,** so no frozen file changes:
+  - a `ScenarioConfig` subclass selected only by `protocol_amendment: X2-A2` / `competitor_arrival_law`;
+  - a separate scenario root `experiments/x2_a2/`;
+  - A2 wrappers around the frozen freeze and stage drivers;
+  - separate tokens (`x2_amend_a2`, `x2a2_freeze_main_<p>`, `x2a2_main_<p>`).
+- **Documents:** `docs/PROTOCOL_X2_AMENDMENT_A2.md`, `docs/X2_AMENDMENT_A2_REVIEW.md`.

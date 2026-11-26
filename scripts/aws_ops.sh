@@ -2,7 +2,8 @@
 # Approval-gated AWS operations. NOTHING here runs automatically from tests or CI.
 #   scripts/aws_ops.sh <plan|plan-destroy|deploy|healthcheck|start-gpu|stop-gpu|collect|destroy|cost-report|state-backup|run-stage|x2-inputs> <dev|research> [stage args]
 #   X2 (G1 only): docs/X2_CAMPAIGN_RUNBOOK.md. x2-inputs <env> <g1m0|g1m1> uploads the platform's per-phase inputs; run-stage
-#   with QUOTASHIFT_STAGE_APPROVAL=x2_<qual|cal|main>_<p> or x2_freeze_<calA|main>_<p> and QUOTASHIFT_X2_INPUTS_SHA256.
+#   with QUOTASHIFT_STAGE_APPROVAL=x2_<qual|cal|main>_<p> or x2_freeze_<calA|main>_<p> (X2 Amendment A2: x2a2_freeze_main_<p>,
+#   x2a2_main_<p>) and QUOTASHIFT_X2_INPUTS_SHA256.
 # Gated actions require BOTH env QUOTASHIFT_APPROVED=<action> and an interactive "yes".
 set -euo pipefail
 ACTION="${1:?action}"; ENVIRONMENT="${2:?env (dev|research)}"
@@ -82,7 +83,7 @@ case "$ACTION" in
     PLAT="${3:?platform g1m0|g1m1}"
     [[ "$PLAT" =~ ^g1m[01]$ ]] || { echo "REFUSED: x2-inputs is for G1 platforms only (G0 runs locally)" >&2; exit 3; }
     [[ -d "experiments/x2/$PLAT" ]] || { echo "REFUSED: experiments/x2/$PLAT missing" >&2; exit 3; }
-    [[ -z "$(git status --porcelain -- "experiments/x2/$PLAT" experiments/x2/FROZEN_SHA256.json)" ]] \
+    [[ -z "$(git status --porcelain -- "experiments/x2/$PLAT" experiments/x2/FROZEN_SHA256.json "experiments/x2_a2")" ]] \
       || { echo "REFUSED: experiments/x2/$PLAT has uncommitted changes (inputs must be a commit)" >&2; exit 3; }
     mkdir -p .x2_inputs
     TB=".x2_inputs/${PLAT}.tar.gz"
@@ -97,8 +98,12 @@ case "$ACTION" in
     [[ -n "$RF" && "$RF" != "null" ]] || { echo "REFUSED: no runner task definition (set runner_image, re-plan, deploy)" >&2; exit 3; }
     RUN="$(aws ecs describe-services --cluster "$(out cluster_name)" --services "$(out vllm_service_name)" --query 'services[0].runningCount' --output text)"
     [[ "$RUN" == "1" ]] || { echo "REFUSED: vLLM service runningCount=$RUN (start-gpu first; exactly one vLLM task)" >&2; exit 3; }
-    if [[ "${QUOTASHIFT_STAGE_APPROVAL:-}" =~ ^x2_(qual|cal|main|freeze_calA|freeze_main)_(g1m[01])$ ]]; then
-      KIND="${BASH_REMATCH[1]}"; PLAT="${BASH_REMATCH[2]}"
+    if [[ "${QUOTASHIFT_STAGE_APPROVAL:-}" =~ ^x2(a2)?_(qual|cal|main|freeze_calA|freeze_main)_(g1m[01])$ ]]; then
+      KIND="${BASH_REMATCH[2]}"; PLAT="${BASH_REMATCH[3]}"
+      if [[ -n "${BASH_REMATCH[1]}" ]]; then   # X2 Amendment A2: main freeze and main stage only
+        [[ "$KIND" =~ ^(main|freeze_main)$ ]] || { echo "REFUSED: X2-A2 covers freeze_main and main only" >&2; exit 3; }
+        KIND="a2_$KIND"
+      fi
       [[ "${QUOTASHIFT_X2_INPUTS_SHA256:-}" =~ ^[0-9a-f]{64}$ ]] \
         || { echo "REFUSED: set QUOTASHIFT_X2_INPUTS_SHA256 (printed by aws_ops.sh x2-inputs for this platform)" >&2; exit 3; }
       OVR=$(KIND="$KIND" PLAT="$PLAT" BUCKET="$(out results_bucket)" python3 scripts/x2_runner_entry.py overrides -- "$@")

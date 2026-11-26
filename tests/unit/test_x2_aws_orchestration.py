@@ -277,3 +277,22 @@ def test_overlays_are_layered_in_order_and_unknown_ones_refused(tmp_path):
     r, log = _run(_bins(tmp_path / "z" if (tmp_path / "z").mkdir() is None else tmp_path), "plan", "research",
                   QUOTASHIFT_OVERLAYS="x2 ../../etc")
     assert r.returncode == 3 and "unknown overlay" in r.stderr
+
+
+# ------------------------------------------------------------------------------------------------ X2 Amendment A2 (DRAFT)
+@pytest.mark.parametrize(("token", "driver"), [("x2a2_main_g1m0", "scripts/x2_a2_stage.py"),
+                                               ("x2a2_freeze_main_g1m0", "scripts/freeze_x2_a2_traces.py")])
+def test_run_stage_x2a2_routes_to_the_a2_drivers(tmp_path, token, driver):
+    r, log = _run(_bins(tmp_path), "run-stage", "research", QUOTASHIFT_APPROVED="run-stage",
+                  QUOTASHIFT_STAGE_APPROVAL=token, QUOTASHIFT_X2_INPUTS_SHA256=SHA)
+    assert r.returncode == 0, r.stderr
+    run = next(c for c in _overrides(log)["containerOverrides"] if c["name"] == "runner")
+    assert driver in run["command"] and "--live" in run["command"]
+    assert {e["name"]: e["value"] for e in run["environment"]}["QUOTASHIFT_APPROVED"] == token
+
+
+@pytest.mark.parametrize("token", ["x2a2_cal_g1m0", "x2a2_qual_g1m0", "x2a2_freeze_calA_g1m0", "x2a2_main_g0m0"])
+def test_run_stage_x2a2_covers_main_only(tmp_path, token):
+    r, log = _run(_bins(tmp_path), "run-stage", "research", QUOTASHIFT_APPROVED="run-stage",
+                  QUOTASHIFT_STAGE_APPROVAL=token, QUOTASHIFT_X2_INPUTS_SHA256=SHA)
+    assert r.returncode in (2, 3) and not any(x.startswith("aws ecs run-task") for x in log)

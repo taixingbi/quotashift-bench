@@ -74,7 +74,9 @@ def cmd_doctor(_: argparse.Namespace) -> int:
 
 
 def cmd_validate(a: argparse.Namespace) -> int:
-    from quotashift.scenario import load_scenario
+    from quotashift.x2.arrivals_a2 import (
+        load_scenario_any as load_scenario,  # X2-A2 dispatch; others: frozen loader
+    )
 
     try:
         sc = load_scenario(_resolve(a.config))
@@ -90,7 +92,9 @@ def cmd_validate(a: argparse.Namespace) -> int:
 
 
 def cmd_dry_run(a: argparse.Namespace) -> int:
-    from quotashift.scenario import load_scenario
+    from quotashift.x2.arrivals_a2 import (
+        load_scenario_any as load_scenario,  # X2-A2 dispatch; others: frozen loader
+    )
 
     try:
         sc = load_scenario(_resolve(a.config))
@@ -144,8 +148,10 @@ def cmd_dry_run(a: argparse.Namespace) -> int:
 
 def cmd_run_local(a: argparse.Namespace) -> int:
     from quotashift.local import run_scenario_local
-    from quotashift.scenario import load_scenario
     from quotashift.targets import active_target, load_target
+    from quotashift.x2.arrivals_a2 import (
+        load_scenario_any as load_scenario,  # X2-A2 dispatch; others: frozen loader
+    )
 
     if a.mock == a.live:
         print("run-local requires exactly one of --mock or --live.", file=sys.stderr)
@@ -211,7 +217,9 @@ def cmd_target(a: argparse.Namespace) -> int:
 def cmd_budget(a: argparse.Namespace) -> int:
     """Fail-closed matched-budget gate for a scenario and its control."""
     from quotashift.budget import BudgetMismatch, summarize_trace, verify_matched_budget
-    from quotashift.scenario import load_scenario
+    from quotashift.x2.arrivals_a2 import (
+        load_scenario_any as load_scenario,  # X2-A2 dispatch; others: frozen loader
+    )
 
     try:
         sc = load_scenario(_resolve(a.config))
@@ -256,9 +264,11 @@ def cmd_experiment(a: argparse.Namespace) -> int:
     )
     from quotashift.evaluation.validity import apply_gates, run_manifest_provenance, validity_gates
     from quotashift.local import run_matched_pairs
-    from quotashift.scenario import load_scenario
     from quotashift.targets import active_target, load_target, model_revision_provenance
     from quotashift.workload.tokenize import TokenizedContextInvalid
+    from quotashift.x2.arrivals_a2 import (
+        load_scenario_any as load_scenario,  # X2-A2 dispatch; others: frozen loader
+    )
 
     if a.mock == a.live:
         print("experiment requires exactly one of --mock or --live.", file=sys.stderr)
