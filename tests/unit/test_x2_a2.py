@@ -190,12 +190,14 @@ def test_original_files_still_refused_by_the_frozen_freeze():
         fx.freeze(PLAT, "main", TOK, TOK.identity)
 
 
-def test_a2_freeze_not_made_and_pins_refuse_without_tokens(monkeypatch):
-    assert not pin_x2_a2.MANIFEST.exists()
-    assert any("A2 freeze has not been made" in x for x in pin_x2_a2.check())
+def test_a2_freeze_verifies_is_written_once_and_pins_refuse_without_tokens(monkeypatch):
+    assert pin_x2_a2.MANIFEST.exists() and pin_x2_a2.check() == []           # A2 freeze 2026-11-26 (x2_amend_a2)
+    assert set(json.loads(pin_x2_a2.MANIFEST.read_text())["files"]) == set(pin_x2_a2.FILES)
     monkeypatch.setattr(sys, "argv", ["pin_x2_a2.py", "--write"])
     monkeypatch.delenv("QUOTASHIFT_APPROVED", raising=False)
     assert pin_x2_a2.main() == 3
+    monkeypatch.setenv("QUOTASHIFT_APPROVED", "x2_amend_a2")
+    assert pin_x2_a2.main() == 3                                               # written once
     monkeypatch.setattr(sys, "argv", ["pin_x2_a2.py", "--pin-phase", PLAT, "main"])
     monkeypatch.setenv("QUOTASHIFT_APPROVED", "x2_freeze_main_g1m0")      # the X2 token is not the A2 token
     assert pin_x2_a2.main() == 3
@@ -208,7 +210,7 @@ def test_a2_live_stage_refuses_wrong_token_and_unfrozen_amendment(monkeypatch, t
         "QUOTASHIFT_APPROVED must be x2a2_main_g1m0 (owner approval for the A2 main stage)"]
     monkeypatch.setenv("QUOTASHIFT_APPROVED", "x2a2_main_g1m0")
     p = x2_a2_stage.live_problems(PLAT, interactive_ok=True, reports_root=tmp_path)
-    assert any("A2 freeze has not been made" in x for x in p) and any("not pinned" in x for x in p)
+    assert not any("A2 freeze has not been made" in x for x in p) and any("not pinned" in x for x in p)
     assert __import__("os").environ["QUOTASHIFT_APPROVED"] == "x2a2_main_g1m0"
 
 
