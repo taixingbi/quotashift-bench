@@ -198,10 +198,14 @@ def test_a2_freeze_verifies_is_written_once_and_pins_refuse_without_tokens(monke
     assert pin_x2_a2.main() == 3
     monkeypatch.setenv("QUOTASHIFT_APPROVED", "x2_amend_a2")
     assert pin_x2_a2.main() == 3                                               # written once
+    pins = b2.A2 / PLAT / "PHASE_PINS.json"                                  # A2 main phase pin 2026-11-26
+    before = pins.read_bytes()
     monkeypatch.setattr(sys, "argv", ["pin_x2_a2.py", "--pin-phase", PLAT, "main"])
     monkeypatch.setenv("QUOTASHIFT_APPROVED", "x2_freeze_main_g1m0")      # the X2 token is not the A2 token
     assert pin_x2_a2.main() == 3
-    assert not (b2.A2 / PLAT / "PHASE_PINS.json").exists()
+    monkeypatch.setenv("QUOTASHIFT_APPROVED", "x2a2_freeze_main_g1m0")    # written once
+    assert pin_x2_a2.main() == 3
+    assert pins.read_bytes() == before
 
 
 def test_a2_live_stage_refuses_wrong_token_and_unfrozen_amendment(monkeypatch, tmp_path):
@@ -210,7 +214,7 @@ def test_a2_live_stage_refuses_wrong_token_and_unfrozen_amendment(monkeypatch, t
         "QUOTASHIFT_APPROVED must be x2a2_main_g1m0 (owner approval for the A2 main stage)"]
     monkeypatch.setenv("QUOTASHIFT_APPROVED", "x2a2_main_g1m0")
     p = x2_a2_stage.live_problems(PLAT, interactive_ok=True, reports_root=tmp_path)
-    assert not any("A2 freeze has not been made" in x for x in p) and any("not pinned" in x for x in p)
+    assert not any("A2 freeze has not been made" in x for x in p) and not any("not pinned" in x for x in p)
     assert __import__("os").environ["QUOTASHIFT_APPROVED"] == "x2a2_main_g1m0"
 
 
