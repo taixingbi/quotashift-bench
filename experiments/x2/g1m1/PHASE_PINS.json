@@ -1,0 +1,22 @@
+{
+ "calA": {
+  "created_utc": "2026-11-27T14:51:11.320587+00:00",
+  "files": {
+   "calA/x2_g1m1_calA_aa_ind_L10_C8.yaml": "3fdb6357010a2e552e70f727f19d3b1ae7a4f7bad8ab9f5d60ced9fbcd30feb7",
+   "calA/x2_g1m1_calA_aa_ind_L140_C8.yaml": "b315ba62f297023ad62a45e5b3c5a2b7c625c8997db5fa9a1656be3276e085c9",
+   "calA/x2_g1m1_calA_aa_ind_L25_C8.yaml": "d38162a026e994f3e213939f4eaa79a0b3386d778923ab0160fedc07fc4c923f",
+   "calA/x2_g1m1_calA_aa_ind_L55_C8.yaml": "3180ac1870276c0d05f625bac717c6ba366aee18d3a8ba43d686be52d3e569a0",
+   "calA/x2_g1m1_calA_aa_ind_L5_C8.yaml": "49272f26388e35f238707b4f3c8e2bd8c8079ca4784c2b900bf42fca6c3b7662",
+   "calA/x2_g1m1_calA_aa_ind_L95_C8.yaml": "087e9ac97d75343c6c558bbe3e25011ff019a8d9ac10ab3737e2692520997715",
+   "calA/reruns/x2_g1m1_calA_aa_ind_L10_C8__r2.yaml": "094f2c0d2c02fdd196283b25488509f8e951bb5d72a8ca60ebabc054265048c0",
+   "calA/reruns/x2_g1m1_calA_aa_ind_L140_C8__r2.yaml": "395f3bae98de459ff2b8e7a43b610789e9c06ed801ebe8c9a481059ffa1903e1",
+   "calA/reruns/x2_g1m1_calA_aa_ind_L25_C8__r2.yaml": "0b9c97818357ef63448bcea4d07940803ff61d8f37facb5d5954520d5d079cc8",
+   "calA/reruns/x2_g1m1_calA_aa_ind_L55_C8__r2.yaml": "c70dc9dc277d3ee26f0856579a2776615678d12bb474004a18fddc9c02c0e5e0",
+   "calA/reruns/x2_g1m1_calA_aa_ind_L5_C8__r2.yaml": "282816ad8e2248ce67daaafde340e83c38ea4563f4ad62b984c8f2623d710198",
+   "calA/reruns/x2_g1m1_calA_aa_ind_L95_C8__r2.yaml": "0d869b8b7dc82583256c03b4b16de465d068a99375a8c3556f6302a8e3b36fdb"
+  },
+  "schedule": "7ee919de53dc7ce6d1fe0039865436de0ad715af28d1a3af4cdfa51d8ad1ee79",
+  "traces": "003e84e2cc141c4b49c4454b0792d311877e95e545f2e977239c424ec7ed7a65",
+  "qualification": "83881526028e245dc04def38d8235f1bf502d41a8cd664e34e735549ee404ef9"
+ }
+}
