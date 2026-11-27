@@ -1,5 +1,5 @@
 {
- "created_utc": "2026-11-27T01:40:18.643926+00:00",
+ "created_utc": "2026-11-27T02:37:52.574036+00:00",
  "note": "names, sizes and SHA-256 only; no contents",
  "sets": {
   "x1_raw_evidence": {
@@ -1322,8 +1322,8 @@
     },
     {
      "path": "reports/x2/g1m1/SHA256SUMS",
-     "bytes": 781,
-     "sha256": "e3b7bd9c356ae0b55a7da60ea508d2962a1b3f090b0dc892c6ec54109157b70b"
+     "bytes": 1260,
+     "sha256": "fcf41fa9654d28e998b825a01dcdd66f0970715cd2fed5ad88e1e793ba1a1a29"
     },
     {
      "path": "reports/x2/g1m1/aws_logs/x2_freeze_calA_g1m1.refused.log",
@@ -1341,6 +1341,11 @@
      "sha256": "916f64874f44975568fc228059409619a77a304c308869b425cec0e84b0b085b"
     },
     {
+     "path": "reports/x2/g1m1/diagnostic/analysis.json",
+     "bytes": 106241,
+     "sha256": "f61af4f6cee77a420c8f093d59844407049acdcd0766f96f5e6bf533cda4b089"
+    },
+    {
      "path": "reports/x2/g1m1/diagnostic/analyze.py",
      "bytes": 2665,
      "sha256": "f888eda022725dd593c3d48cc9f22573bbd8525fe528fad403ac72c281f3c865"
@@ -1351,14 +1356,34 @@
      "sha256": "5d026f1fa6e74a31ec7d1bc862e27a372c6245f80bae6ad7c3f648bf9afd7268"
     },
     {
+     "path": "reports/x2/g1m1/diagnostic/boot2_launcher.log",
+     "bytes": 2327,
+     "sha256": "a766587f5d8f22d1dc0be794f85881a9e9e8f4c54ac8651b15dcaa6aa19a857f"
+    },
+    {
      "path": "reports/x2/g1m1/diagnostic/diag_g1m1.py",
      "bytes": 4697,
      "sha256": "210290ce49567785fb0bac6b7ec6a5509b0b151e3d564ae3466d4a7c189268d3"
     },
     {
+     "path": "reports/x2/g1m1/diagnostic/diag_live.json",
+     "bytes": 1225110,
+     "sha256": "c365931a7b9e97bd0d2b1222a16659a9b8cc52806a2f2501bf245030f3dd9845"
+    },
+    {
      "path": "reports/x2/g1m1/diagnostic/offline_ref.json",
      "bytes": 284,
      "sha256": "4fa75ffdf3a99fcb16dfe4eb126f61423919822d8a33649155c57a6d3c357413"
+    },
+    {
+     "path": "reports/x2/g1m1/diagnostic/overrides.redacted.json",
+     "bytes": 5339,
+     "sha256": "217e44559f013878679cb5b9164dbfd7002d93bb78ffe9c3e24e443c25701a80"
+    },
+    {
+     "path": "reports/x2/g1m1/diagnostic/run_diag.sh",
+     "bytes": 3701,
+     "sha256": "983a9f766a87677353d035099ab4154b136a733c5b74c5bc47fc2c039932a273"
     },
     {
      "path": "reports/x2/g1m1/qualification/segments.json",
@@ -2009,6 +2034,26 @@
      "path": "results/aws/reports/x2/g1m0/qualification/segments.json",
      "bytes": 183836,
      "sha256": "d7f682c37d35ec9d4f44b7b5b1c75b76b4f321b2031386f319068da9119bf6d9"
+    },
+    {
+     "path": "results/aws/reports/x2/g1m1/SHA256SUMS",
+     "bytes": 190,
+     "sha256": "0387f47e5a43b12916a6315cbe645fa188067f15be214a0dd500f7beb17a4ab4"
+    },
+    {
+     "path": "results/aws/reports/x2/g1m1/aws_logs/x2_qual_g1m1.log",
+     "bytes": 11732,
+     "sha256": "916f64874f44975568fc228059409619a77a304c308869b425cec0e84b0b085b"
+    },
+    {
+     "path": "results/aws/reports/x2/g1m1/qualification/segments.json",
+     "bytes": 183790,
+     "sha256": "c95511f8cfd466f831faf630b4978cefc88360a9e91426aecb52f925d942c091"
+    },
+    {
+     "path": "results/aws/x2_diag_g1m1/diag.json",
+     "bytes": 1225110,
+     "sha256": "c365931a7b9e97bd0d2b1222a16659a9b8cc52806a2f2501bf245030f3dd9845"
     },
     {
      "path": "results/aws/x2_firstboot2/marker.json",
@@ -9046,6 +9091,66 @@
      "sha256": "97735fde9bd078445cbab408fe0e1ec76ff65d65e132ae93eaa6782c5a58b1ba"
     },
     {
+     "path": "results/aws/x2_outputs/experiments/x2/g1m1/calA/reruns/x2_g1m1_calA_aa_ind_L10_C8__r2.yaml",
+     "bytes": 1868,
+     "sha256": "094f2c0d2c02fdd196283b25488509f8e951bb5d72a8ca60ebabc054265048c0"
+    },
+    {
+     "path": "results/aws/x2_outputs/experiments/x2/g1m1/calA/reruns/x2_g1m1_calA_aa_ind_L140_C8__r2.yaml",
+     "bytes": 1873,
+     "sha256": "395f3bae98de459ff2b8e7a43b610789e9c06ed801ebe8c9a481059ffa1903e1"
+    },
+    {
+     "path": "results/aws/x2_outputs/experiments/x2/g1m1/calA/reruns/x2_g1m1_calA_aa_ind_L25_C8__r2.yaml",
+     "bytes": 1869,
+     "sha256": "0b9c97818357ef63448bcea4d07940803ff61d8f37facb5d5954520d5d079cc8"
+    },
+    {
+     "path": "results/aws/x2_outputs/experiments/x2/g1m1/calA/reruns/x2_g1m1_calA_aa_ind_L55_C8__r2.yaml",
+     "bytes": 1869,
+     "sha256": "c70dc9dc277d3ee26f0856579a2776615678d12bb474004a18fddc9c02c0e5e0"
+    },
+    {
+     "path": "results/aws/x2_outputs/experiments/x2/g1m1/calA/reruns/x2_g1m1_calA_aa_ind_L5_C8__r2.yaml",
+     "bytes": 1865,
+     "sha256": "282816ad8e2248ce67daaafde340e83c38ea4563f4ad62b984c8f2623d710198"
+    },
+    {
+     "path": "results/aws/x2_outputs/experiments/x2/g1m1/calA/reruns/x2_g1m1_calA_aa_ind_L95_C8__r2.yaml",
+     "bytes": 1869,
+     "sha256": "0d869b8b7dc82583256c03b4b16de465d068a99375a8c3556f6302a8e3b36fdb"
+    },
+    {
+     "path": "results/aws/x2_outputs/experiments/x2/g1m1/calA/x2_g1m1_calA_aa_ind_L10_C8.yaml",
+     "bytes": 1864,
+     "sha256": "3fdb6357010a2e552e70f727f19d3b1ae7a4f7bad8ab9f5d60ced9fbcd30feb7"
+    },
+    {
+     "path": "results/aws/x2_outputs/experiments/x2/g1m1/calA/x2_g1m1_calA_aa_ind_L140_C8.yaml",
+     "bytes": 1869,
+     "sha256": "b315ba62f297023ad62a45e5b3c5a2b7c625c8997db5fa9a1656be3276e085c9"
+    },
+    {
+     "path": "results/aws/x2_outputs/experiments/x2/g1m1/calA/x2_g1m1_calA_aa_ind_L25_C8.yaml",
+     "bytes": 1865,
+     "sha256": "d38162a026e994f3e213939f4eaa79a0b3386d778923ab0160fedc07fc4c923f"
+    },
+    {
+     "path": "results/aws/x2_outputs/experiments/x2/g1m1/calA/x2_g1m1_calA_aa_ind_L55_C8.yaml",
+     "bytes": 1865,
+     "sha256": "3180ac1870276c0d05f625bac717c6ba366aee18d3a8ba43d686be52d3e569a0"
+    },
+    {
+     "path": "results/aws/x2_outputs/experiments/x2/g1m1/calA/x2_g1m1_calA_aa_ind_L5_C8.yaml",
+     "bytes": 1861,
+     "sha256": "49272f26388e35f238707b4f3c8e2bd8c8079ca4784c2b900bf42fca6c3b7662"
+    },
+    {
+     "path": "results/aws/x2_outputs/experiments/x2/g1m1/calA/x2_g1m1_calA_aa_ind_L95_C8.yaml",
+     "bytes": 1865,
+     "sha256": "087e9ac97d75343c6c558bbe3e25011ff019a8d9ac10ab3737e2692520997715"
+    },
+    {
      "path": "results/aws/x2_outputs/experiments/x2_a2/g1m0/FROZEN_SCHEDULE_MAIN.json",
      "bytes": 64660,
      "sha256": "a0e62b620acdb5c7db2f95019937c716570c4dfbc951dee3d9dd5682a6d75f29"
@@ -9506,6 +9611,16 @@
      "sha256": "d7f682c37d35ec9d4f44b7b5b1c75b76b4f321b2031386f319068da9119bf6d9"
     },
     {
+     "path": "results/aws/x2_outputs/reports/x2/g1m1/SHA256SUMS",
+     "bytes": 190,
+     "sha256": "0387f47e5a43b12916a6315cbe645fa188067f15be214a0dd500f7beb17a4ab4"
+    },
+    {
+     "path": "results/aws/x2_outputs/reports/x2/g1m1/aws_logs/x2_qual_g1m1.log",
+     "bytes": 11732,
+     "sha256": "916f64874f44975568fc228059409619a77a304c308869b425cec0e84b0b085b"
+    },
+    {
      "path": "results/aws/x2_outputs/reports/x2/g1m1/qualification/segments.json",
      "bytes": 183790,
      "sha256": "c95511f8cfd466f831faf630b4978cefc88360a9e91426aecb52f925d942c091"
@@ -9526,8 +9641,8 @@
      "sha256": "916f64874f44975568fc228059409619a77a304c308869b425cec0e84b0b085b"
     }
    ],
-   "n": 1771,
-   "bytes": 38088668
+   "n": 1794,
+   "bytes": 40887011
   },
   "x1_results": {
    "files": [
