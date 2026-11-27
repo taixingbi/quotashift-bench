@@ -582,3 +582,9 @@ Written **before** the re-run, from the read-only forensic review of attempt 1 (
   It uses the same call-time rebinding pattern as A2's `a2_loader`. Non-Mistral models get the frozen class.
   Two fail-closed guards were added (`count == len(tokens)`, no trailing EOS); A3 never corrects a count.
 - **Documents:** `docs/PROTOCOL_X2_AMENDMENT_A3.md`, `docs/X2_AMENDMENT_A3_REVIEW.md`.
+- **Frozen (2026-11-27 13:58:45Z), owner approval "approve A3 freeze and runner dispatch change".**
+  - `experiments/x2_a3/AMENDMENT_A3_SHA256.json` pins 6 files and records the v5, X2, A2, X1 and A1 manifest hashes.
+  - The pinned code equals the code validated in run 2.
+  - Runner dispatch: g1m1 freeze and stage kinds go through `scripts/x2_a3.py`; plain X2 main is refused for g1m1;
+    g1m0 and qualification commands are unchanged.
+  - The runner image has not been rebuilt.

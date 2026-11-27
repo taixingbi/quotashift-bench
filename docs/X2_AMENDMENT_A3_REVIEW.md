@@ -2,8 +2,10 @@
 
 **For:** owner review of `docs/PROTOCOL_X2_AMENDMENT_A3.md`.
 
-**Status:** nothing has been frozen, deployed or measured, and no AWS resource was started. The A3 freeze
-(`x2_amend_a3`) has not been made.
+**Status (updated 2026-11-27, 08:58 EST):** the owner approved the A3 freeze and the runner dispatch change.
+- Both are done: `experiments/x2_a3/AMENDMENT_A3_SHA256.json`, created 13:58:45Z.
+- The pinned A3 code is byte-identical to the code validated in run 2 (`ef095ba`).
+- Nothing has been deployed or measured, and the runner image has not been rebuilt.
 
 **Contents:**
 
@@ -191,7 +193,14 @@ The mock's offline wall times (0.5 ms injected delay) are in the JSON and are no
 
 ## 7. GO / NO-GO
 
-**Recommendation: GO for owner review and the A3 freeze. NO-GO for any live use until the steps below are done.**
+**Recommendation (draft):** GO for owner review and the A3 freeze; NO-GO for any live use until the steps below are
+done.
+
+**Update, 2026-11-27:**
+- Steps 1–3 are done: owner approval, runner dispatch, A3 freeze.
+- `x2_a3.problems("g1m1", live=True)` now returns no problems.
+- Remaining before live use: a runner-image rebuild and push from a commit containing the A3 manifest (its own
+  approval), then the g1m1 stage approvals already defined.
 
 - **GO because:**
   - the correction is additive and Mistral-only;

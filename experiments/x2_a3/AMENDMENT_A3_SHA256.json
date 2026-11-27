@@ -1,0 +1,22 @@
+{
+ "kind": "X2 Amendment A3 (sequential Mistral token counting)",
+ "created_utc": "2026-11-27T13:58:45.877748+00:00",
+ "files": {
+  "docs/PROTOCOL_X2_AMENDMENT_A3.md": "0785ce9d1b75631fd820e930a0e81833ab728982338cf413e734c8c22cda8eb3",
+  "src/quotashift/workload/tokenize_a3.py": "9d0131306a8ce8641f8f2528a28c76461188ae7dc85463e26a6f0f4b3415aded",
+  "src/quotashift/workload/__init__.py": "4914075dfb67315774516bb0f8b050ebf5624d7519e2aa4c7c9849594cfab75a",
+  "scripts/x2_a3.py": "d10e501b4b5661c23262596b4a318ce4f70c89149965cc07059d6b23ba6aedf2",
+  "scripts/pin_x2_a3.py": "0e97b0c1f8524572be8371e10d353074e4dacd4421c18e9148a8b802cce3690c",
+  "scripts/x2_a3_validate.py": "4e25a15b5a8f7f4991a77380dae3a7bbff07acc8dcd4e376e90ba296c5a5c06e"
+ },
+ "earlier_manifests_sha256": {
+  "experiments/v5/FROZEN_SHA256.json": "e8aa80835c2f99a5b9ccec028fef2dba44196c176c0794329612510f7c3ceca2",
+  "experiments/x2/FROZEN_SHA256.json": "b50334681adf26b6524d47bbea98ccb983ada6365ed3871473a1848c1df27787",
+  "experiments/x2_a2/AMENDMENT_A2_SHA256.json": "def1e467f9a7f8b708c1f05ce8153fbcf05ef9c8e9760ba749ec93551c2ed8ed",
+  "experiments/x1/FROZEN_SHA256.json": "39ae158cb36389fb6e1e9a0fa1b59d2990267be04800a031b504f86e7aa216f9",
+  "experiments/x1/AMENDMENT_A1_SHA256.json": "d99bdbae58b24a3ef53523d07021bcd50d847aec45de741d1ab68b5bdce2a032"
+ },
+ "scope": "Mistral models only (quotashift.workload.tokenize_a3.A3_MODELS); process-local, activated by QUOTASHIFT_TOKEN_COUNTER=X2-A3 set by scripts/x2_a3.py",
+ "supersedes": "the 16-worker concurrent /tokenize fan-out of the frozen VllmTokenizer, for A3 models in A3-activated processes only",
+ "unchanged": "every byte of the v5, X2 Freeze 1, X2-A2, X1, A1 artifacts; Mistral revision and vLLM flags; prompts, request shapes, seeds, arrival laws, rates, SLOs, thresholds (1.25), gates, hypotheses, Holm family, analysis; exact-token equality; Qwen counting"
+}
