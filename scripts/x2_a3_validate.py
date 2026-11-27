@@ -198,6 +198,34 @@ def runtime_presend(frozen: dict, url: str) -> dict:
     return out
 
 
+def tokenization_only(root: Path, url: str) -> dict:
+    """Every A2 main scenario-seed under root: frozen calibrate + exact verify_trace with the A3 counter, NO other gate.
+    Used only where the frozen freeze refused on a non-tokenization gate, to show tokenization alone is exact."""
+    import freeze_x2_traces as fx
+
+    import quotashift.scenario as qs
+    from quotashift.local import budget_view, paired_traces
+    from quotashift.workload import tokenize as T
+    from quotashift.x2.arrivals_a2 import a2_loader
+
+    out: dict = {"scenario_seeds": 0, "verify_ok": 0, "errors": [], "calls": 0, "guard_trips": 0}
+    count = T.VllmTokenizer(url, MODEL)
+    with a2_loader():
+        for f in fx.phase_files(PLAT, "main", root):
+            sc = qs.load_scenario(f)
+            for s in range(sc.seed, sc.seed + sc.comparison.repetitions):
+                out["scenario_seeds"] += 1
+                try:
+                    a_tr, c_tr, _ = paired_traces(sc, s, count)
+                    out["verify_ok"] += all(T.verify_trace(tr, count, max_model_len=sc.model_max_len, exact=True)["ok"]
+                                            for tr in (budget_view(sc, a_tr, s), c_tr))
+                except (Exception, SystemExit) as e:  # noqa: BLE001
+                    out["errors"].append(f"{sc.scenario_id} {s}: {type(e).__name__}: {str(e)[:200]}")
+    out["calls"], out["guard_trips"] = count.calls, count.guard_trips
+    out["ok"] = out["verify_ok"] == out["scenario_seeds"] and not out["errors"]
+    return out
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--sp-model", required=True)
@@ -293,6 +321,8 @@ def main() -> int:
             r = with_mock("tokenize", lambda m, root=root: run_freeze(T.VllmTokenizer(m.url, MODEL), "main", root))
             if r.get("ok"):
                 r["conservation"] = conservation(r["_traces"], a2=True)
+            else:  # the freeze stops at its first gate refusal; count every scenario-seed directly (tokenization only)
+                r["tokenization_only"] = with_mock("tokenize", lambda m, root=root: tokenization_only(root, m.url))
             hyp[str(rate)] = {k: v for k, v in r.items() if not k.startswith("_")}
     rows["MAIN-hyp"] = hyp
     A3.uninstall()
@@ -319,8 +349,15 @@ def main() -> int:
         "A3-ext fails closed (guard trip, no silent miscount)": not rows["A3-ext"]["ok"]
         and (rows["A3-ext"]["guard_trips"] or 0) > 0,
         "A3-quiet passes": rows["A3-quiet"]["ok"],
-        "MAIN-hyp passes at every grid rate": all(v["ok"] and v["guard_trips"] == 0 and v["conservation"]["ok"]
-                                                  for v in hyp.values()),
+        # Corrected after run 1 (reports/x2_a3/A3_OFFLINE_VALIDATION_run1.json): run 1 required the whole frozen A2 main
+        # freeze to pass at every grid rate, which conflates tokenization with the A2 arrival-coverage gate; at 5 tok/s
+        # (N_D = 2) that gate refuses by design (docs/PROTOCOL_X2_AMENDMENT_A2.md section 5). A3 is judged on tokenization.
+        "MAIN-hyp: A3 tokenization exact for every scenario-seed at every grid rate, 0 trips, 0 injections": all(
+            v["guard_trips"] == 0 and v["mock"]["injected"] == 0 and (
+                (v["ok"] and v["conservation"]["ok"]) or (v.get("tokenization_only") or {}).get("ok", False))
+            for v in hyp.values()),
+        "MAIN-hyp: any freeze refusal is the documented A2 coverage gate only": all(
+            v["ok"] or str(v.get("error", "")).startswith("SystemExit: arrival coverage gate would fail") for v in hyp.values()),
     }
     R["digests"] = d
     R["expectations"] = ex
