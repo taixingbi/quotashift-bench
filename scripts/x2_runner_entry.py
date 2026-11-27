@@ -93,6 +93,33 @@ def export(plat: str, root: Path = APP) -> None:
 
 TARGET = {"g1m0": "x2-g1-qwen", "g1m1": "x2-g1-mistral"}
 A2_KINDS = ("a2_freeze_main", "a2_main")          # tokens x2a2_freeze_main_<p>, x2a2_main_<p>
+# X2 Amendment A3 (docs/PROTOCOL_X2_AMENDMENT_A3.md): Mistral platforms count prompt tokens sequentially. Their freeze
+# and stage commands go through scripts/x2_a3.py, which runs the SAME frozen driver with the SAME arguments (and refuses
+# --live until the A3 freeze verifies). Qualification and every Qwen command are unchanged.
+A3_PLATFORMS = ("g1m1",)
+A3_DRIVERS = {"freeze_x2_traces.py": "freeze", "x2_stage.py": "stage", "freeze_x2_a2_traces.py": "freeze",
+              "x2_a2_stage.py": "stage"}
+
+
+def a3_wrap(plat: str, cmd: list[str]) -> list[str]:
+    """[... 'run', '--', 'python', 'scripts/<frozen driver>', *args] -> the same through scripts/x2_a3.py (A3 platforms).
+    The phase is explicit for x2_a3.py: the X2 drivers carry it as --phase, the A2 drivers are main-only."""
+    if plat not in A3_PLATFORMS:
+        return cmd
+    i = cmd.index("--") + 2
+    drv = Path(cmd[i]).name
+    if drv not in A3_DRIVERS:
+        return cmd
+    args = list(cmd[i + 1:])
+    if "--phase" in args:
+        j = args.index("--phase")
+        phase = args[j + 1]
+        del args[j:j + 2]
+    else:
+        phase = "main"
+    if phase == "main" and drv in ("freeze_x2_traces.py", "x2_stage.py"):
+        raise Refused(f"{plat}: main runs under X2-A2 (kinds a2_freeze_main / a2_main), never the plain X2 main driver")
+    return [*cmd[:i], "scripts/x2_a3.py", A3_DRIVERS[drv], "--phase", phase, *args]
 
 
 def pack(plat: str, out: Path, repo: Path) -> str:
@@ -152,6 +179,8 @@ def overrides(kind: str, plat: str, bucket: str, extra: list[str], env: dict) ->
             raise Refused("only '--rerun <block> --reason <text>' may be added to a stage")
         cmd = [*entry, "run", "--", "python", "scripts/x2_stage.py", "--platform", plat, "--phase",
                "calA" if kind == "cal" else "main", "--live", "--out-root", "/app/results/reports/x2", *extra]
+    if kind != "qual":
+        cmd = a3_wrap(plat, cmd)
     envs = [{"name": "QUOTASHIFT_APPROVED", "value": tok}, {"name": "QUOTASHIFT_X2_PLATFORM", "value": plat},
             {"name": "QUOTASHIFT_TARGET", "value": TARGET[plat]}, {"name": "QUOTASHIFT_X2_INPUTS_SHA256", "value": sha}]
     return {"containerOverrides": [
@@ -230,8 +259,10 @@ def main(argv: list[str] | None = None) -> int:
         if a.mode == "run":
             cmd = a.cmd[1:] if a.cmd and a.cmd[0] == "--" else a.cmd
             if not cmd or not any(c.endswith(("x2_stage.py", "freeze_x2_traces.py", "x2_a2_stage.py",
-                                              "freeze_x2_a2_traces.py")) for c in cmd):
-                raise Refused("run accepts only the X2 (or X2-A2) stage driver or trace freeze")
+                                              "freeze_x2_a2_traces.py", "x2_a3.py")) for c in cmd):
+                raise Refused("run accepts only the X2 (or X2-A2 / X2-A3) stage driver or trace freeze")
+            if plat in A3_PLATFORMS and not any(c.endswith("x2_a3.py") for c in cmd):
+                raise Refused(f"{plat} (Mistral) freezes and stages run only through scripts/x2_a3.py (X2-A3)")
             rc = subprocess.run(cmd, cwd=APP).returncode
         elif a.mode == "qualify":
             rc = run_qualify(plat)

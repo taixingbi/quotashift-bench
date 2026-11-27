@@ -15,3 +15,5 @@ reports/x2/g1m1
 reports/backup
 .x2_inputs
 results
+# X2-A3 offline validation: local copy of the gated tokenizer model, never in an image
+reports/x2_a3/ref

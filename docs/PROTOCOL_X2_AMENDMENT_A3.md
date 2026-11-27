@@ -1,10 +1,10 @@
-# Protocol X2: Amendment A3, sequential token counting for Mistral (DRAFT)
+# Protocol X2: Amendment A3, sequential token counting for Mistral
 
-**Status:** DRAFT for owner review (2026-11-27). It authorizes nothing.
-- The A3 freeze (`x2_amend_a3`, `experiments/x2_a3/AMENDMENT_A3_SHA256.json`) has not been made.
+**Status:** FROZEN (owner approval 2026-11-27: "approve A3 freeze and runner dispatch change"), pinned by
+`experiments/x2_a3/AMENDMENT_A3_SHA256.json` (`pin_x2_a3.py --write`, token `x2_amend_a3`).
 - No A3 trace has been frozen against a live tokenizer.
 - No A3 calibration-A or main measurement has been made.
-- No AWS resource was started for this draft.
+- The runner image has not been rebuilt (a separate AWS action, needing its own approval).
 
 **Identifier:** `X2-A3`. Activation value: `QUOTASHIFT_TOKEN_COUNTER=X2-A3`.
 
@@ -164,12 +164,17 @@ reports/x2_a3/A3_OFFLINE_VALIDATION.json`
 ## 8. Procedure after review (each step needs its own owner approval)
 
 1. **Owner review of this draft.**
-2. **Runner dispatch (non-frozen).**
-   - Change `scripts/x2_runner_entry.py` so that `overrides` emits `python scripts/x2_a3.py {freeze,stage} …` for
-     Mistral platforms, and so that its allowed-command list includes `x2_a3.py`.
-   - Rebuild and push the runner image.
-   - Not part of this draft.
-3. **A3 freeze:** `QUOTASHIFT_APPROVED=x2_amend_a3 uv run python scripts/pin_x2_a3.py --write`, then commit.
+2. **Runner dispatch (non-frozen): DONE**, approved together with the freeze.
+   - `scripts/x2_runner_entry.py` (`a3_wrap`) sends the g1m1 freeze and stage kinds `freeze_calA`, `cal`,
+     `a2_freeze_main` and `a2_main` through `python scripts/x2_a3.py {freeze,stage} --phase …`, with the frozen
+     driver's own arguments unchanged.
+   - It refuses the plain X2 `main` / `freeze_main` kinds for g1m1, because main runs under A2.
+   - In the runner, its `run` mode refuses an unwrapped frozen driver for g1m1.
+   - Qualification and every g1m0 command are byte-for-byte unchanged (tested).
+   - `.dockerignore` excludes `reports/x2_a3/ref`.
+   - Pending: a runner-image rebuild and push, which needs its own approval. The image must be built from a commit
+     that contains the A3 manifest.
+3. **A3 freeze: DONE** (`QUOTASHIFT_APPROVED=x2_amend_a3 uv run python scripts/pin_x2_a3.py --write`).
 4. **g1m1 calibration-A freeze, in-VPC:**
    - run `x2_a3.py freeze --platform g1m1 --phase calA --live`;
    - pin the phase with the existing token `x2_freeze_calA_g1m1`;

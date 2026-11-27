@@ -296,3 +296,60 @@ def test_run_stage_x2a2_covers_main_only(tmp_path, token):
     r, log = _run(_bins(tmp_path), "run-stage", "research", QUOTASHIFT_APPROVED="run-stage",
                   QUOTASHIFT_STAGE_APPROVAL=token, QUOTASHIFT_X2_INPUTS_SHA256=SHA)
     assert r.returncode in (2, 3) and not any(x.startswith("aws ecs run-task") for x in log)
+
+
+# ------------------------------------------------------------------------------------------------ X2-A3 dispatch
+def _cmd(kind, plat, extra=()):
+    tok = f"x2a2_{kind[3:]}_{plat}" if kind in ent.A2_KINDS else f"x2_{kind}_{plat}"
+    o = ent.overrides(kind, plat, "b", list(extra), {"QUOTASHIFT_X2_INPUTS_SHA256": SHA, "QUOTASHIFT_STAGE_APPROVAL": tok})
+    return o["containerOverrides"][0]["command"]
+
+
+def test_a3_dispatch_mistral_through_x2_a3_qwen_unchanged():
+    head = ["python", "scripts/x2_runner_entry.py", "run", "--", "python"]
+    assert _cmd("freeze_calA", "g1m1") == [*head, "scripts/x2_a3.py", "freeze", "--phase", "calA", "--platform", "g1m1",
+                                           "--live"]
+    assert _cmd("cal", "g1m1", ["--rerun", "B", "--reason", "r"]) == [
+        *head, "scripts/x2_a3.py", "stage", "--phase", "calA", "--platform", "g1m1", "--live", "--out-root",
+        "/app/results/reports/x2", "--rerun", "B", "--reason", "r"]
+    assert _cmd("a2_freeze_main", "g1m1") == [*head, "scripts/x2_a3.py", "freeze", "--phase", "main", "--platform",
+                                              "g1m1", "--live"]
+    assert _cmd("a2_main", "g1m1") == [*head, "scripts/x2_a3.py", "stage", "--phase", "main", "--platform", "g1m1",
+                                       "--live", "--out-root", "/app/results/reports/x2"]
+    assert _cmd("qual", "g1m1") == ["python", "scripts/x2_runner_entry.py", "qualify"]
+    # Qwen: byte-for-byte the pre-A3 commands
+    assert _cmd("cal", "g1m0") == [*head, "scripts/x2_stage.py", "--platform", "g1m0", "--phase", "calA", "--live",
+                                   "--out-root", "/app/results/reports/x2"]
+    assert _cmd("freeze_calA", "g1m0") == [*head, "scripts/freeze_x2_traces.py", "--platform", "g1m0", "--phase",
+                                           "calA", "--live"]
+    assert _cmd("a2_main", "g1m0") == [*head, "scripts/x2_a2_stage.py", "--platform", "g1m0", "--live", "--out-root",
+                                       "/app/results/reports/x2"]
+
+
+def test_a3_dispatch_refuses_plain_x2_main_for_mistral(capsys):
+    for kind in ("main", "freeze_main"):
+        with pytest.raises(SystemExit):
+            _cmd(kind, "g1m1")
+        assert "never the plain X2 main driver" in capsys.readouterr().err
+
+
+def test_a3_wrapped_command_parses_back_to_the_same_frozen_driver_and_args():
+    import x2_a3
+
+    for kind, drv in (("freeze_calA", "freeze_x2_traces.py"), ("cal", "x2_stage.py"),
+                      ("a2_freeze_main", "freeze_x2_a2_traces.py"), ("a2_main", "x2_a2_stage.py")):
+        c = _cmd(kind, "g1m1")
+        k, phase, plat, rest = x2_a3.parse(c[c.index("scripts/x2_a3.py") + 1:])
+        assert x2_a3.DRIVERS[(k, phase)] == drv and plat == "g1m1" and "--live" in rest
+
+
+def test_entry_run_refuses_unwrapped_mistral_driver(monkeypatch, capsys):
+    monkeypatch.setenv("QUOTASHIFT_X2_PLATFORM", "g1m1")
+    monkeypatch.setenv("QUOTASHIFT_IN_VPC_RUNNER", "1")
+    monkeypatch.setenv("QUOTASHIFT_TARGET", "x2-g1-mistral")
+    monkeypatch.setattr(ent, "extract", lambda plat: [])
+    monkeypatch.setattr(ent, "seed_reports", lambda plat: None)
+    monkeypatch.setattr(ent, "export", lambda plat: None)
+    with pytest.raises(SystemExit):
+        ent.main(["run", "--", "python", "scripts/freeze_x2_traces.py", "--platform", "g1m1", "--phase", "calA"])
+    assert "only through scripts/x2_a3.py" in capsys.readouterr().err
