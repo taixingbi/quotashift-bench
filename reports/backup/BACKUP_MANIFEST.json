@@ -1,5 +1,5 @@
 {
- "created_utc": "2026-11-27T00:12:32.314862+00:00",
+ "created_utc": "2026-11-27T01:40:18.643926+00:00",
  "note": "names, sizes and SHA-256 only; no contents",
  "sets": {
   "x1_raw_evidence": {
@@ -1322,8 +1322,8 @@
     },
     {
      "path": "reports/x2/g1m1/SHA256SUMS",
-     "bytes": 397,
-     "sha256": "fd5eff14fd655fd0d2d2851c46132554c5dc4ce70c04b660b39b8c3a2459f0ae"
+     "bytes": 781,
+     "sha256": "e3b7bd9c356ae0b55a7da60ea508d2962a1b3f090b0dc892c6ec54109157b70b"
     },
     {
      "path": "reports/x2/g1m1/aws_logs/x2_freeze_calA_g1m1.refused.log",
@@ -1339,6 +1339,26 @@
      "path": "reports/x2/g1m1/aws_logs/x2_qual_g1m1.log",
      "bytes": 11732,
      "sha256": "916f64874f44975568fc228059409619a77a304c308869b425cec0e84b0b085b"
+    },
+    {
+     "path": "reports/x2/g1m1/diagnostic/analyze.py",
+     "bytes": 2665,
+     "sha256": "f888eda022725dd593c3d48cc9f22573bbd8525fe528fad403ac72c281f3c865"
+    },
+    {
+     "path": "reports/x2/g1m1/diagnostic/boot1_launcher_failure.log",
+     "bytes": 5808,
+     "sha256": "5d026f1fa6e74a31ec7d1bc862e27a372c6245f80bae6ad7c3f648bf9afd7268"
+    },
+    {
+     "path": "reports/x2/g1m1/diagnostic/diag_g1m1.py",
+     "bytes": 4697,
+     "sha256": "210290ce49567785fb0bac6b7ec6a5509b0b151e3d564ae3466d4a7c189268d3"
+    },
+    {
+     "path": "reports/x2/g1m1/diagnostic/offline_ref.json",
+     "bytes": 284,
+     "sha256": "4fa75ffdf3a99fcb16dfe4eb126f61423919822d8a33649155c57a6d3c357413"
     },
     {
      "path": "reports/x2/g1m1/qualification/segments.json",
@@ -9506,8 +9526,8 @@
      "sha256": "916f64874f44975568fc228059409619a77a304c308869b425cec0e84b0b085b"
     }
    ],
-   "n": 1767,
-   "bytes": 38074830
+   "n": 1771,
+   "bytes": 38088668
   },
   "x1_results": {
    "files": [
