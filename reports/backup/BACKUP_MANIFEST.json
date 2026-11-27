@@ -1,5 +1,5 @@
 {
- "created_utc": "2026-11-26T18:59:00.741859+00:00",
+ "created_utc": "2026-11-27T00:12:32.314862+00:00",
  "note": "names, sizes and SHA-256 only; no contents",
  "sets": {
   "x1_raw_evidence": {
@@ -1321,6 +1321,31 @@
      "sha256": "d7f682c37d35ec9d4f44b7b5b1c75b76b4f321b2031386f319068da9119bf6d9"
     },
     {
+     "path": "reports/x2/g1m1/SHA256SUMS",
+     "bytes": 397,
+     "sha256": "fd5eff14fd655fd0d2d2851c46132554c5dc4ce70c04b660b39b8c3a2459f0ae"
+    },
+    {
+     "path": "reports/x2/g1m1/aws_logs/x2_freeze_calA_g1m1.refused.log",
+     "bytes": 1026,
+     "sha256": "6417c903dcdf76227ed183932e532ea8dbedb0586f57f0ab7b7c6fa8a1960ebe"
+    },
+    {
+     "path": "reports/x2/g1m1/aws_logs/x2_precheck_g1m1.log",
+     "bytes": 541,
+     "sha256": "0a08b4ce796bf82166bc8c1f4577f2ac2ca9fe3bd2b997519a43fc5a42afd71c"
+    },
+    {
+     "path": "reports/x2/g1m1/aws_logs/x2_qual_g1m1.log",
+     "bytes": 11732,
+     "sha256": "916f64874f44975568fc228059409619a77a304c308869b425cec0e84b0b085b"
+    },
+    {
+     "path": "reports/x2/g1m1/qualification/segments.json",
+     "bytes": 183790,
+     "sha256": "c95511f8cfd466f831faf630b4978cefc88360a9e91426aecb52f925d942c091"
+    },
+    {
      "path": "results/aws/.x2_done",
      "bytes": 0,
      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
@@ -1974,6 +1999,11 @@
      "path": "results/aws/x2_firstboot3/marker.json",
      "bytes": 27,
      "sha256": "0859fb7d5255f71e030107ed99020874beabd45b415b39c2f41ee06689522693"
+    },
+    {
+     "path": "results/aws/x2_firstboot4/marker.json",
+     "bytes": 26,
+     "sha256": "3d19cb3b35747f7c40100ecfe7a2b85024c629e0a88a88033853c54109138b3f"
     },
     {
      "path": "results/aws/x2_g1m0_X2a_decode_vs_short_low_C8__attack/20261126T133229Z_fcfs_23000/config.resolved.yaml",
@@ -8986,6 +9016,16 @@
      "sha256": "55c7b1e9fefc8b818c8216177e7d9551cfce8505f2cbe6ddd25ab6960061442e"
     },
     {
+     "path": "results/aws/x2_outputs/experiments/x2/g1m1/QUALIFICATION.json",
+     "bytes": 5439,
+     "sha256": "83881526028e245dc04def38d8235f1bf502d41a8cd664e34e735549ee404ef9"
+    },
+    {
+     "path": "results/aws/x2_outputs/experiments/x2/g1m1/README.md",
+     "bytes": 519,
+     "sha256": "97735fde9bd078445cbab408fe0e1ec76ff65d65e132ae93eaa6782c5a58b1ba"
+    },
+    {
      "path": "results/aws/x2_outputs/experiments/x2_a2/g1m0/FROZEN_SCHEDULE_MAIN.json",
      "bytes": 64660,
      "sha256": "a0e62b620acdb5c7db2f95019937c716570c4dfbc951dee3d9dd5682a6d75f29"
@@ -9446,6 +9486,11 @@
      "sha256": "d7f682c37d35ec9d4f44b7b5b1c75b76b4f321b2031386f319068da9119bf6d9"
     },
     {
+     "path": "results/aws/x2_outputs/reports/x2/g1m1/qualification/segments.json",
+     "bytes": 183790,
+     "sha256": "c95511f8cfd466f831faf630b4978cefc88360a9e91426aecb52f925d942c091"
+    },
+    {
      "path": "results/aws/x2_qual_g1m0.blocked_at_prompt.log",
      "bytes": 50,
      "sha256": "92db3e7176c65fb61e22f8d2c7014bfbadbef424dd1ed2e66e110e33411b0529"
@@ -9454,10 +9499,15 @@
      "path": "results/aws/x2_qual_g1m0.log",
      "bytes": 11732,
      "sha256": "b4646d6779044754e37f17b04ca4abbc20dccb067bee4824388fcc435c2f07f1"
+    },
+    {
+     "path": "results/aws/x2_qual_g1m1.log",
+     "bytes": 11732,
+     "sha256": "916f64874f44975568fc228059409619a77a304c308869b425cec0e84b0b085b"
     }
    ],
-   "n": 1757,
-   "bytes": 37675838
+   "n": 1767,
+   "bytes": 38074830
   },
   "x1_results": {
    "files": [
@@ -9648,6 +9698,11 @@
      "sha256": "ab47c65852bab4dadbede5590a6f4ae7d7c91cb50b85530dc911e92b5dbd52bb"
     },
     {
+     "path": "~/QuotaShift-backups/tfstate/research-20261126T221321Z.tfstate",
+     "bytes": 149993,
+     "sha256": "359e285520918809008c6d730673172f0f295de3c7c81fe823e767408ac090ee"
+    },
+    {
      "path": "~/QuotaShift-backups/tfstate/state-bootstrap-20261125T171741Z.tfstate",
      "bytes": 14751,
      "sha256": "b7ab410e292f3cc1a21bb5b6dc47faeb80620b5ca557e13206b7593fa153cd43"
@@ -9678,8 +9733,8 @@
      "sha256": "81ce39baeccd9a4ce736474c5e1c314c2104b0742cced387d24e58a694c7d49a"
     }
    ],
-   "n": 14,
-   "bytes": 42334446
+   "n": 15,
+   "bytes": 42484439
   }
  }
 }
