@@ -1,5 +1,5 @@
 {
- "created_utc": "2026-11-27T02:37:52.574036+00:00",
+ "created_utc": "2026-11-27T03:35:08.723611+00:00",
  "note": "names, sizes and SHA-256 only; no contents",
  "sets": {
   "x1_raw_evidence": {
@@ -1322,8 +1322,8 @@
     },
     {
      "path": "reports/x2/g1m1/SHA256SUMS",
-     "bytes": 1260,
-     "sha256": "fcf41fa9654d28e998b825a01dcdd66f0970715cd2fed5ad88e1e793ba1a1a29"
+     "bytes": 1919,
+     "sha256": "0315d644a3dbd9d1379621db257859f780cca609e9e407cce5cfc1661c61e274"
     },
     {
      "path": "reports/x2/g1m1/aws_logs/x2_freeze_calA_g1m1.refused.log",
@@ -1346,9 +1346,19 @@
      "sha256": "f61af4f6cee77a420c8f093d59844407049acdcd0766f96f5e6bf533cda4b089"
     },
     {
+     "path": "reports/x2/g1m1/diagnostic/analysis2.txt",
+     "bytes": 1959,
+     "sha256": "ec55614beb5d922944523dc485b72c48ecb3a8f3da9696c66aac96e4da450237"
+    },
+    {
      "path": "reports/x2/g1m1/diagnostic/analyze.py",
      "bytes": 2665,
      "sha256": "f888eda022725dd593c3d48cc9f22573bbd8525fe528fad403ac72c281f3c865"
+    },
+    {
+     "path": "reports/x2/g1m1/diagnostic/analyze2.py",
+     "bytes": 1221,
+     "sha256": "0c725d09848fbc5dc71fa30e2608e1a4c1f59fa55394651a8c63907a17fca741"
     },
     {
      "path": "reports/x2/g1m1/diagnostic/boot1_launcher_failure.log",
@@ -1359,6 +1369,21 @@
      "path": "reports/x2/g1m1/diagnostic/boot2_launcher.log",
      "bytes": 2327,
      "sha256": "a766587f5d8f22d1dc0be794f85881a9e9e8f4c54ac8651b15dcaa6aa19a857f"
+    },
+    {
+     "path": "reports/x2/g1m1/diagnostic/boot3_launcher.log",
+     "bytes": 1542,
+     "sha256": "57a2a4b4f3c91ac1679598ddcc41bf5ed9923c51b67b14f0cb659c5cda582068"
+    },
+    {
+     "path": "reports/x2/g1m1/diagnostic/diag2_g1m1.py",
+     "bytes": 4729,
+     "sha256": "201cb96a4cda79482801f444fc299fdb25e2885114cf8e6873549c46a4ab7638"
+    },
+    {
+     "path": "reports/x2/g1m1/diagnostic/diag2_live.json",
+     "bytes": 963639,
+     "sha256": "44dba8666ac8de8579f34b6bbe6b702e1e0f0936301e6865371aeb3fde6b69ec"
     },
     {
      "path": "reports/x2/g1m1/diagnostic/diag_g1m1.py",
@@ -1376,6 +1401,11 @@
      "sha256": "4fa75ffdf3a99fcb16dfe4eb126f61423919822d8a33649155c57a6d3c357413"
     },
     {
+     "path": "reports/x2/g1m1/diagnostic/offline_ref2.json",
+     "bytes": 93,
+     "sha256": "a657b59fade43a2dfe307a6373903f792902527f4835d5eeaaa1e35e23de1b16"
+    },
+    {
      "path": "reports/x2/g1m1/diagnostic/overrides.redacted.json",
      "bytes": 5339,
      "sha256": "217e44559f013878679cb5b9164dbfd7002d93bb78ffe9c3e24e443c25701a80"
@@ -1384,6 +1414,11 @@
      "path": "reports/x2/g1m1/diagnostic/run_diag.sh",
      "bytes": 3701,
      "sha256": "983a9f766a87677353d035099ab4154b136a733c5b74c5bc47fc2c039932a273"
+    },
+    {
+     "path": "reports/x2/g1m1/diagnostic/run_diag2.sh",
+     "bytes": 3703,
+     "sha256": "8964bace1c6859681510f44ef3d57681aaff0dfe5df0d7eb714e660bea352785"
     },
     {
      "path": "reports/x2/g1m1/qualification/segments.json",
@@ -2049,6 +2084,11 @@
      "path": "results/aws/reports/x2/g1m1/qualification/segments.json",
      "bytes": 183790,
      "sha256": "c95511f8cfd466f831faf630b4978cefc88360a9e91426aecb52f925d942c091"
+    },
+    {
+     "path": "results/aws/x2_diag2_g1m1/diag2.json",
+     "bytes": 963639,
+     "sha256": "44dba8666ac8de8579f34b6bbe6b702e1e0f0936301e6865371aeb3fde6b69ec"
     },
     {
      "path": "results/aws/x2_diag_g1m1/diag.json",
@@ -9641,8 +9681,8 @@
      "sha256": "916f64874f44975568fc228059409619a77a304c308869b425cec0e84b0b085b"
     }
    ],
-   "n": 1794,
-   "bytes": 40887011
+   "n": 1802,
+   "bytes": 42828195
   },
   "x1_results": {
    "files": [
