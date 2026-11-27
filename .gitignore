@@ -59,3 +59,6 @@ results/aws/
 
 # X2-A3 offline validation: local copy of the gated Mistral tokenizer model (pinned by sha256, never committed)
 reports/x2_a3/ref/
+
+# X2 CloudWatch log export (runner/vLLM streams; may contain account ids / private addresses; never committed)
+reports/x2/cloudwatch/
