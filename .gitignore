@@ -56,3 +56,6 @@ infra/terraform/backend.hcl
 
 # local mirror of the AWS results bucket (raw evidence; never committed)
 results/aws/
+
+# X2-A3 offline validation: local copy of the gated Mistral tokenizer model (pinned by sha256, never committed)
+reports/x2_a3/ref/

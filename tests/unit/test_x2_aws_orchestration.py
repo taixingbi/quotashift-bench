@@ -175,9 +175,9 @@ def test_run_stage_x1_path_unchanged(tmp_path):
 def test_x2_inputs_refusals(tmp_path):
     r, log = _run(_bins(tmp_path), "x2-inputs", "research", "g0m0", QUOTASHIFT_APPROVED="x2-inputs")
     assert r.returncode == 3 and "G1 platforms only" in r.stderr
-    r, log = _run(_bins(tmp_path / "b" if (tmp_path / "b").mkdir() is None else tmp_path), "x2-inputs", "research",
-                  "g1m1", QUOTASHIFT_APPROVED="x2-inputs")      # experiments/x2/g1m1 does not exist yet
-    assert r.returncode == 3 and not any(x.startswith("aws s3 cp") for x in log)
+    # (The "experiments/x2/<p> missing" refusal was exercised on g1m1 until its record directory was committed in
+    # 147879c; both G1 platforms now have one, and running x2-inputs for real would rewrite the local inputs tarball.)
+    assert (REPO / "experiments" / "x2" / "g1m1").is_dir() and (REPO / "experiments" / "x2" / "g1m0").is_dir()
     r, _ = _run(_bins(tmp_path / "c" if (tmp_path / "c").mkdir() is None else tmp_path), "x2-inputs", "research", "g1m0")
     assert r.returncode == 3 and "approval-gated" in r.stderr
 
