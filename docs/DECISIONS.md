@@ -588,3 +588,12 @@ Written **before** the re-run, from the read-only forensic review of attempt 1 (
   - Runner dispatch: g1m1 freeze and stage kinds go through `scripts/x2_a3.py`; plain X2 main is refused for g1m1;
     g1m0 and qualification commands are unchanged.
   - The runner image has not been rebuilt.
+
+## ADR-X2-G0-PREP — G0 offline readiness; counter-identity guard (2026-11-27)
+- **Context:** G1 is complete (g1m0, g1m1). G0 (gpu-node-2) is expected around 11-29 and still needs wired Ethernet.
+- **Decision:** add a non-frozen, read-only operator guard, `scripts/x2_counter_check.py`, run before every G0 phase pin.
+  - Mistral traces must carry the X2-A3 sequential identity; every other model must carry the frozen identity.
+  - Reason: G0 runs from a terminal, without the G1 runner's forced dispatch.
+- **Not changed:** the frozen drivers, A2, A3, every protocol file and every threshold.
+- **Recommended for owner decision:** use A2 for G0 main, as on G1.
+- **Documents:** `docs/X2_G0_READINESS.md`, `docs/X2_G0_RUNBOOK.md`, `docs/X2_AWS_EVIDENCE_AND_CLEANUP.md`.

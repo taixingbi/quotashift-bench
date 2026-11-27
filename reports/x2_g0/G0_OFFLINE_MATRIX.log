@@ -1,0 +1,11 @@
+[18:18:00] g0m0: calA 12 holds, main 40 rates
+[18:33:12] g0m1: calA 12 holds, main 40 rates
+[18:35:11] A3 g0m1 calA hold 1.35: True
+[18:36:35] A3 g0m1 calA hold 2.0: True
+[18:37:30] A3 g0m1 calA hold 3.0: True
+[18:39:46] A3 g0m1 main 10: True
+[18:42:44] A3 g0m1 main 50: True
+[18:47:02] A3 g0m1 main 140: True
+[18:53:51] A3 g0m1 main 295: True
+wrote reports/x2_g0/G0_OFFLINE_MATRIX.json in 3081.0 s
+exit 0
