@@ -49,6 +49,11 @@ def test_image_contains_every_pinned_file_and_no_raw_evidence():
     pinned = {*pin_x2.FILES, *pin_x1.FILES, *pin_x1_amendment.FILES, *pin_x1.V5_DEPENDENCIES, *pin_x2.V5_DEPENDENCIES,
               "experiments/x2/FROZEN_SHA256.json", "experiments/x1/FROZEN_SHA256.json",
               "experiments/x1/AMENDMENT_A1_SHA256.json", "experiments/v5/FROZEN_SHA256.json"}
+    import pin_v5
+    import pin_x2_a2
+    import pin_x2_a3
+    pinned |= {*pin_x2_a2.FILES, *pin_x2_a3.FILES, *pin_x2_a3.EARLIER, "experiments/x2_a3/AMENDMENT_A3_SHA256.json",
+               *json.loads(pin_v5.MANIFEST.read_text())["files"]}      # A3 --check runs the FULL v5 check in the runner
     missing = sorted(f for f in pinned if not _in_image(f))
     assert missing == [], missing
     for raw in ("reports/x1/g0m0/preflight/a1_requests.json", "reports/x2/g1m0/calA/STAGE_LOG.json",

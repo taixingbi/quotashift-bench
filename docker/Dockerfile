@@ -20,6 +20,9 @@ COPY experiments ./experiments
 # reports/x2/<platform>, results) never enters the image (also excluded in .dockerignore). Checked by
 # tests/unit/test_x2_aws_orchestration.py::test_image_contains_every_pinned_file_and_no_raw_evidence.
 COPY docs ./docs
+# X2-A3: pin_x2_a3 --check runs the FULL v5 check (the frozen counter tokenize.py is a v5 pin), which includes these four
+# v5-pinned test files; only they are copied (no other tests, no fixtures, no evidence).
+COPY tests/unit/test_export_v5_raw.py tests/unit/test_p1_host.py tests/unit/test_v5_protocol.py tests/unit/test_v5_rev3_consistency.py ./tests/unit/
 COPY reports/x1/AMENDMENT_A1_POWER.json ./reports/x1/
 COPY reports/x2/Q1_POWER.json reports/x2/VERDICT_POWER.json ./reports/x2/
 COPY infra/terraform/envs/research.x2.tfvars ./infra/terraform/envs/
