@@ -287,3 +287,8 @@
   - In the protocol, counting happens before a block sends any request, in an isolated VPC with no other tenants.
   - The vLLM mechanism is a hypothesis.
   - A3 adds sequential `/tokenize` latency to freezes and pre-send verification: see `docs/X2_AMENDMENT_A3_REVIEW.md` §5.
+- **Flaky X1 unit test `test_x1_identity_alignment.py::test_date_header_probe_on_the_local_mock` (seen 2026-11-27 in 1 of 3 full-suite runs).**
+  - **Symptom:** it returned `inconsistent Date headers`.
+  - **Cause:** the X1 clock-offset probe (`quotashift.x1.tokenize_probe.clock_offset_probe`, X1-pinned) assumes each HTTP `Date` header is the server's current second. The local uvicorn mock caches its `Date` header per server tick, so under full-suite CPU load the header can be up to about 1 s stale, and the sample intervals stop intersecting.
+  - **Re-runs:** the test passed 30/30 in isolation, and passed in 2 of 3 full runs.
+  - **Scope:** a test-environment timing artifact, not a regression. The probe is used only by X1 preflight (`scripts/x1_preflight.py`); no X2, A2 or A3 module, driver or gate imports it. Not changed (X1-pinned).
