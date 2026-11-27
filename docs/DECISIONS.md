@@ -558,3 +558,27 @@ Written **before** the re-run, from the read-only forensic review of attempt 1 (
   - A2 wrappers around the frozen freeze and stage drivers;
   - separate tokens (`x2_amend_a2`, `x2a2_freeze_main_<p>`, `x2a2_main_<p>`).
 - **Documents:** `docs/PROTOCOL_X2_AMENDMENT_A2.md`, `docs/X2_AMENDMENT_A2_REVIEW.md`.
+
+## ADR-X2-A3 — X2 Amendment A3: sequential token counting for Mistral (DRAFT; owner decision, not frozen) (2026-11-27)
+- **Trigger:** the frozen exact-tokenization gate refused the g1m1 calibration-A freeze. Two diagnostic boots showed:
+  - concurrent vLLM 0.17.1 `/tokenize` in mistral mode sometimes appends a trailing `</s>` (id 2);
+  - sequential `/tokenize` equals the pinned offline tokenizer;
+  - `/v1/completions` prompt usage is exact at every concurrency tested.
+
+  The server-side mechanism is a hypothesis, not established.
+- **Owner's choice:** count Mistral prompt tokens with exactly one `/tokenize` in flight, at every count site: the
+  calA and main freezes, and the runtime pre-send recalibration plus exact `verify_trace` in every block.
+- **Rejected:**
+  - counting via `/v1/completions` (it would warm the prefix cache);
+  - a different `--tokenizer-mode` (a serving change that would require requalification);
+  - silently dropping a trailing EOS (a correction, not a measurement);
+  - editing the frozen `VllmTokenizer` (a v5 pin).
+- **Implemented additively,** so no pinned byte changes:
+  - `quotashift.workload.tokenize_a3`;
+  - an env-gated hook in the previously empty, unpinned `quotashift/workload/__init__.py`;
+  - `scripts/x2_a3.py`, which runs the frozen drivers unchanged;
+  - write-once pins (`x2_amend_a3`).
+
+  It uses the same call-time rebinding pattern as A2's `a2_loader`. Non-Mistral models get the frozen class.
+  Two fail-closed guards were added (`count == len(tokens)`, no trailing EOS); A3 never corrects a count.
+- **Documents:** `docs/PROTOCOL_X2_AMENDMENT_A3.md`, `docs/X2_AMENDMENT_A3_REVIEW.md`.

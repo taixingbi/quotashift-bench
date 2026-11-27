@@ -1,0 +1,280 @@
+{
+ "label": "X2-A3 OFFLINE VALIDATION (mock server backed by the pinned tokenizer; not a live result)",
+ "created_utc": "2026-11-27T12:50:19Z",
+ "git_head": "e2cd49190aa3183d7006b0ad15f98981eb5d2ba4",
+ "git_dirty_paths": [],
+ "python": "3.12.13",
+ "sentencepiece": "0.2.3",
+ "sp_model_sha256": "37f00374dea48658ee8f5d0f21895b9bc55cb0103939607c8185bfd1c6ca1f89",
+ "model": "mistralai/Mistral-7B-Instruct-v0.3",
+ "rows": {
+  "F16-fault": {
+   "ok": false,
+   "error": "TokenizedContextInvalid: 3 request(s) did not calibrate to their planned token count, first: ('v02-benign-22000-000009', 47, 48)",
+   "wall_s": 0.6326820850372314,
+   "calls": 241,
+   "guard_trips": null,
+   "mock": {
+    "fault": "tokenize",
+    "injected": 218,
+    "max_tokenize_inflight": 7,
+    "delay_s": 0.0005
+   }
+  },
+  "F16-clean": {
+   "ok": true,
+   "wall_s": 13.848456859588623,
+   "calls": 21528,
+   "guard_trips": null,
+   "traces_digest": "a5095c7c53cf7dfbeb4611f7ecf4744fbaf074751ed978646519c1a0e74406f0",
+   "schedule_digest": "fd33ae493d05d1bcbee2748bb6cc1cb6c533b0aefaceae90f59fb6993c6f3685",
+   "scenario_seeds": 36,
+   "mock": {
+    "fault": "none",
+    "injected": 0,
+    "max_tokenize_inflight": 10,
+    "delay_s": 0.0005
+   }
+  },
+  "A3-fault": {
+   "ok": true,
+   "wall_s": 43.315133810043335,
+   "calls": 21528,
+   "guard_trips": 0,
+   "traces_digest": "a5095c7c53cf7dfbeb4611f7ecf4744fbaf074751ed978646519c1a0e74406f0",
+   "schedule_digest": "fd33ae493d05d1bcbee2748bb6cc1cb6c533b0aefaceae90f59fb6993c6f3685",
+   "scenario_seeds": 36,
+   "mock": {
+    "fault": "tokenize",
+    "injected": 0,
+    "max_tokenize_inflight": 1,
+    "delay_s": 0.0005
+   }
+  },
+  "A3-clean": {
+   "ok": true,
+   "wall_s": 46.06201195716858,
+   "calls": 21528,
+   "guard_trips": 0,
+   "traces_digest": "a5095c7c53cf7dfbeb4611f7ecf4744fbaf074751ed978646519c1a0e74406f0",
+   "schedule_digest": "fd33ae493d05d1bcbee2748bb6cc1cb6c533b0aefaceae90f59fb6993c6f3685",
+   "scenario_seeds": 36,
+   "mock": {
+    "fault": "none",
+    "injected": 0,
+    "max_tokenize_inflight": 1,
+    "delay_s": 0.0005
+   }
+  },
+  "A3-clean-2": {
+   "ok": true,
+   "wall_s": 48.16973900794983,
+   "calls": 21528,
+   "guard_trips": 0,
+   "traces_digest": "a5095c7c53cf7dfbeb4611f7ecf4744fbaf074751ed978646519c1a0e74406f0",
+   "schedule_digest": "fd33ae493d05d1bcbee2748bb6cc1cb6c533b0aefaceae90f59fb6993c6f3685",
+   "scenario_seeds": 36,
+   "mock": {
+    "fault": "none",
+    "injected": 0,
+    "max_tokenize_inflight": 1,
+    "delay_s": 0.0005
+   }
+  },
+  "SP-direct": {
+   "ok": true,
+   "wall_s": 2.3187427520751953,
+   "calls": 53820,
+   "guard_trips": null,
+   "traces_digest": "a5095c7c53cf7dfbeb4611f7ecf4744fbaf074751ed978646519c1a0e74406f0",
+   "schedule_digest": "fd33ae493d05d1bcbee2748bb6cc1cb6c533b0aefaceae90f59fb6993c6f3685",
+   "scenario_seeds": 36
+  },
+  "CONSERVATION": {
+   "scenario_seeds_checked": 36,
+   "problems": [],
+   "ok": true
+  },
+  "RT-presend": {
+   "scenario_seeds": 36,
+   "verify_ok": 36,
+   "frozen_match": 36,
+   "calls": 21528,
+   "guard_trips": 0,
+   "wall_s": 46.65770411491394,
+   "counter_class": "SequentialMistralTokenizer",
+   "errors": [],
+   "mock": {
+    "fault": "tokenize",
+    "injected": 0,
+    "max_tokenize_inflight": 1,
+    "delay_s": 0.0005
+   }
+  },
+  "A3-ext": {
+   "ok": false,
+   "error": "TokenizedContextInvalid: A3: /tokenize returned a trailing EOS (id 2) for a raw prompt; the known concurrency artifact; refusing to count",
+   "wall_s": 0.31009697914123535,
+   "calls": 1,
+   "guard_trips": 1,
+   "mock": {
+    "fault": "any",
+    "injected": 1,
+    "max_tokenize_inflight": 1,
+    "delay_s": 0.0005
+   }
+  },
+  "A3-quiet": {
+   "ok": true,
+   "wall_s": 47.906363010406494,
+   "calls": 21528,
+   "guard_trips": 0,
+   "traces_digest": "a5095c7c53cf7dfbeb4611f7ecf4744fbaf074751ed978646519c1a0e74406f0",
+   "schedule_digest": "fd33ae493d05d1bcbee2748bb6cc1cb6c533b0aefaceae90f59fb6993c6f3685",
+   "scenario_seeds": 36,
+   "mock": {
+    "fault": "any",
+    "injected": 0,
+    "max_tokenize_inflight": 1,
+    "delay_s": 0.0005
+   }
+  },
+  "MAIN-hyp": {
+   "5": {
+    "ok": false,
+    "error": "SystemExit: arrival coverage gate would fail: x2_g1m1_X2a_decode_vs_short_low_C8 attack seed 23002: {'first': 0.15996654590903525, 'last': 0.6125921784570372}",
+    "wall_s": 133.4799518585205,
+    "calls": 60736,
+    "guard_trips": 0,
+    "mock": {
+     "fault": "tokenize",
+     "injected": 0,
+     "max_tokenize_inflight": 1,
+     "delay_s": 0.0005
+    }
+   },
+   "10": {
+    "ok": true,
+    "wall_s": 139.79825901985168,
+    "calls": 62736,
+    "guard_trips": 0,
+    "traces_digest": "50d6bc8b86cb051220cee1a81353106f164d27bce0772cc465dae6cd1e3268bb",
+    "schedule_digest": "163e08b189c4a713bb9be0f7b2e217350be06cf4572d094b1fcc6118aaad4004",
+    "scenario_seeds": 136,
+    "mock": {
+     "fault": "tokenize",
+     "injected": 0,
+     "max_tokenize_inflight": 1,
+     "delay_s": 0.0005
+    },
+    "conservation": {
+     "scenario_seeds_checked": 136,
+     "problems": [],
+     "ok": true
+    }
+   },
+   "25": {
+    "ok": true,
+    "wall_s": 152.45713305473328,
+    "calls": 68416,
+    "guard_trips": 0,
+    "traces_digest": "cd7df32195c9938752d59957a43d4a032045dcd6bfef2c0c9b0854cb2a11d484",
+    "schedule_digest": "b14773eaf62ab827af3e1ff56b338bee14ef20d2522820bd73b2710532de9039",
+    "scenario_seeds": 136,
+    "mock": {
+     "fault": "tokenize",
+     "injected": 0,
+     "max_tokenize_inflight": 1,
+     "delay_s": 0.0005
+    },
+    "conservation": {
+     "scenario_seeds_checked": 136,
+     "problems": [],
+     "ok": true
+    }
+   },
+   "55": {
+    "ok": true,
+    "wall_s": 179.92926216125488,
+    "calls": 81376,
+    "guard_trips": 0,
+    "traces_digest": "e75bcae05217b26e40ad7bbd3f7aa3593d1e027f38d17a06d46b4aa3a03ae71a",
+    "schedule_digest": "a743f585ab9999ee62652d81aabf57ed076dd5e467647583bf994c7f2ff4a4b5",
+    "scenario_seeds": 136,
+    "mock": {
+     "fault": "tokenize",
+     "injected": 0,
+     "max_tokenize_inflight": 1,
+     "delay_s": 0.0005
+    },
+    "conservation": {
+     "scenario_seeds_checked": 136,
+     "problems": [],
+     "ok": true
+    }
+   },
+   "95": {
+    "ok": true,
+    "wall_s": 217.65335392951965,
+    "calls": 97808,
+    "guard_trips": 0,
+    "traces_digest": "6c139b712595777f820130f86696329001bd580bc9438653fb7d0c02b14e28ac",
+    "schedule_digest": "902e2edb2ac084f516b84fc3d8e1859bbb170383fb128f29410f9d93da53e8cf",
+    "scenario_seeds": 136,
+    "mock": {
+     "fault": "tokenize",
+     "injected": 0,
+     "max_tokenize_inflight": 1,
+     "delay_s": 0.0005
+    },
+    "conservation": {
+     "scenario_seeds_checked": 136,
+     "problems": [],
+     "ok": true
+    }
+   },
+   "140": {
+    "ok": true,
+    "wall_s": 258.7026150226593,
+    "calls": 115728,
+    "guard_trips": 0,
+    "traces_digest": "2028ec466bdba6d7b46089773d017d5b6790ed51a13dab08fce3706cada8d48a",
+    "schedule_digest": "09a9a6d8181f747c66e7f631d4e1aa7cb92768f264b6b48af2f20a7434f97620",
+    "scenario_seeds": 136,
+    "mock": {
+     "fault": "tokenize",
+     "injected": 0,
+     "max_tokenize_inflight": 1,
+     "delay_s": 0.0005
+    },
+    "conservation": {
+     "scenario_seeds_checked": 136,
+     "problems": [],
+     "ok": true
+    }
+   }
+  }
+ },
+ "digests": {
+  "A3-fault": "a5095c7c53cf7dfbeb4611f7ecf4744fbaf074751ed978646519c1a0e74406f0",
+  "A3-clean": "a5095c7c53cf7dfbeb4611f7ecf4744fbaf074751ed978646519c1a0e74406f0",
+  "A3-clean-2": "a5095c7c53cf7dfbeb4611f7ecf4744fbaf074751ed978646519c1a0e74406f0",
+  "SP-direct": "a5095c7c53cf7dfbeb4611f7ecf4744fbaf074751ed978646519c1a0e74406f0",
+  "F16-clean": "a5095c7c53cf7dfbeb4611f7ecf4744fbaf074751ed978646519c1a0e74406f0"
+ },
+ "expectations": {
+  "F16-fault refused (reproduces live)": true,
+  "F16-clean passes": true,
+  "A3-fault passes with 0 guard trips and 0 injected artifacts": true,
+  "A3 max /tokenize in flight == 1": true,
+  "36 calA scenario-seeds": true,
+  "digests identical: A3-fault == A3-clean == A3-clean-2 == SP-direct == F16-clean": true,
+  "schedules identical across counters": true,
+  "conservation (requests, authorized tokens, tokenized == planned, seeds)": true,
+  "runtime pre-send: 36/36 frozen match + exact verify, 0 trips": true,
+  "A3-ext fails closed (guard trip, no silent miscount)": true,
+  "A3-quiet passes": true,
+  "MAIN-hyp passes at every grid rate": false
+ },
+ "all_expectations_met": false
+}

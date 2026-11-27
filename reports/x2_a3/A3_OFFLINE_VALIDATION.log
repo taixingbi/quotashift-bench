@@ -1,0 +1,29 @@
+[08:13:22] row done: fault=tokenize ok=False 1s calls=243
+[08:13:36] row done: fault=none ok=True 14s calls=21528
+[08:14:11] row done: fault=tokenize ok=True 35s calls=21528
+[08:14:54] row done: fault=none ok=True 43s calls=21528
+[08:15:41] row done: fault=none ok=True 48s calls=21528
+[08:16:31] row done: fault=tokenize ok=36 47s calls=21528
+[08:16:32] row done: fault=any ok=False 1s calls=1
+[08:17:20] row done: fault=any ok=True 48s calls=21528
+[08:19:34] row done: fault=tokenize ok=False 134s calls=60736
+[08:21:47] row done: fault=tokenize ok=True 134s calls=60736
+[08:24:05] row done: fault=tokenize ok=True 138s calls=62736
+[08:26:38] row done: fault=tokenize ok=True 152s calls=68416
+[08:29:16] row done: fault=tokenize ok=True 157s calls=81376
+[08:32:31] row done: fault=tokenize ok=True 195s calls=97808
+[08:36:43] row done: fault=tokenize ok=True 251s calls=115728
+PASS  F16-fault refused (reproduces live)
+PASS  F16-clean passes
+PASS  A3-fault passes with 0 guard trips and 0 injected artifacts
+PASS  A3 max /tokenize in flight == 1
+PASS  36 calA scenario-seeds
+PASS  digests identical: A3-fault == A3-clean == A3-clean-2 == SP-direct == F16-clean
+PASS  schedules identical across counters
+PASS  conservation (requests, authorized tokens, tokenized == planned, seeds)
+PASS  runtime pre-send: 36/36 frozen match + exact verify, 0 trips
+PASS  A3-ext fails closed (guard trip, no silent miscount)
+PASS  A3-quiet passes
+PASS  MAIN-hyp: A3 tokenization exact for every scenario-seed at every grid rate, 0 trips, 0 injections
+PASS  MAIN-hyp: any freeze refusal is the documented A2 coverage gate only
+ALL EXPECTATIONS MET
