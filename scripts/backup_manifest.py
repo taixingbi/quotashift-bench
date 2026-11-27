@@ -23,7 +23,8 @@ OUT = REPO / "reports" / "backup" / "BACKUP_MANIFEST.json"
 BACKUPS = Path.home() / "QuotaShift-backups"
 SETS = {
     "x1_raw_evidence": [REPO / "reports" / "x1" / "g0m0"],
-    "x2_raw_evidence": sorted((REPO / "reports" / "x2").glob("g[01]m[01]")) + [REPO / "results" / "aws"],
+    "x2_raw_evidence": sorted((REPO / "reports" / "x2").glob("g[01]m[01]")) + [REPO / "results" / "aws",
+                                                                                   REPO / "reports" / "x2" / "cloudwatch"],
     "x1_results": sorted((REPO / "results").glob("x1_*")) if (REPO / "results").exists() else [],
     "archives": [BACKUPS],
 }
